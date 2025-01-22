@@ -21,6 +21,7 @@
         h1 {
             font-family: 'Ysabeau', sans-serif;
             text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            
         }
         
         
@@ -54,10 +55,10 @@
 <body style="background-color: #e7e7e7;">
     <div class="container py-5">
         <!-- Formulario -->
-        <div id="form-container" class="mx-auto p-1 border-1 rounded" style="background-color: #fcf6f6; box-shadow: 1px 2px 16px rgba(0, 0, 0, 0.9);">
-            <form method='POST' id="form-guardar-pdf" class="px-3" enctype="multipart/form-data" action="{% url 'crear_protocolo' %}">
+        <div id="form-container" class="mx-auto p-1 border-1 rounded" style="background-color: #141313; box-shadow: 1px 2px 16px rgba(0, 0, 0, 0.9);">
+            <form method='POST' style="background-color: #fafafa;" id="form-guardar-pdf" class="px-3" enctype="multipart/form-data" action="{% url 'crear_protocolo' %}">
                 {% csrf_token %}
-                <h3 class="text-center mb-4" style="color:#000000; margin-top: 20px">Formulario de Protocolo</h3>
+                <h3 class="text-center mb-4" style="color:#f8f2f2; margin-top: 20px">Formulario de Protocolo</h3>
 
                 <!-- Campos de formulario -->
                 <div class="form-group mb-3">
