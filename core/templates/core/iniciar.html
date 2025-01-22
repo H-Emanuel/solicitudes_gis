@@ -1,5 +1,7 @@
 {% load static %}
 
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -16,23 +18,31 @@
     <link href="{% static 'css/base.css' %}" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
   </head>
-  <body>
-    <video autoplay loop muted>
-      <source src="/media/assets/video/mundo.mp4" type="video/mp4" />Tu navegador no soporta el elemento de video.
-    </video>
 
-    <div class="container-centered-3">
-      <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_6pF8sLX.png" height="125" alt="Caluga Administrativa" />
-      <img src="/media/assets/image/version-negativo-caluga-logoSIG.png" alt="Logo SIG" height="125" />
+
+
+  <body>
+    <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10;">
+      <img src= "/media/assets/image/version-negativo-caluga-logoSIG.png" height="200" alt="Caluga Administrativa" />
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh;">
+      <video autoplay loop muted style="object-fit: cover; width: 100%; height: 100%;">
+        <source src="/media/assets/video/mundop.mp4" type="video/mp4" />
+        Tu navegador no soporta el elemento de video.
+      </video>
     </div>
 
-    <div class="firstAnimation secondAnimation containerTitle">
+
+
+
+    <div class="containerTitle">
       <div class="container-centered-2 mt-3">
         <h4 class="section-subtitle">Departamento</h4>
         <h1 class="font-medium section-title">Sistema de Información Geográfica</h1>
         <h2 class="section-subtitle">Ilustre Municipalidad de Valparaíso</h2>
         <h6 class="section-subtitle">SECPLA</h6>
       </div>
+      
       <div class="container-centered mt-1">
         <button class="button-grey" onclick="window.location.href='menu/'">
           <span></span>
