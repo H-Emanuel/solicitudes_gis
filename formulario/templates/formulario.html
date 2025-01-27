@@ -1,190 +1,269 @@
-{% csrf_token %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es-ES">
 <head>
     {% load static %}
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Protocolo</title>
-    <div class="container text-center mt-5">
-        <h1>Protocolo Traspaso de Datos Geoespaciales </h1>
-        <br>
-    
-      </div>
-      <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
-      <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-      <link rel="stylesheet" href="{% static 'css/forms.css' %}">
-      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-</head>
-<body >
-    <div class="container">
+    <link rel="icon" type="image/x-icon" href="/media/assets/image/iconoSIG.ico" />
 
-          <!-- Modal -->
-          <div id="myModal" class="modal">
-            <span class="close" onclick="cerrarModal()">&times;</span>
-            <img class="modal-content" id="imagenModal">
-          </div>
-            <br>
-          <div id="form-container">
-              
-            <form  method='POST' id="form-guardar-pdf" class="px-3" enctype="multipart/form-data" action="{% url 'crear_protocolo' %}">
+    
+    <style>
+        /* Logo */
+        /* Aseguramos que el contenedor del logo sea centrado */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        h1 {
+            font-family: 'Ysabeau', sans-serif;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+        }
+        
+        
+        
+        .modal-header .warning-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2rem;
+            color: #cf8401; 
+        }
+    </style>
+    <header class="py-0" style="background-color: #212529; box-shadow: 2px 8px 10px rgba(0, 0, 0, 0.4);">
+        <div class="logo-container">
+            <img src="/media/assets/image/version-negativo-caluga-logoSIG.png"  height="200" alt="Municipio Valparaíso Logo" class="logo">
+        </div>
+    </header>
+    
+    <div class="container text-center mt-5">
+        <h1 style="color: #030d29; font-weight: bold; ">Protocolo Traspaso de Datos Geoespaciales</h1>
+        <br>
+    </div>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+</head>
+
+<body style="background-color: #e7e7e7;">
+    <div class="container py-5">
+        <!-- Formulario -->
+        <div id="form-container" class="mx-auto p-1 border-1 rounded" style="background-color: #616161; box-shadow: 1px 2px 16px rgba(0, 0, 0, 0.9);">
+            <form method='POST' id="form-guardar-pdf" class="px-3" enctype="multipart/form-data" action="{% url 'crear_protocolo' %}">
                 {% csrf_token %}
-                <br>
+                <h3 class="text-center mb-4" style="color:#000000; margin-top: 20px">Formulario de Protocolo</h3>
+
+                <!-- Campos de formulario -->
                 <div class="form-group mb-3">
-                  {{ forms.direccion.label_tag }}
-                  {{ forms.direccion }}
-              </div>
-                <br>
+                    <label for="direccion">{{ forms.direccion.label }}</label>
+                    {{ forms.direccion }}
+                </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.departamento.label_tag }}
+                    <label for="departamento">{{ forms.departamento.label }}</label>
                     {{ forms.departamento }}
                 </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.nombre_solicitante.label_tag }}
+                    <label for="nombre_solicitante">{{ forms.nombre_solicitante.label }}</label>
                     {{ forms.nombre_solicitante }}
                 </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.nombre_proyecto.label_tag }}
+                    <label for="nombre_proyecto">{{ forms.nombre_proyecto.label }}</label>
                     {{ forms.nombre_proyecto }}
                 </div>
+                
                 <div class="form-group mb-3">
-                  {{ forms.corre_solicitante.label_tag }}
-                  {{ forms.corre_solicitante }}
-              </div>
+                    <label for="corre_solicitante">{{ forms.corre_solicitante.label }}</label>
+                    {{ forms.corre_solicitante }}
+                </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.area.label_tag }}
+                    <label for="area">{{ forms.area.label }}</label>
                     {{ forms.area }}
                 </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.objetivos.label_tag }}
+                    <label for="objetivos">{{ forms.objetivos.label }}</label>
                     {{ forms.objetivos }}
                 </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.insumo.label_tag }}
+                    <label for="insumo">{{ forms.insumo.label }}</label>
                     {{ forms.insumo }}
                 </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.producto.label_tag }}
+                    <label for="producto">{{ forms.producto.label }}</label>
                     {{ forms.producto }}
                 </div>
+                
                 <div class="form-group mb-3">
-                    {{ forms.cambios_posible.label_tag }}
+                    <label for="cambios_posible">{{ forms.cambios_posible.label }}</label>
                     {{ forms.cambios_posible }}
                 </div>
 
-                <div class="form-group mb-3">
-                  <h4>Puede Adjuntar Multiples archivos con un maximos de 300MB</h3>
-                    <br><br>
-                  <input type="file" name="archivo" multiple="multiple">
-              </div>
-              <!-- Otros campos de formulario -->          
-                <br>
-                <br>
-                <br>
-                <div class="text-center">
-                    <button type="submit" id="btn-guardar-pdf" class="btn btn-primary">Guardar, Descargar y enviar PDF</button>
+                <!-- Archivo adjunto -->
+                <div class="form-group mb-4">
+                    <label for="archivo"><strong>Adjuntar Archivos (máx. 300MB)</strong></label>
+                    <input type="file" name="archivo" multiple="multiple" class="form-control" id="archivo">
                 </div>
-                <br>
-                <br>
-                <br>
-                <label> <b>Una vez que hayas completado la ficha, recibirás una copia en formato PDF y obtendrás un código que te permitirá verificar el estado de la ficha en el menú principal de Gestión de Tiempo. </b></label>
-                <br>
-            </form>
-      </div>
 
+
+                <div class="text-center">
+                    <button type="submit" id="btn-guardar-pdf" class="pushable">
+                        <span class="shadow"></span>
+                        <span class="edge"></span>
+                        <span class="front"> Enviar </span>
+                    </button>
+                </div>    
+                                    
+                <!-- Mensaje de información -->
+                <div class="mt-4 text-center" style="font-size: 14px; color: #555;">
+                    <label><b>Recibirás una copia en PDF y un código para verificar el estado de la ficha.</b></label>
+                </div>
+            </form>
+        </div>
+        <!-- Modal -->
+        <div id="myModal" class="modal">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <img class="modal-content" id="imagenModal">
+        </div>
         <br>
-      </div>
-      <br>
-      <div id="success-message" style="display: none; text-align: center; font-size: 24px;">
-        <p>Su formulario se ha enviado correctamente. Esta página se cerrará en breve.</p>
     </div>
     
-    
-    
+    <!-- Mensaje de éxito -->
+    <div id="success-message" style="display: none; text-align: center; font-size: 24px;">
+        <p>Su formulario se ha enviado correctamente. Esta página se cerrará en breve.</p>
+    </div>
 </body>
-
-
-
 </html>
+
 {% verbatim %}
 
 <script>
+
+
 function myFunction() {
-  alert("!!IMPORTANTE!!"
-  +"\nUna vez realizada y enviada la solicitud, la encargada del Departamento SIG (Deisy.Pereira@munivalpo.cl) revisará y asignará la solicitud de acuerdo con los procedimientos establecidos. Lo solicitado se entregará al correo institucional del solicitante.");
-}
+    alert("!!IMPORTANTE!!"
+    +"\nUna vez realizada y enviada la solicitud, la encargada del Departamento SIG (Deisy.Pereira@munivalpo.cl) revisará y asignará la solicitud de acuerdo con los procedimientos establecidos. Lo solicitado se entregará al correo institucional del solicitante.");
+    }
 
-function cerrarModal() {
-  var modal = document.getElementById("myModal");
-  modal.style.display = "none";
-}
+    function cerrarModal() {
+    var modal = document.getElementById("myModal");
+    modal.style.display = "none";
+    }
 
-const botonGuardarPDF = document.getElementById('btn-guardar-pdf');
+    const botonGuardarPDF = document.getElementById('btn-guardar-pdf');
 
-botonGuardarPDF.addEventListener('click', (event) => {
-  if (!validarCampos()) {
-    event.preventDefault(); // Evita el envío del formulario
-    alert('Por favor, complete todos los campos antes de generar el PDF.');
-  } else {
+    botonGuardarPDF.addEventListener('click', (event) => {
+    if (!validarCampos()) {
+        event.preventDefault(); // Evita el envío del formulario
+        alert('Por favor, complete todos los campos antes de generar el PDF.');
+    } else {
 
-    setTimeout(() => {
-      window.close(); // Cierra la ventana actual
-    }, 12000);
-  }
-});
+        setTimeout(() => {
+        window.close(); // Cierra la ventana actual
+        }, 12000);
+    }
+    });
 
-function validarCampos() {
-  const formulario = document.forms[0];
+    function validarCampos() {
+    const formulario = document.forms[0];
 
-  // Acceder a los campos por su posición en el formulario
-  const direccion = formulario.elements[0].value.trim();
-  const departamento = formulario.elements[1].value.trim();
-  const nombreSolicitante = formulario.elements[2].value.trim();
-  const nombreProyecto = formulario.elements[3].value.trim();
-  const area = formulario.elements[4].value.trim();
-  const objetivos = formulario.elements[5].value.trim();
-  const insumo = formulario.elements[6].value.trim();
-  const producto = formulario.elements[7].value.trim();
-  const cambiosPosible = formulario.elements[8].value.trim();
+    // Acceder a los campos por su posición en el formulario
+    const direccion = formulario.elements[0].value.trim();
+    const departamento = formulario.elements[1].value.trim();
+    const nombreSolicitante = formulario.elements[2].value.trim();
+    const nombreProyecto = formulario.elements[3].value.trim();
+    const area = formulario.elements[4].value.trim();
+    const objetivos = formulario.elements[5].value.trim();
+    const insumo = formulario.elements[6].value.trim();
+    const producto = formulario.elements[7].value.trim();
+    const cambiosPosible = formulario.elements[8].value.trim();
 
-  // Validar que los campos no estén vacíos
-  if (
-    direccion === '' ||
-    departamento === '' ||
-    nombreSolicitante === '' ||
-    nombreProyecto === '' ||
-    area === '' ||
-    objetivos === '' ||
-    insumo === '' ||
-    producto === '' ||
-    cambiosPosible === ''
-  ) {
-    return false;
-  }
+    // Validar que los campos no estén vacíos
+    if (
+        direccion === '' ||
+        departamento === '' ||
+        nombreSolicitante === '' ||
+        nombreProyecto === '' ||
+        area === '' ||
+        objetivos === '' ||
+        insumo === '' ||
+        producto === '' ||
+        cambiosPosible === ''
+    ) {
+        return false;
+    }
 
-  return true;
-}
-</script>
+    return true;
+    }
+    </script>
+    
+    
+    <script>
+    document.getElementById('form-guardar-pdf').addEventListener('submit', function(event) {
+        // Evitar el envío del formulario
+        event.preventDefault();
+        // Obtener el contenedor del formulario y el mensaje de éxito
+        var formContainer = document.getElementById('form-container');
+        var successMessage = document.getElementById('success-message');
+
+        // Ocultar el contenedor del formulario y mostrar el mensaje de éxito
+        formContainer.style.display = 'none';
+        successMessage.style.display = 'block';
+        this.submit();
+    });
+
+    </script>
+
+<div class="modal fade" id="warningModal" tabindex="-1" aria-labelledby="warningModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="warningModalLabel">Advertencia</h5>
+                <span class="warning-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </span>
+            </div>
+            <div class="modal-body">
+                <p><strong>¡Atención!</strong> Si se requiere información en capas, podrá entregarse exclusivamente sobre una fracción específica del territorio (Barrios, Unidad Vecinal, etc.) </p>
+                <p>Para otros casos, consulta <a href="https://geoportal-sistema-de-informacion-geografica-munivalpo.hub.arcgis.com/" target="_blank">este enlace</a>.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="confirmarAccionBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Script de warning -->
 <script>
-  document.getElementById('form-guardar-pdf').addEventListener('submit', function(event) {
-      // Evitar el envío del formulario
-      event.preventDefault();
-      // Obtener el contenedor del formulario y el mensaje de éxito
-      var formContainer = document.getElementById('form-container');
-      var successMessage = document.getElementById('success-message');
+    window.onload = function() {
+        var myModal = new bootstrap.Modal(document.getElementById('warningModal'), {
+            keyboard: false,  
+            backdrop: 'static' 
+        });
+        myModal.show();  
+    }
 
-      // Ocultar el contenedor del formulario y mostrar el mensaje de éxito
-      formContainer.style.display = 'none';
-      successMessage.style.display = 'block';
-      this.submit();
-  });
+    // bOTON de confirmacion
+    document.getElementById('confirmarAccionBtn').addEventListener('click', function() {
+        // Cierra el modal al confirmar
+        var myModal = bootstrap.Modal.getInstance(document.getElementById('warningModal'));
+        myModal.hide(); 
 
+        document.getElementById('contenidoPagina').style.display = 'block';
+    });
 </script>
-
-
 
 {% endverbatim %}
