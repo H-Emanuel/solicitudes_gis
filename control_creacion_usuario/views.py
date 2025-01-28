@@ -573,6 +573,242 @@ def Calculor_de_trabajo():
 
     return tdc,tpr
 
+# @csrf_exempt  # Solo usar esto si estás probando; para producción, configura CSRF correctamente
+# def Envio_de_correo(request):
+#     if request.method == 'POST':
+#         user = request.user
+#         emails = json.loads(request.POST.get('emails', '[]'))
+#         archivos = request.FILES.getlist('files')
+#         total_size = sum(archivo.size for archivo in archivos)
+
+#         urls_archivos = []
+#         archivos_adjuntos = []
+#         dominio = f"{request.scheme}://{request.get_host()}"
+
+
+#         if user.is_superuser:
+#             try:
+#                 # Obtener los datos
+#                 message = request.POST.get('message', '')
+#                 ficha_id = request.POST.get('ficha_id')
+#                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
+#                 Protocolo.enviado_correo = True
+#                 profesional = Protocolo.profesional
+#                 Protocolo.estado = 'EN PROCESO'
+#                 Protocolo.save()
+
+#                 # Verificar el tamaño de los archivos
+#                 if total_size > 10 * 1024 * 1024:  # Más de 10 MB
+#                     for archivo in archivos:
+#                         archivo_link = Archivo_Link.objects.create(protocolo=Protocolo, archivo=archivo)
+#                         url_relativa = default_storage.url(archivo_link.archivo.name)
+#                         urls_archivos.append(f"{dominio}{url_relativa}")
+
+#                 else:  # Menor o igual a 10 MB
+#                     for archivo in archivos:
+#                         archivo_adjunto = MIMEApplication(archivo.read())
+#                         nombre_archivo = encode_rfc2231(archivo.name, 'utf-8')
+#                         archivo_adjunto.add_header(
+#                             'Content-Disposition',
+#                             'attachment',
+#                             filename=nombre_archivo
+#                         )
+#                         archivos_adjuntos.append(archivo_adjunto)
+
+#                 # Generar PDF
+#                 buffer = Generar_PDF(ficha_id)
+
+#                 # Configuración del correo
+#                 superusers = User.objects.filter(is_superuser=True).exclude(username="osvaldo.moya").values_list('email', flat=True)
+#                 superuser_emails = list(superusers)
+
+#                 mi_correo = f'{user.username}@munivalpo.cl'.strip()
+#                 asunto = f'Solicitud N°{Protocolo.codigo} Asignada'
+#                 mensaje = MIMEMultipart()
+#                 mensaje['From'] = mi_correo
+#                 destinatarios = list(set([profesional.email] + emails))
+#                 mensaje['To'] = ', '.join(destinatarios)
+#                 mensaje['Subject'] = asunto
+
+#                 bcc_destinatarios = [mi_correo]
+
+#                 # Cargar la firma
+#                 firma_path = os.path.join('media/assets/Firma', f'{user.username}.png')
+#                 if os.path.exists(firma_path):
+#                     with open(firma_path, 'rb') as firma_file:
+#                         firma_img = MIMEImage(firma_file.read())
+#                         firma_img.add_header('Content-ID', '<firma>')
+#                         mensaje.attach(firma_img)
+
+#                 # Generar el contenido HTML
+#                 html_archivos = ""
+#                 if urls_archivos:
+#                     html_archivos = f"""
+#                     <p>Los siguientes archivos superan el límite de 10 MB y están disponibles en los siguientes enlaces:</p>
+#                     <ul>
+#                         {''.join(f'<li><a href="{url}" target="_blank">{url}</a></li>' for url in urls_archivos)}
+#                     </ul>
+#                     """
+#                 else:
+#                     html_archivos = "<p>Los archivos están adjuntos al correo.</p>"
+
+#                 html_content = f"""
+#                 <html>
+#                     <body>
+#                         <p>{escape(message)}</p>
+#                         <br>
+#                         {html_archivos}
+#                         <br>
+#                         <img src="cid:firma" alt="Firma" width="600" height="auto" />
+#                     </body>
+#                 </html>
+#                 """
+#                 mensaje.attach(MIMEText(html_content, 'html'))
+
+#                 # Adjuntar PDF
+#                 archivo_pdf = buffer.getvalue()
+#                 pdf_adjunto = MIMEApplication(archivo_pdf)
+#                 pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
+#                 mensaje.attach(pdf_adjunto)
+
+#                 # Adjuntar archivos menores a 10 MB
+#                 for archivo_adjunto in archivos_adjuntos:
+#                     mensaje.attach(archivo_adjunto)
+
+#                 # Configuración del servidor SMTP
+#                 smtp_server = 'mail.munivalpo.cl'
+#                 smtp_port = 587
+#                 smtp_usuario = f'servervalpo\\{user.username}'
+#                 smtp_contrasena = encotra_contraseña(user.username)
+
+#                 # Enviar el correo
+#                 server = smtplib.SMTP(smtp_server, smtp_port)
+#                 server.starttls()
+#                 server.login(smtp_usuario, smtp_contrasena)
+#                 server.sendmail(
+#                     mi_correo,
+#                     destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
+#                     mensaje.as_string()
+#                 )
+#                 server.quit()
+
+#                 return JsonResponse({'success': True})
+#             except Exception as e:
+#                 return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+#         else:
+#             try:
+#                 message = request.POST.get('message', '')
+#                 ficha_id = request.POST.get('ficha_id')
+#                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
+#                 Protocolo.enviado_correo_t = True
+#                 profesional = Protocolo.profesional
+#                 Protocolo.estado = 'EJECUTADO'
+#                 solicitante = Protocolo.corre_solicitante
+
+#                 Protocolo.save()
+
+#                 # Verificar el tamaño de los archivos
+#                 if total_size > 10 * 1024 * 1024:  # Más de 10 MB
+#                     for archivo in archivos:
+#                         archivo_link = Archivo_Link.objects.create(protocolo=Protocolo, archivo=archivo)
+#                         url_relativa = default_storage.url(archivo_link.archivo.name)
+#                         urls_archivos.append(f"{dominio}{url_relativa}")
+
+#                 else:  # Menor o igual a 10 MB
+#                     for archivo in archivos:
+#                         archivo_adjunto = MIMEApplication(archivo.read())
+#                         nombre_archivo = encode_rfc2231(archivo.name, 'utf-8')
+#                         archivo_adjunto.add_header(
+#                             'Content-Disposition',
+#                             'attachment',
+#                             filename=nombre_archivo
+#                         )
+#                         archivos_adjuntos.append(archivo_adjunto)
+
+#                 # Generar PDF
+#                 buffer = Generar_PDF(ficha_id)
+
+#                 # Configuración del correo
+#                 superusers = User.objects.filter(is_superuser=True).exclude(username="osvaldo.moya").values_list('email', flat=True)
+#                 superuser_emails = list(superusers)
+
+#                 mi_correo = f'{user.username}@munivalpo.cl'.strip()
+#                 asunto = f'Solicitud N°{Protocolo.codigo} Asignada'
+#                 mensaje = MIMEMultipart()
+#                 mensaje['From'] = mi_correo
+#                 destinatarios = list(set([solicitante] + emails + superuser_emails))
+#                 mensaje['To'] = ', '.join(destinatarios)
+#                 mensaje['Subject'] = asunto
+
+#                 bcc_destinatarios = [mi_correo]
+
+#                 # Cargar la firma
+#                 firma_path = os.path.join('media/assets/Firma', f'{user.username}.png')
+#                 if os.path.exists(firma_path):
+#                     with open(firma_path, 'rb') as firma_file:
+#                         firma_img = MIMEImage(firma_file.read())
+#                         firma_img.add_header('Content-ID', '<firma>')
+#                         mensaje.attach(firma_img)
+
+#                 # Generar el contenido HTML
+#                 html_archivos = ""
+#                 if urls_archivos:
+#                     html_archivos = f"""
+#                     <p>Los siguientes archivos superan el límite de 10 MB y están disponibles en los siguientes enlaces:</p>
+#                     <ul>
+#                         {''.join(f'<li><a href="{url}" target="_blank">{url}</a></li>' for url in urls_archivos)}
+#                     </ul>
+#                     """
+#                 else:
+#                     html_archivos = "<p></p>"
+
+#                 html_content = f"""
+#                 <html>
+#                     <body>
+#                         <p>{escape(message)}</p>
+#                         <br>
+#                         {html_archivos}
+#                         <br>
+#                         <img src="cid:firma" alt="Firma" width="600" height="auto" />
+#                     </body>
+#                 </html>
+#                 """
+#                 mensaje.attach(MIMEText(html_content, 'html'))
+
+#                 # Adjuntar PDF
+#                 archivo_pdf = buffer.getvalue()
+#                 pdf_adjunto = MIMEApplication(archivo_pdf)
+#                 pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
+#                 mensaje.attach(pdf_adjunto)
+
+#                 # Adjuntar archivos menores a 10 MB
+#                 for archivo_adjunto in archivos_adjuntos:
+#                     mensaje.attach(archivo_adjunto)
+
+#                 # Configuración del servidor SMTP
+#                 smtp_server = 'mail.munivalpo.cl'
+#                 smtp_port = 587
+#                 smtp_usuario = f'servervalpo\\{user.username}'
+#                 smtp_contrasena = encotra_contraseña(user.username)
+
+#                 # Enviar el correo
+#                 server = smtplib.SMTP(smtp_server, smtp_port)
+#                 server.starttls()
+#                 server.login(smtp_usuario, smtp_contrasena)
+#                 server.sendmail(
+#                     mi_correo,
+#                     destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
+#                     mensaje.as_string()
+#                 )
+#                 server.quit()
+
+#                 return JsonResponse({'success': True})
+#             except Exception as e:
+#                 return JsonResponse({'success': False, 'error': str(e)}, status=555)  
+                              
+#     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
 @csrf_exempt  # Solo usar esto si estás probando; para producción, configura CSRF correctamente
 def Envio_de_correo(request):
     if request.method == 'POST':
@@ -590,6 +826,7 @@ def Envio_de_correo(request):
             try:
                 # Obtener los datos
                 message = request.POST.get('message', '')
+                formatted_message = escape(message).replace("\n", "<br>")
                 ficha_id = request.POST.get('ficha_id')
                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
                 Protocolo.enviado_correo = True
@@ -649,13 +886,13 @@ def Envio_de_correo(request):
                         {''.join(f'<li><a href="{url}" target="_blank">{url}</a></li>' for url in urls_archivos)}
                     </ul>
                     """
-                else:
-                    html_archivos = "<p>Los archivos están adjuntos al correo.</p>"
+                # else:
+                #     html_archivos = "<p>Los archivos están adjuntos al correo.</p>"
 
                 html_content = f"""
                 <html>
                     <body>
-                        <p>{escape(message)}</p>
+                        <p>{formatted_message}</p>
                         <br>
                         {html_archivos}
                         <br>
@@ -699,6 +936,7 @@ def Envio_de_correo(request):
         else:
             try:
                 message = request.POST.get('message', '')
+                formatted_message = escape(message).replace("\n", "<br>")
                 ficha_id = request.POST.get('ficha_id')
                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
                 Protocolo.enviado_correo_t = True
@@ -766,7 +1004,7 @@ def Envio_de_correo(request):
                 html_content = f"""
                 <html>
                     <body>
-                        <p>{escape(message)}</p>
+                        <p>{formatted_message}</p>
                         <br>
                         {html_archivos}
                         <br>

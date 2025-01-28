@@ -270,15 +270,13 @@
                     <ul id="emailList" class="list-group mb-3">
                     </ul>
 
-                    <!-- Área de texto para mensaje -->
-                    <div class="mb-3">
-                        <label for="messageText" class="form-label">3. Mensaje</label>
-                        <textarea class="form-control" id="messageText" rows="5" placeholder="Escribe tu mensaje aquí">{% if request.user.is_superuser %}Estimado Favor proceder según corresponda.Atte.                     
-                            {% else %}Estimado Solicitante ....Atte.
-                            {% endif %}
+                    <textarea class="form-control" id="messageText" rows="5" placeholder="Escribe tu mensaje aquí">{% if request.user.is_superuser %}Estimado,
+                        Por favor, proceda con la solicitud según corresponda.
+                        Agradezco de antemano su gestión.
+                        Atte.{% else %}Estimado Solicitante,
+                        Atte.{% endif %}
                         </textarea>
-                        <img src="" alt="">
-                    </div>
+                        
                     
 
                     <!-- Campo para adjuntar archivos -->
