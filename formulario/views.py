@@ -233,48 +233,48 @@ def crear_protocolo(request):
         # # Después de guardar la ficha
         Protocolo.save()
 
-        # Obtén los datos necesarios para el correo
-        correo_destino1 = 'deisy.pereira@munivalpo.cl' 
-        correo_destino2 = request.POST['corre_solicitante']  # Asegúrate de que esto sea una cadena y no una tupla
-        asunto = 'Nueva ficha generada'
+        # # Obtén los datos necesarios para el correo
+        # correo_destino1 = 'deisy.pereira@munivalpo.cl' 
+        # correo_destino2 = request.POST['corre_solicitante']  # Asegúrate de que esto sea una cadena y no una tupla
+        # asunto = 'Nueva ficha generada'
 
-        # Construye el mensaje de correo
-        mensaje = MIMEMultipart()
-        mensaje['From'] = 'departamento.sig@munivalpo.cl'  
-        mensaje['To'] = ', '.join([correo_destino1, correo_destino2])
-        mensaje['Subject'] = asunto
+        # # Construye el mensaje de correo
+        # mensaje = MIMEMultipart()
+        # mensaje['From'] = 'departamento.sig@munivalpo.cl'  
+        # mensaje['To'] = ', '.join([correo_destino1, correo_destino2])
+        # mensaje['Subject'] = asunto
 
-        # Cuerpo del mensaje
-        cuerpo_mensaje = cuerpo_mensaje# Asegúrate de definir el cuerpo del mensaje
-        mensaje.attach(MIMEText(cuerpo_mensaje, 'plain'))
+        # # Cuerpo del mensaje
+        # cuerpo_mensaje = cuerpo_mensaje# Asegúrate de definir el cuerpo del mensaje
+        # mensaje.attach(MIMEText(cuerpo_mensaje, 'plain'))
 
-        # Adjunta el PDF al mensaje de correo
-        archivo_pdf = buffer.getvalue()
+        # # Adjunta el PDF al mensaje de correo
+        # archivo_pdf = buffer.getvalue()
 
-        pdf_adjunto = MIMEApplication(archivo_pdf)
-        pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
-        mensaje.attach(pdf_adjunto)
+        # pdf_adjunto = MIMEApplication(archivo_pdf)
+        # pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
+        # mensaje.attach(pdf_adjunto)
 
-        # Configura el servidor SMTP
-        smtp_server = 'mail.munivalpo.cl'  # Cambia esto según tu proveedor de correo
-        smtp_port = 587    # Puerto de Gmail para TLS
-        smtp_usuario = 'servervalpo\\departamento.sig'  # Tu dirección de correo
-        smtp_contrasena = 'deptosig2024!'  # Tu contraseña de correo
+        # # Configura el servidor SMTP
+        # smtp_server = 'mail.munivalpo.cl'  # Cambia esto según tu proveedor de correo
+        # smtp_port = 587    # Puerto de Gmail para TLS
+        # smtp_usuario = 'servervalpo\\departamento.sig'  # Tu dirección de correo
+        # smtp_contrasena = 'deptosig2024!'  # Tu contraseña de correo
 
-        # Inicia la conexión con el servidor SMTP
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
+        # # Inicia la conexión con el servidor SMTP
+        # server = smtplib.SMTP(smtp_server, smtp_port)
+        # server.starttls()
 
-        # Inicia sesión en tu cuenta de correo
-        server.login(smtp_usuario, smtp_contrasena)
+        # # Inicia sesión en tu cuenta de correo
+        # server.login(smtp_usuario, smtp_contrasena)
 
-        # Envía el correo electrónico
-        to_addresses = [correo_destino1, correo_destino2]
+        # # Envía el correo electrónico
+        # to_addresses = [correo_destino1, correo_destino2]
 
-        server.sendmail("departamento.sig@munivalpo.cl", to_addresses, mensaje.as_string())
+        # server.sendmail("departamento.sig@munivalpo.cl", to_addresses, mensaje.as_string())
 
-        # Cierra la conexión con el servidor SMTP
-        server.quit()
+        # # Cierra la conexión con el servidor SMTP
+        # server.quit()
 
 
         return response
