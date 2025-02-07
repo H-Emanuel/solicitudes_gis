@@ -4,23 +4,108 @@
 
 {% block main_content%}
 
-{% block custom_css %} 
+{% block custom_css %}
 <style>
     .row>* {
         padding: calc(var(--bs-gutter-x)* .5);
     }
 
     #tabla_registro {
-        width: 100%;
+        width: 90%;
         font-family: "Roboto Condensed";
     }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+    text-align: left;
+    border: 1px solid #ddd;
+    table-layout: fixed; /* Hace que los th definan el ancho de la columna */
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+    word-wrap: break-word; /* Permite saltos de línea */
+    white-space: normal; /* Hace que el texto se ajuste dentro del ancho */
+    overflow-wrap: break-word;
+}
+
+th {
+    background-color: #0f52a9;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Ajustar el ancho de los encabezados para que controlen sus columnas */
+th:nth-child(1) { width: 90px; } /* Id de la solicitud */
+th:nth-child(2) { width: 110px; } /* Solicitante */
+th:nth-child(3) { width: 130px; } /* Fecha de llegada */
+th:nth-child(4) { width: 130px; } /* Departamento */
+th:nth-child(5) { width: 180px; } /* Acciones */
+th:nth-child(6) { width: 120px; } /* Estado */
+th:nth-child(7) { width: 190px; } /* Carga de trabajo */
+th:nth-child(8) { width: 180px; } /* Profesional SIG */
+th:nth-child(9) { width: 150px; } /* Fecha Designio */
+th:nth-child(10) { width: 150px; } /* Fecha Enviado */
+th:nth-child(11) { width: 120px; } /* Días Hábiles */
+
+/* Alternar colores en filas */
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Hacer la tabla responsiva */
+@media screen and (max-width: 768px) {
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 8px;
+    }
+
+    /* Reducir el tamaño de las columnas en móviles */
+    th, td {
+        width: auto;
+    }
+}
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.pagination-container .page-link {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.pagination-container .page-link:hover {
+    background-color: #1a5da4;
+    color: white;
+}
+
+.pagination-container .page-link.active {
+    background-color: #1a5da4;
+    color: white;
+    font-weight: bold;
+}
+
+
 </style>
 
 {% endblock custom_css %}
 
 
 <link rel="stylesheet" href="https://cdn.datatables.net/2.1.7/css/dataTables.dataTables.css" />
-  
+
 <script src="https://cdn.datatables.net/2.1.7/js/dataTables.js"></script>
 
 <link rel="stylesheet" href="{% static 'css/table.css' %}" />
@@ -28,428 +113,535 @@
 
 <section class="d-flex justify-content-center">
     <div class="row">
-        <div class="col">
+        <div class="col" style="display: flex;justify-content: center;flex-wrap: wrap;">
+
+            <div class="container">
+                <div id="paginacion" class="pagination-container"></div>
+            </div>
+
             <table id="tabla_registro" class="display table-custom">
                 <thead>
                     <tr>
                         <th>Id de la solicitud</th>
-                        <th>solicitante</th>
+                        <th>Solicitante</th>
                         <th>Fecha de llegada</th>
                         <th>Departamento</th>
-                        <th style="min-width: 220px;">Acciones</th>
-                        <th>Profesional SIG</th>
+                        <th style="max-width: 220px;">Acciones</th>
                         <th>Estado</th>
-                        <th style="min-width: 250px;">Carga de trabajo</th>
+                        <th style="max-width: 250px;">Carga de trabajo</th>
+                        <th>profesional SIG</th>
                         <th>Fecha Designio</th>
                         <th>Fecha Enviado</th>
                         <th>Dias Hábiles</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in Solicitudes %}
-                    <tr>
-                        <td data-label="Numero de creacion solicitud">{{ item.solicitud.id }}</td>
-                        <td data-label="Nombre del solicitante">
-                            <p style="font-weight: bolder;" class="nombre-solicitante">
-                                {{ item.solicitud.nombre_solicitante }}
-                            </p>
-                        </td>
-                        <td data-label="Fecha de llegada">{{ item.solicitud.fecha|date:"Y/m/d H:i" }}</td>
-                        <td data-label="Departamento" class="nombre-solicitante">{{ item.solicitud.departamento }}</td>
-                        <td data-label="Descargar Ficha">
-                            <a style="text-decoration: none; position: relative;" href="/solicitud/descargar_pdf/{{ item.solicitud.id }}" download>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones">
-                                    <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v242.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
-                                </svg>
-                            </a>
-
-                            <a style="text-decoration: none;" href="#" data-id="{{ item.solicitud.id }}" class="preview-link">
-
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="acciones">
-                                    <path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/>
-                                </svg>
-                            </a>
-                       
-
-                            {% if item.solicitud.enviado_correo and request.user.is_superuser %}
-
-                                <a style="text-decoration: none; position: relative;" href="#" class="email-link" data-bs-toggle="modal" data-bs-target="#dynamicEmailModal" data-email-id="1" data-id="{{ item.solicitud.id }}" data-correo="{{ item.solicitud.profesional.email }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones" style="fill: rgb(66, 190, 13);">
-                                        <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
-                                    </svg>
-                                </a>
-
-                            {% elif item.solicitud.enviado_correo_t and request.user.is_active %}
-
-                                <a style="text-decoration: none; position: relative;" href="#" class="email-link" data-bs-toggle="modal" data-bs-target="#dynamicEmailModal" data-email-id="1" data-id="{{ item.solicitud.id }}" data-correo="{{ item.solicitud.corre_solicitante }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones" style="fill: rgb(66, 190, 13);">
-                                        <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
-                                    </svg>
-                                </a>
-
-                            {% else %}
-
-                                <a style="text-decoration: none; position: relative;" href="#" class="email-link" data-bs-toggle="modal" data-bs-target="#dynamicEmailModal" data-email-id="1" data-id="{{ item.solicitud.id }}" {% if request.user.is_superuser %} data-correo="{{ item.solicitud.profesional.email }}"{% else %} data-correo="{{ item.solicitud.corre_solicitante }}" {% endif %}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones">
-                                        <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
-                                    </svg>
-                                </a>
-
-
-                            {% endif %}
-
-                            
-                        {% if request.user.is_superuser %}
-
-
-                            {% if item.numero_designios == 0 %}
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="acciones" style="fill: darkgrey;">
-                                    <path d="M128 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm32 97.3c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80S48 51.8 48 96c0 32.8 19.7 61 48 73.3L96 224l-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0 0 54.7c-28.3 12.3-48 40.5-48 73.3c0 44.2 35.8 80 80 80s80-35.8 80-80c0-32.8-19.7-61-48-73.3l0-54.7 256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-54.7c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80s-80 35.8-80 80c0 32.8 19.7 61 48 73.3l0 54.7-320 0 0-54.7zM488 96a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM320 392a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
-                                </svg>
-                            
-                            {% else %}
-
-                            <a style="text-decoration: none;" href="#" data-protocolo-id="{{ item.solicitud.id }}" class="registro-preview-link">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="acciones">
-                                    <path d="M128 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm32 97.3c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80S48 51.8 48 96c0 32.8 19.7 61 48 73.3L96 224l-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0 0 54.7c-28.3 12.3-48 40.5-48 73.3c0 44.2 35.8 80 80 80s80-35.8 80-80c0-32.8-19.7-61-48-73.3l0-54.7 256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-54.7c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80s-80 35.8-80 80c0 32.8 19.7 61 48 73.3l0 54.7-320 0 0-54.7zM488 96a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM320 392a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
-                                </svg>
-                            </a>
-
-                            {% endif %}
-
-                        {% endif %}
-                            
-
-                        </td>
-                        <td data-label="Profesional Asignado">
-                            <!-- Select de profesional -->
-                            {% if request.user.is_superuser %}
-                            <div class="select-wrapper">
-                                <select id="profesional-{{ item.solicitud.id }}" class="profesional-select" 
-                                        data-solicitud-id="{{ item.solicitud.id }}" 
-                                        data-antiguo-profesional="{% if item.solicitud.profesional %}{{ item.solicitud.profesional.id }}{% else %}None{% endif %}" 
-                                        required>
-                                    <option value="" disabled {% if not item.solicitud.profesional %}selected{% endif %}>Selecciona un profesional</option>
-                                    {% for usuario in Usuarios %}
-                                    <option value="{{ usuario.id }}" {% if item.solicitud.profesional and usuario.id == item.solicitud.profesional.id %}selected{% endif %}>
-                                        {{ usuario.first_name }} {{ usuario.last_name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            
-                        
-                            {% else %}
-                            <select id="profesional-{{ item.solicitud.id }}" class="profesional-select" data-solicitud-id="{{ item.solicitud.id }}" disabled>
-                                <option value="" disabled {% if not item.solicitud.profesional %}selected{% endif %}>Selecciona un profesional</option>
-                                {% for usuario in Usuarios %}
-                                <option value="{{ usuario.id }}" {% if item.solicitud.profesional and usuario.id == item.solicitud.profesional.id %}selected{% endif %}>
-                                    {{ usuario.first_name }} {{ usuario.last_name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            {% endif %}
-                        </td>
-
-                        <td data-label="Estado actual">
-
-                            {% if request.user.is_superuser %}
-                            
-                            <select name="estado" class="estado-select" data-solicitud-id="{{ item.solicitud.id }}">
-                                {% for estado in OPCIONES.ESTADO %}
-                                <option value="{{ estado.0 }}" {% if estado.0 == item.solicitud.estado %}selected{% endif %}>
-                                    {{ estado.1 }}
-                                </option>
-                                {% endfor %}
-                            </select>
-
-                            {% else %}
-                                <select name="estado" class="estado-select" data-solicitud-id="{{ item.solicitud.id }}" disabled>
-                                    {% for estado in OPCIONES.ESTADO %}
-                                    <option value="{{ estado.0 }}" {% if estado.0 == item.solicitud.estado %}selected{% endif %}>
-                                        {{ estado.1 }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            
-                            
-                            {% endif %}
-                            
-                        </td>
-                        <td data-label="Carga de trabajo">
-                            <select name="limite" class="limite-select" data-solicitud-id="{{ item.solicitud.id }}" {% if not request.user.is_superuser %}disabled{% endif %}>
-                                {% for limite in OPCIONES.LIMITE_DE_DIA %}
-                                <option value="{{ limite.0 }}" {% if limite.0 == item.solicitud.tipo_limite %}selected{% endif %}>{{ limite.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        {% if request.user.is_superuser %}
-
-                           <a href="#" data-id="{{ item.solicitud.id }}" class="reset-link"> 
-                            <svg width="30px" height="30px" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                                <g fill="none" fill-rule="evenodd" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="matrix(0 1 1 0 2.5 2.5)">
-                                <path d="m3.98652376 1.07807068c-2.38377179 1.38514556-3.98652376 3.96636605-3.98652376 6.92192932 0 4.418278 3.581722 8 8 8s8-3.581722 8-8-3.581722-8-8-8"/>
-                                <path d="m4 1v4h-4" transform="matrix(1 0 0 -1 0 6)"/>
-                                </g> 
-                                </svg>
-                            </a>
-                        {% endif %}
-
-                        </td>
-                        <td data-label="Fecha Designio">{{ item.solicitud.fecha_D|date:"Y/m/d H:i" }}</td>
-                        <td data-label="Fecha Termino">{{ item.solicitud.fecha_T|date:"Y/m/d H:i" }}</td>
-
-                        {% if item.solicitud.estado == 'RECHAZADO' %}
-                        <td data-label="Estado" class="text-muted">
-                            RECHAZADO
-                        </td>
-                        {% else %}
-                            <td data-label="Estado" 
-                                class="{% if 'Trabajo terminado' in item.dias_restantes %}text-success
-                                    {% elif 'Pasada por' in item.dias_restantes %}text-danger
-                                    {% elif 'Te quedan' in item.dias_restantes %}text-warning
-                                    {% else %}text-muted{% endif %}">
-                                {{ item.dias_restantes }}
-                            </td>
-                        {% endif %}
-
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="11">No hay datos</td>
-                    </tr>
-                    {% endfor %}
+                    <!-- Los datos se llenarán dinámicamente aquí -->
                 </tbody>
             </table>
-        </div>
+            </div>
     </div>
 
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header" style="background-color: #707eff;">
-              <h5 class="modal-title" id="previewModalLabel">Vista previa de solicitud</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #707eff;">
+                    <h5 class="modal-title" id="previewModalLabel">Vista previa de solicitud</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
 
-              <p id="previewData"></p>
+                    <p id="previewData"></p>
+                </div>
             </div>
-          </div>
-         
+
         </div>
     </div>
-<!-- Modal Dinámico de ENVIAR AL CORREO -->
-<div class="modal fade" id="dynamicEmailModal" tabindex="-1" aria-labelledby="dynamicEmailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="dynamicEmailModalLabel">Enviar Correo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="dynamicEmailForm">
-                    <!-- Campo para agregar correos -->
-                    
-                    <div class="mb-3">
-                        <label for="emailInput" class="form-label">1. Destinatario</label>
-                        <ul id="destinatarioList" class="list-group mb-3">
-                            <!-- Aquí se mostrará dinámicamente el destinatario -->
+    <!-- Modal Dinámico de ENVIAR AL CORREO -->
+    <div class="modal fade" id="dynamicEmailModal" tabindex="-1" aria-labelledby="dynamicEmailModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dynamicEmailModalLabel">Enviar Correo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dynamicEmailForm">
+                        <!-- Campo para agregar correos -->
+
+                        <div class="mb-3">
+                            <label for="emailInput" class="form-label">1. Destinatario</label>
+                            <ul id="destinatarioList" class="list-group mb-3">
+                                <!-- Aquí se mostrará dinámicamente el destinatario -->
+                            </ul>
+                        </div>
+
+
+                        <div class="mb-3">
+                            <label for="emailInput" class="form-label">2. Agregar en copia</label>
+                            <input type="email" class="form-control" id="emailInput" placeholder="Ingresa un correo">
+                        </div>
+
+                        <!-- Botón para agregar correo -->
+                        <button type="button" class="btn btn-primary mb-3" onclick="addEmail()">Agregar Correo</button>
+
+                        <!-- Lista de correos agregados -->
+                        <ul id="emailList" class="list-group mb-3">
                         </ul>
-                    </div>
-                    
 
-                    <div class="mb-3">
-                        <label for="emailInput" class="form-label">2. Agregar en copia</label>
-                        <input type="email" class="form-control" id="emailInput" placeholder="Ingresa un correo"> 
-                    </div>
-
-                    <!-- Botón para agregar correo -->
-                    <button type="button" class="btn btn-primary mb-3" onclick="addEmail()">Agregar Correo</button>
-
-                    <!-- Lista de correos agregados -->
-                    <ul id="emailList" class="list-group mb-3">
-                    </ul>
-
-                    <textarea class="form-control" id="messageText" rows="5" placeholder="Escribe tu mensaje aquí">{% if request.user.is_superuser %}Estimado,
+                        <textarea class="form-control" id="messageText" rows="5" placeholder="Escribe tu mensaje aquí">{% if request.user.is_superuser %}Estimado,
                         Por favor, proceda con la solicitud según corresponda.
-                        Agradecida por su atención.
+                        Agradezco de antemano su atención.
                         Atte.{% else %}Estimado Solicitante,
                         Atte.{% endif %}
                         </textarea>
-                        
-                    
 
-                    <!-- Campo para adjuntar archivos -->
-                    <div class="mb-3">
-                        <label for="fileInput" class="form-label">4. Adjuntar archivos(10 mb se adjuntar normalmente, 300mb sera exportado a link. )</label>
-                        <input type="file" class="form-control" id="fileInput" multiple>
-                    </div>
 
-                    <!-- Lista de archivos adjuntados -->
-                    <ul id="fileList" class="list-group mb-3"></ul>
-                </form>
-            </div>
-            <br>
-            <div id="loadingSpinner" class="text-center mb-3" style="display: none;">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Enviando...</span>
+
+                        <!-- Campo para adjuntar archivos -->
+                        <div class="mb-3">
+                            <label for="fileInput" class="form-label">4. Adjuntar archivos(10 mb se adjuntar
+                                normalmente, 300mb sera exportado a link. )</label>
+                            <input type="file" class="form-control" id="fileInput" multiple>
+                        </div>
+
+                        <!-- Lista de archivos adjuntados -->
+                        <ul id="fileList" class="list-group mb-3"></ul>
+                    </form>
                 </div>
-                <p>Enviando datos, por favor espera...</p>
-            </div>
-            
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" onclick="sendData()">Enviar</button>
+                <br>
+                <div id="loadingSpinner" class="text-center mb-3" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Enviando...</span>
+                    </div>
+                    <p>Enviando datos, por favor espera...</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="sendData()">Enviar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Bootstrap para el motivo del cambio -->
-<div class="modal fade" id="registro_De_Designio" tabindex="-1" role="dialog" aria-labelledby="registro_De_DesignioLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="registro_De_DesignioLabel">Motivo del cambio de profesional</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Modal Bootstrap para el motivo del cambio -->
+    <div class="modal fade" id="registro_De_Designio" tabindex="-1" role="dialog"
+        aria-labelledby="registro_De_DesignioLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registro_De_DesignioLabel">Motivo del cambio de profesional</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 
-        </div>
-        <div class="modal-body">
-          <form id="motivoCambioForm">
-            <div class="form-group">
-              <label for="motivo">Motivo del cambio</label>
-              <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
-            </div>
-            <input type="hidden" id="nuevo_profesional_id" name="nuevo_profesional_id">
-            <input type="hidden" id="solicitud_id" name="solicitud_id">
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-primary" id="guardarMotivo">Guardar motivo</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-<div class="modal fade" id="registroPreviewModal" tabindex="-1" aria-labelledby="registroPreviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color: #707eff;">
-                <h5 class="modal-title" id="registroPreviewModalLabel">Vista previa de registros</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="registroPreviewData"></div>
+                </div>
+                <div class="modal-body">
+                    <form id="motivoCambioForm">
+                        <div class="form-group">
+                            <label for="motivo">Motivo del cambio</label>
+                            <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                        </div>
+                        <input type="hidden" id="nuevo_profesional_id" name="nuevo_profesional_id">
+                        <input type="hidden" id="solicitud_id" name="solicitud_id">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="guardarMotivo">Guardar motivo</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="Nueva_fecha_Designio" tabindex="-1" role="dialog" aria-labelledby="Nueva_fecha_DesignioLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="Nueva_fecha_DesignioLabel">Designación de Dias hábiles</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <label for="fechaNueva">Seleccione la nueva fecha y hora:</label>
-                <input type="datetime-local" id="fechaNueva" class="form-control">
-                <div id="errorFecha" class="text-danger mt-2" style="display: none;">La fecha seleccionada no puede ser un sábado o domingo.</div>
-            </div>
-            <div class="modal-footer">
-
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="guardarFecha">Guardar Nueva Fecha</button>
-
+    <div class="modal fade" id="registroPreviewModal" tabindex="-1" aria-labelledby="registroPreviewModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #707eff;">
+                    <h5 class="modal-title" id="registroPreviewModalLabel">Vista previa de registros</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="registroPreviewData"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    <div class="modal fade" id="Nueva_fecha_Designio" tabindex="-1" role="dialog"
+        aria-labelledby="Nueva_fecha_DesignioLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="Nueva_fecha_DesignioLabel">Designación de Dias hábiles</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="fechaNueva">Seleccione la nueva fecha y hora:</label>
+                    <input type="datetime-local" id="fechaNueva" class="form-control">
+                    <div id="errorFecha" class="text-danger mt-2" style="display: none;">La fecha seleccionada no puede
+                        ser un sábado o domingo.</div>
+                </div>
+                <div class="modal-footer">
 
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="guardarFecha">Guardar Nueva Fecha</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
+{% endblock %}
 
 {% block custom_js %}
 <script>
-    //Darle diseño a al tabla mediante JS
-    $(document).ready(function () {
-        var tabla = $('#tabla_registro').DataTable({
-            searching: false,
-            pageLength: 12,
-            lengthChange: false,
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.12.1/i18n/es-CL.json'
+    var currentPage = 1;
+    var itemsPerPage = 10;
+    var totalPages = 1;
+
+    function actualizarTabla() {
+
+        $.ajax({
+            url: "{% url 'solicitudes_json' %}",
+            method: 'GET',
+            success: function(response) {
+                var tbody = $('#tabla_registro tbody');
+                tbody.empty();  // Limpia la tabla antes de agregar nuevos datos
+
+                var esSuperuser = response.es_superuser;
+                var usuarios = response.Usuarios;
+                var totalItems = response.Solicitudes.length; // Usamos el total real de elementos
+                 totalPages = Math.ceil(totalItems / itemsPerPage); // Calculamos totalPages aquí
+                // Lista de profesionales
+
+                // Calculamos la paginación
+                // **Ordenamos los datos por ID descendente (últimos primero)**
+                response.Solicitudes.sort((a, b) => b.id - a.id);
+
+                var start = (currentPage - 1) * itemsPerPage;
+                var end = start + itemsPerPage;
+                var itemsToShow = response.Solicitudes.slice(start, end);
+
+                itemsToShow.forEach(function(item) {
+                    var estados = response.OPCIONES.ESTADO;
+                    var limites = response.OPCIONES.LIMITE_DE_DIA;
+                    var disabledAttr = esSuperuser ? "" : "disabled";
+
+                    var selectEstado = `<select class="estado-select" data-solicitud-id="${item.id}" ${disabledAttr}>`;
+                    estados.forEach(function(estado) {
+                        var selected = item.estado === estado[0] ? 'selected' : '';
+                        selectEstado += `<option value="${estado[0]}" ${selected}>${estado[1]}</option>`;
+                    });
+                    selectEstado += `</select>`;
+
+                    var correo_destinatario = "";
+                    if (esSuperuser) {
+                        correo_destinatario = item.profesional_correo;
+                    } else {
+                        correo_destinatario = item.corre_solicitante;
+                    }
+                
+                    var selectLimite = `<select class="limite-select" data-solicitud-id="${item.id}" ${disabledAttr}>`;
+                    limites.forEach(function(limite) {
+                        var selected = item.tipo_limite === limite[0] ? 'selected' : '';
+                        selectLimite += `<option value="${limite[0]}" ${selected}>${limite[1]}</option>`;
+                    });
+                    selectLimite += `</select>`;
+
+                    var selectProfesional = `<select class="profesional-select" data-solicitud-id="${item.id}" data-antiguo-profesional="${item.profesional_id ? item.profesional_id : 'None'}" ${disabledAttr}>`;
+                    selectProfesional += `<option value="" disabled ${!item.profesional_id ? "selected" : ""}>Selecciona un profesional</option>`;
+
+                    usuarios.forEach(function(usuario) {
+                        var selected = item.profesional_id === usuario.id ? 'selected' : '';
+                        selectProfesional += `<option value="${usuario.id}" ${selected}>${usuario.first_name} ${usuario.last_name}</option>`;
+                    });
+                    selectProfesional += `</select>`;
+
+
+                    
+                    
+                    
+
+                    // Botón de Enviar Correo
+                    var colorCorreo = esSuperuser
+                        ? (item.enviado_correo ? "rgb(66, 190, 13)" : "rgb(16, 97, 196)")  // Superuser
+                        : (item.enviado_correo_t ? "rgb(66, 190, 13)" : "rgb(16, 97, 196)");  // Usuario normal
+
+                    var btnEmail = `
+                        <a href="#" class="email-link" style="text-decoration: none;" 
+                        data-bs-toggle="modal" data-bs-target="#dynamicEmailModal"
+                        data-id="${item.id}" 
+                        data-correo="${correo_destinatario}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones" style="fill: ${colorCorreo};">
+                                <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
+                            </svg>
+                        </a>`;
+
+
+                    // Botón de Vista Previa con atributos `data-*` para pasar datos al modal
+                    var btnPreview = `
+                        <a style="text-decoration: none; position:relative;" href="#" class="preview-link" 
+                        data-item='${JSON.stringify(item)}'> 
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="acciones">
+                                <path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/>
+                            </svg>
+                        </a>`;
+
+
+                    // Botón de "Descargar Ficha"
+                    var btnDescargar = `
+                        <a style="text-decoration: none; position: relative;" href="/solicitud/descargar_pdf/${item.id}"download>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones">
+                                <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v242.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
+                            </svg>
+                        </a>`;
+
+                    var btnRegistroPreview = "";
+                        if (esSuperuser) {
+                            if (item.numero_designios === 0) {
+                                btnRegistroPreview = `
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="acciones" style="fill: darkgrey;">
+                                        <path d="M128 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm32 97.3c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80S48 51.8 48 96c0 32.8 19.7 61 48 73.3L96 224l-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0 0 54.7c-28.3 12.3-48 40.5-48 73.3c0 44.2 35.8 80 80 80s80-35.8 80-80c0-32.8-19.7-61-48-73.3l0-54.7 256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-54.7c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80s-80 35.8-80 80c0 32.8 19.7 61 48 73.3l0 54.7-320 0 0-54.7zM488 96a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM320 392a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
+                                    </svg>
+                                `;
+                            } else {
+                                btnRegistroPreview = `
+                                    <a href="#" class="registro-preview-link" data-protocolo-id="${item.id}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="acciones">
+                                            <path d="M128 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm32 97.3c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80S48 51.8 48 96c0 32.8 19.7 61 48 73.3L96 224l-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l256 0 0 54.7c-28.3 12.3-48 40.5-48 73.3c0 44.2 35.8 80 80 80s80-35.8 80-80c0-32.8-19.7-61-48-73.3l0-54.7 256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-54.7c28.3-12.3 48-40.5 48-73.3c0-44.2-35.8-80-80-80s-80 35.8-80 80c0 32.8 19.7 61 48 73.3l0 54.7-320 0 0-54.7zM488 96a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM320 392a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
+                                        </svg>
+                                    </a>
+                                `;
+                            }
+                        }
+
+                    let colorClase = ""; 
+
+                    if (item.dias_restantes.includes("Pasada ")) {
+                        colorClase = "text-danger" ; //  Rojo (Bootstrap)
+                    } else if (item.dias_restantes.includes("horas")) {
+                        colorClase = "text-warning"; // Amarillo
+                    } else if (item.dias_restantes.includes("días hábiles")) {
+                        colorClase = "text-primary"; // Azul
+                    } else if (item.dias_restantes.includes("Trabajo terminado")) {
+                        colorClase = "text-success"; // Verde
+                    }
+
+                    var diasRestantesTd = `<td style="font-weight: bolder;" class="${colorClase}">${item.dias_restantes}</td>`;
+
+
+                    var row = `<tr>
+                        <td>${item.id}</td>
+                        <td>${item.nombre_solicitante}</td>
+                        <td>${item.fecha}</td>
+                        <td>${item.departamento}</td>
+                        <td>${btnPreview} ${btnDescargar} ${btnEmail} ${btnRegistroPreview}</td>
+                        <td>${selectEstado}</td>
+                        <td>${selectLimite}</td>
+                        <td>${selectProfesional}</td>
+                        <td>${item.fecha_D}</td>
+                        <td>${item.fecha_T}</td>
+                        ${diasRestantesTd}
+
+                    </tr>`;
+
+                    tbody.append(row);
+                });
+
+                $(".registro-preview-link").off("click").on("click", cargarVistaPrevia);
+
+                $(".estado-select").off("change").on("change", manejarCambioEstado);
+
+                $(".limite-select").off("change").on("change", manejarCambioLimite);
+
+                $(".profesional-select").off("change").on("change", manejarCambioProfesional);
+                // Evento para abrir el modal al hacer clic en "Vista Previa" (Sin AJAX)
+                $(document).on("click", ".preview-link", function(e) {
+                e.preventDefault();  // Evita la recarga de la página
+
+                var item = JSON.parse($(this).attr("data-item"));
+                
+                var archivosHTML = (item.archivos_adjuntos_urls && Array.isArray(item.archivos_adjuntos_urls) && item.archivos_adjuntos_urls.length > 0)
+                ? `<ul>` + item.archivos_adjuntos_urls.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('') + `</ul>`
+                : "<p>No hay archivos adjuntos.</p>";
+
+
+                // Insertar los datos directamente en el modal
+                $('#previewData').html(`
+                    <strong>ID:</strong> ${item.id} <br>
+                    <strong>Departamento:</strong> ${item.departamento} <br>
+                    <strong>Dirección:</strong> ${item.direccion} <br>
+                    <strong>Solicitante:</strong> ${item.nombre_solicitante} <br>
+                    <strong>Proyecto:</strong> ${item.nombre_proyecto} <br>
+                    <strong>Correo Solicitante:</strong> ${item.corre_solicitante} <br>
+                    <strong>Área:</strong> ${item.area} <br>
+                    <strong>Objetivos:</strong> ${item.objetivos} <br>
+                    <strong>Insumo:</strong> ${item.insumo} <br>
+                    <strong>Producto:</strong> ${item.producto} <br>
+                    <strong>Cambios Posibles:</strong> ${item.cambios_posible} <br>
+                    <strong>Fecha:</strong> ${item.fecha} <br>
+                    <strong>Código:</strong> ${item.codigo} <br>
+                    <strong>Fecha Designio:</strong> ${item.fecha_D} <br>
+                    <strong>Fecha Término:</strong> ${item.fecha_T} <br>
+                    <strong>Fecha Límite:</strong> ${item.fecha_L} <br>
+                    <strong>Profesional:</strong> ${item.profesional_nombre} <br>
+                    <strong>Correo Profesional:</strong> ${item.profesional_correo} <br>
+                    <strong>Tipo de Límite:</strong> ${item.tipo_limite} <br>
+                    <strong>Estado:</strong> ${item.estado} <br>
+                    <strong>Correo Enviado:</strong> ${item.enviado_correo ? 'Sí' : 'No'} <br>
+                    <strong>Correo Enviado (Solicitante):</strong> ${item.enviado_correo_t ? 'Sí' : 'No'} <br>
+                    <strong>Número de Designios:</strong> ${item.numero_designios} <br>
+                    <strong>Días Restantes:</strong> ${item.dias_restantes} <br>
+                    <strong>Archivos Adjuntos:</strong> ${archivosHTML} <br>
+                `);
+
+                // Mostrar el modal
+                $('#previewModal').modal('show');
+            });
+
+
+                $('.email-link').click(function (event) {
+                    event.preventDefault();  // Evita la recarga de la página
+
+                    var btn = $(this);
+                    var correo_destinatario = btn.data('correo');
+                    var solicitudId = btn.data('id');
+
+                    // Limpiar la lista anterior y agregar el nuevo destinatario
+                    $('#destinatarioList').html(`<li class="list-group-item" style="color:gray;">${correo_destinatario}</li>`);
+
+                    // Guardar el ID de la solicitud seleccionada
+                    selectedFichaId = solicitudId;
+                });
+
+                
+                generarPaginacion();  // Llamamos a la paginación aquí
+
             },
-            order: [[0, 'desc']] // '0' indica la primera columna (Solicitudes.id), 'desc' indica orden descendente
+            
+            error: function() {
+                console.log('Error al cargar los datos');
+            }
         });
-    
-        var previousValues = {}; // Objeto para almacenar los valores anteriores de cada select por ID
-    
-    // Guardar el valor anterior antes del cambio
-    $(".limite-select").focus(function () {
-        var solicitudId = $(this).data('solicitud-id'); // Obtener el ID único de la solicitud
-        previousValues[solicitudId] = $(this).val(); // Guardar el valor anterior asociado al ID
-    });
-    
-    
-    
-    $(".limite-select").change(function () {
+    }
+
+    function generarPaginacion() {
+        var paginacion = $("#paginacion");
+        paginacion.empty();
+
+        if (totalPages <= 1) return;
+
+        var prevDisabled = currentPage === 1 ? "disabled" : "";
+        paginacion.append(`<button class="page-link" ${prevDisabled} onclick="cambiarPagina(${currentPage - 1})">&lt;</button>`);
+
+        for (var i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                var activeClass = i === currentPage ? "active" : "";
+                paginacion.append(`<button class="page-link ${activeClass}" onclick="cambiarPagina(${i})">${i}</button>`);
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                paginacion.append(`<span class="page-link">...</span>`);
+            }
+        }
+
+        var nextDisabled = currentPage === totalPages ? "disabled" : "";
+        paginacion.append(`<button class="page-link" ${nextDisabled} onclick="cambiarPagina(${currentPage + 1})">&gt;</button>`);
+    }
+
+    function cambiarPagina(page) {
+    if (page < 1 || page > totalPages) return;
+
+    currentPage = page;
+    actualizarTabla(); // ✅ Llamamos a actualizarTabla() con la nueva página
+}
+
+    function actualizarEstado(id, estado) {
+        $.ajax({
+            url: "{% url 'actualizar_estado_solicitud' %}",
+            method: 'POST',
+            data: {
+                'id': id,
+                'estado': estado,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function (response) {
+                console.log('Estado actualizado correctamente');
+            },
+            error: function () {
+                console.log('Error al actualizar el estado');
+            }
+        });
+    }
+
+    function actualizarLimite(id, limite) {
+        $.ajax({
+            url: "{% url 'actualizar_limite_solicitud' %}",
+            method: 'POST',
+            data: {
+                'id': id,
+                'tipo_limite': limite,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function (response) {
+                console.log('Carga de trabajo actualizada correctamente');
+            },
+            error: function () {
+                console.log('Error al actualizar la carga de trabajo');
+            }
+        });
+    }
+
+    function manejarCambioLimite() {
         var solicitudId = $(this).data('solicitud-id');
         var nuevoLimite = $(this).val();
-        var profesionalSelect = $("select[data-solicitud-id='" + solicitudId + "']");
-        var profesional = profesionalSelect.val();
-    
+
         if (nuevoLimite === 'P') {
-            if (profesional !== undefined && profesional !== null && profesional !== '') {
-                // Mostrar el modal
-                var now = new Date();
-                var today = now.toISOString().slice(0, 16); // Formato compatible con datetime-local
-                $("#fechaNueva").val(today); // Setear fecha y hora actual en el input
-                $("#Nueva_fecha_Designio").modal('show');
-    
-                // Manejar el botón de guardar
-                $("#guardarFecha").off("click").on("click", function () {
-                    var fechaSeleccionada = new Date($("#fechaNueva").val());
-                    var dia = fechaSeleccionada.getDay(); // 0 = Domingo, 6 = Sábado
-    
-                    if (dia === 0 || dia === 6) {
-                        $("#errorFecha").show(); // Mostrar mensaje de error
-                    } else {
-                        $("#errorFecha").hide(); // Ocultar mensaje de error
-    
-                        $.ajax({
-                            url: "{% url 'actualizar_limite' %}",
-                            type: "POST",
-                            data: {
-                                solicitud_id: solicitudId,
-                                nuevoLimite: nuevoLimite,
-                                fecha: fechaSeleccionada.toISOString(),
-                                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
-                            },
-                            success: function (response) {
-                                Swal.fire({
-                                    icon: "success",
-                                    title: "Fecha y límite actualizados correctamente",
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                });
-                                $("#Nueva_fecha_Designio").modal('hide'); // Cerrar el modal
-                                setTimeout(() => {
-                                    location.reload();
-                                    }, 1000);
-                            },
-                            error: function (xhr, status, error) {
-                                alert("Error al actualizar el límite:", error);
-                            }
-                        });
-                    }
-                });
-            } else {
-                alert("Debe seleccionar un profesional válido.");
-            }
+            var now = new Date();
+            var today = now.toISOString().slice(0, 16);
+            $("#fechaNueva").val(today);
+            $("#Nueva_fecha_Designio").modal('show');
+
+            // Limpiar eventos previos y asignar el nuevo evento correctamente
+            $("#guardarFecha").off("click").on("click", function () {
+                var fechaSeleccionada = new Date($("#fechaNueva").val());
+                var dia = fechaSeleccionada.getDay(); // 0 = Domingo, 6 = Sábado
+
+                if (dia === 0 || dia === 6) {
+                    $("#errorFecha").show();
+                } else {
+                    $("#errorFecha").hide();
+
+                    $.ajax({
+                        url: "{% url 'actualizar_limite' %}",
+                        type: "POST",
+                        data: {
+                            solicitud_id: solicitudId,
+                            nuevoLimite: nuevoLimite,
+                            fecha: fechaSeleccionada.toISOString(),
+                            csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+                        },
+                        success: function (response) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Fecha y límite actualizados correctamente",
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            $("#Nueva_fecha_Designio").modal('hide'); 
+
+                            // Refrescar solo la tabla sin recargar la página
+                            setTimeout(() => {
+                                actualizarTabla();
+                            }, 1000);
+                        },
+                        error: function (xhr, status, error) {
+                            alert("Error al actualizar el límite:", error);
+                        }
+                    });
+                }
+            });
+
         } else {
-            // Lógica normal para otros valores de nuevoLimite
             $.ajax({
                 url: "{% url 'actualizar_limite' %}",
                 type: "POST",
@@ -465,57 +657,25 @@
                         showConfirmButton: false,
                         timer: 1500
                     });
+
                     setTimeout(() => {
-                        location.reload();
-                        }, 1500);
+                        actualizarTabla();
+                    }, 1500);
                 },
                 error: function (xhr, status, error) {
                     alert("Error al actualizar el estado:", error);
                 }
             });
         }
-    });
-    
-    });
-    
-        $(".estado-select").change(function() {
-            var solicitudId = $(this).data('solicitud-id');
-            var nuevoEstado = $(this).val();
-    
-            console.log(nuevoEstado)
-            // Realizar la solicitud AJAX para actualizar el estado
-            $.ajax({
-                url: "{% url 'actualizar_estado' %}",
-                type: "POST",
-                data: {
-                    solicitud_id: solicitudId,
-                    estado: nuevoEstado,
-                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                },
-                success: function(response) {
-                    // Manejar la respuesta exitosa si es necesario
-                    setTimeout(() => {
-             
-                    location.reload();
-    
-                    }, 1000);
-                    console.log("Estado actualizado correctamente");
-                },
-                error: function(xhr, status, error) {
-                    // Manejar el error si es necesario
-                    console.error("Error al actualizar el estado:", error);
-                }
-            });
-        });
-    
-        $(".profesional-select").change(function() {
+    }
+
+    function manejarCambioProfesional() {
         var solicitudId = $(this).data('solicitud-id');
         var nuevoProfesional = $(this).val();
         var antProfesional = $(this).data('antiguo-profesional');
-        console.log(antProfesional)
-        // Verificar si el profesional anterior está vacío o es None
+
         if (!antProfesional || antProfesional === "None") {
-            // Si el profesional anterior es None o vacío, solo actualizar directamente
+            // Si no hay un profesional anterior, actualizar directamente
             actualizarProfesional(solicitudId, nuevoProfesional);
         } else {
             // Si hay un profesional anterior, mostrar el modal para el motivo
@@ -523,138 +683,178 @@
             $("#solicitud_id").val(solicitudId);
             $("#registro_De_Designio").modal("show");
         }
-    });
-    
-        // Función para actualizar el profesional sin motivo
-        function actualizarProfesional(solicitudId, nuevoProfesional) {
-            var csrfToken = '{{ csrf_token }}';
-    
-            $.ajax({
-                url: "{% url 'actualizar_profesional' %}",
-                type: "POST",
-                data: {
-                    solicitud_id: solicitudId,
-                    profesional: nuevoProfesional,
-                    csrfmiddlewaretoken: csrfToken
-                },
-                success: function(response) {
-                    if (response.success) {
-                        $("#response-message").html('<div class="alert alert-success">Profesional actualizado correctamente sin motivo</div>');
-                    } else {
-                        $("#response-message").html('<div class="alert alert-danger">Error al actualizar el profesional</div>');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $("#response-message").html('<div class="alert alert-danger">Ocurrió un error al actualizar el profesional</div>');
-                    console.error("Error al actualizar el profesional:", error);
+    }
+
+    function actualizarProfesional(solicitudId, nuevoProfesional) {
+        var csrfToken = $("input[name='csrfmiddlewaretoken']").val();
+
+        $.ajax({
+            url: "{% url 'actualizar_profesional' %}",
+            type: "POST",
+            data: {
+                solicitud_id: solicitudId,
+                profesional: nuevoProfesional,
+                csrfmiddlewaretoken: csrfToken
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Profesional actualizado correctamente",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+
+                    setTimeout(() => {
+                        actualizarTabla(); // Recargar solo la tabla
+                    }, 1000);
+                } else {
+                    alert("Error al actualizar el profesional");
                 }
-            });
-        }
-    
-        // Al hacer clic en "Guardar motivo" en el modal
-        $("#guardarMotivo").click(function() {
-            var motivo = $("#motivo").val();
-            var solicitudId = $("#solicitud_id").val();
-            var nuevoProfesional = $("#nuevo_profesional_id").val();
-            var csrfToken = '{{ csrf_token }}';
-    
-            if (!motivo) {
-                alert("Debe ingresar el motivo del cambio.");
-                return;
+            },
+            error: function(xhr, status, error) {
+                alert("Error al actualizar el profesional:", error);
             }
-    
-            $.ajax({
-                url: "{% url 'actualizar_profesional' %}",
-                type: "POST",
-                data: {
-                    solicitud_id: solicitudId,
-                    profesional: nuevoProfesional,
-                    motivo: motivo,
-                    csrfmiddlewaretoken: csrfToken
-                },
-                success: function(response) {
-                    if (response.success) {
-                        $("#response-message").html('<div class="alert alert-success">Profesional y motivo actualizados correctamente</div>');
-                        location.reload();
-    
-                    } else {
-                        $("#response-message").html('<div class="alert alert-danger">Error al actualizar el profesional</div>');
-                    }
-                    $("#registro_De_Designio").modal("hide");
-                },
-                error: function(xhr, status, error) {
-                    $("#response-message").html('<div class="alert alert-danger">Ocurrió un error al actualizar el profesional</div>');
-                    console.error("Error al actualizar el profesional:", error);
-                    $("#registro_De_Designio").modal("hide");
-                }
-            });
         });
-        
-        var previewLinks = document.querySelectorAll('.preview-link');
-        previewLinks.forEach(function(link) {
-          link.addEventListener('click', function(event) {
-            event.preventDefault(); // Evitar el comportamiento predeterminado del enlace
-        
-            var registroId = parseInt(this.getAttribute('data-id')); // Convertir a número
-        
-            // Hacer una solicitud AJAX a la vista de Django para obtener los datos del registro
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/solicitud/vista_previa/' + registroId, true);
-            xhr.onreadystatechange = function() {
-              if (xhr.readyState === 4 && xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
-        
-                var previewDataElement = document.getElementById('previewData');
-                previewDataElement.innerText =   'Fecha de la Solicitud: ' + data.fecha
-                                               + '\n'
-                                               + '\nCodigo: ' + data.codigo
-                                               + '\n'
-                                               + '\nDirección: ' + data.direccion
-                                               + '\n'
-                                               + '\nDepartamento o Unidad Responsable: ' + data.departamento
-                                               + '\n'
-                                               + '\nNombre del solicitante: ' + data.nombre_solicitante
-                                               + '\n'
-                                               + '\nNombre del proyecto: ' + data.nombre_proyecto
-                                               + '\n'
-                                               + '\nCorreo del solicitante: ' + data.corre_solicitante
-                                               + '\n'
-                                               + '\nArea De estudio: ' + data.area
-                                               + '\n'
-                                               + '\nObjetivos de la solicitud:' + data.objetivos
-                                               + '\n'
-                                               + '\nInsumo Solicitado: ' + data.insumo
-                                               + '\n'
-                                               + '\nProductos: ' + data.productos
-                                               + '\n'
-                                               + '\nCambios posible en el Insumo Entregado: ' + data.Cambios
-                                               + '\n';
-                                               
-                                               if (data.archivos_adjuntos_urls && data.archivos_adjuntos_urls.length > 0) {
-            // Agregar enlaces a los archivos adjuntos si existen
-            previewDataElement.innerHTML += '<br><br><strong>Archivos Adjuntos:</strong><br>';
-            data.archivos_adjuntos_urls.forEach(function(url) {
-                previewDataElement.innerHTML += '<a href="' + url + '" download>' + url.split('/').pop() + '</a><br>';
-            });
-        } else {
-            // Manejar el caso en el que no hay archivos adjuntos
-            previewDataElement.innerHTML += '<br><br>No hay archivos adjuntos disponibles';
+    }
+
+    $("#guardarMotivo").click(function() {
+        var motivo = $("#motivo").val();
+        var solicitudId = $("#solicitud_id").val();
+        var nuevoProfesional = $("#nuevo_profesional_id").val();
+        var csrfToken = $("input[name='csrfmiddlewaretoken']").val();
+
+        if (!motivo) {
+            alert("Debe ingresar el motivo del cambio.");
+            return;
         }
-        
-        
-          
-                $('#previewModal').modal('show'); // Mostrar el modal utilizando jQuery
-              }
-            };
-            xhr.send();
-          });
+
+        $.ajax({
+            url: "{% url 'actualizar_profesional' %}",
+            type: "POST",
+            data: {
+                solicitud_id: solicitudId,
+                profesional: nuevoProfesional,
+                motivo: motivo,
+                csrfmiddlewaretoken: csrfToken
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Profesional y motivo actualizados correctamente",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+
+                    $("#registro_De_Designio").modal("hide");
+                    setTimeout(() => {
+                        actualizarTabla(); 
+                    }, 1000);
+                } else {
+                    alert("Error al actualizar el profesional");
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("Error al actualizar el profesional:", error);
+            }
         });
+    });
+
+    function manejarCambioEstado() {
+        var solicitudId = $(this).data('solicitud-id');
+        var nuevoEstado = $(this).val();
+
+        $.ajax({
+            url: "{% url 'actualizar_estado_solicitud' %}",
+            type: "POST",
+            data: {
+                solicitud_id: solicitudId,
+                estado: nuevoEstado,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Estado actualizado correctamente",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+
+                    setTimeout(() => {
+                        actualizarTabla();
+                    }, 1000);
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("Error al actualizar el estado:", error);
+            }
+        });
+    }
+
+    function cargarVistaPrevia(event) {
+        event.preventDefault();
+        var protocoloId = $(this).data("protocolo-id");
+
+        $.ajax({
+            url: `/vista_previa_reaccinacion/${protocoloId}`,
+            method: 'GET',
+            success: function(response) {
+                var previewDataElement = $('#registroPreviewData');
+                previewDataElement.empty();
+
+                response.registros.forEach(function(registro) {
+                    previewDataElement.append(`
+                        <p><strong>Profesional Anterior:</strong> ${registro.Profesional_N} ${registro.Profesional_N_1}</p>
+                        <p><strong>Objeto:</strong> ${registro.Motivo}</p>
+                        <p><strong>Fecha:</strong> ${registro.Fecha}</p>
+                        <hr>
+                    `);
+                });
+
+                $('#registroPreviewModal').modal('show');
+            },
+            error: function() {
+                console.log("Error al cargar los datos");
+            }
+        });
+    }
+
+    // setInterval(actualizarTabla, 10000);
+
+    // Cargar la tabla al cargar la página
+    $(document).ready(function () {
+        actualizarTabla();
+    });
+
 </script>
 
+
+<script>
+    var socket = new WebSocket("ws://" + window.location.host + "/ws/solicitudes/");
+
+    socket.onmessage = function (event) {
+        var data = JSON.parse(event.data);
+        if (data.message === "actualizar") {
+            console.log("🔄 Tabla actualizada automáticamente");
+            actualizarTabla();
+        }
+    };
+
+    socket.onopen = function () {
+        console.log("✅ Conectado al WebSocket");
+    };
+
+    socket.onerror = function (error) {
+        console.error("❌ Error en WebSocket:", error);
+    };
+
+</script>
 <script src="/static/js/solicitud_llegadas.js">
 
 </script>
-
-{% endblock custom_js %}
 
 {% endblock %}

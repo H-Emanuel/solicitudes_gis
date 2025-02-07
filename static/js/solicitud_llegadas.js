@@ -113,45 +113,6 @@ function sendData() {
 }
 
 
-
-// VISTA DE REGISTRO PREVIO
-
-
-var previewLinks = document.querySelectorAll('.registro-preview-link');
-
-previewLinks.forEach(function(link) {
-    link.addEventListener('click', function(event) {
-        event.preventDefault(); // Evitar el comportamiento predeterminado del enlace
-
-        var protocoloId = parseInt(this.getAttribute('data-protocolo-id')); // Convertir a número
-
-        // Hacer una solicitud AJAX a la vista de Django para obtener los datos
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/vista_previa_reaccinacion/' + protocoloId, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
-
-                // Seleccionar el contenedor para mostrar los datos
-                var previewDataElement = document.getElementById('registroPreviewData');
-                previewDataElement.innerHTML = ''; // Limpiar contenido previo
-
-                data.registros.forEach(function(registro) {
-                    previewDataElement.innerHTML += 
-                        '<p><strong>Profesional Anterior:</strong> ' + registro.Profesional_N + ' '+ registro.Profesional_N_1  +'</p>' +
-                        '<p><strong>Objeto:</strong> ' + registro.Motivo + '</p>' +
-                        '<p><strong>Fecha:</strong> ' + registro.Fecha + '</p>' +
-                        '<hr>';
-                });
-
-                // Mostrar el modal
-                $('#registroPreviewModal').modal('show');
-            }
-        };
-        xhr.send();
-    });
-});
-
 // BOTON DE RESETEO
 
 const resetLinks = document.querySelectorAll('.reset-link');

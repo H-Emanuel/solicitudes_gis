@@ -126,7 +126,7 @@ def Registro_arcgis(depa, pagina):
         sigla = obtener_sigla(depa)
 
         # Conectar a ArcGIS
-        gis = GIS("https://www.arcgis.com", "jimmi.gomez_munivalpo", "Jimgomez8718")
+        gis = GIS("https://www.arcgis.com", "emanuel.venegas_munivalpo", "Godzilla_2016")
 
         # URL de la capa
         layer_url = "https://services8.arcgis.com/5BaAHTQ4nRVz57H5/arcgis/rest/services/Registro_de_Usuarios/FeatureServer/0"

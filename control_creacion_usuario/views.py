@@ -36,11 +36,33 @@ import pytz
 from email.utils import encode_rfc2231
 from django.core.files.storage import default_storage
 from django.utils.html import escape
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
-gis = GIS("https://www.arcgis.com", "jimmi.gomez_munivalpo", "Jimgomez8718")
+gis = GIS("https://www.arcgis.com", "emanuel.venegas_munivalpo", "Godzilla_2016")
 
 from .pdf_generator import *
+
+ESTADO = [
+    ('RECIBIDO', 'RECIBIDO'),
+    ('EN PROCESO', 'EN PROCESO'),
+    ('EJECUTADO', 'EJECUTADO'),
+    ('RECHAZADO', 'RECHAZADO')
+]
+
+LIMITE_DE_DIA = [
+    ('', ''),
+    ('L', '1 - 2 Días Hábiles'),
+    ('M', '2 - 4 Días Hábiles'),
+    ('A', '3 - 5 Días Hábiles'),
+    ('P', 'Especificar días manualmente'),
+]
+
+OPCIONES = {
+    'ESTADO': ESTADO,
+    'LIMITE_DE_DIA': LIMITE_DE_DIA
+}
 
 def login(request):
     if request.user.is_authenticated:
@@ -99,26 +121,6 @@ def Historial_Visitas(request):
 
 @login_required(login_url='/login/')
 def solicitude_llegadas(request, dia_p=None):
-    ESTADO = [
-        ('RECIBIDO', 'RECIBIDO'),
-        ('EN PROCESO', 'EN PROCESO'),
-        ('EJECUTADO', 'EJECUTADO'),
-        ('RECHAZADO', 'RECHAZADO')
-    ]
-
-    LIMITE_DE_DIA = {
-        ('', ''),
-        ('L', '1 - 2 Días Hábiles'),
-        ('M', '2 - 4 Días Hábiles'),
-        ('A', '3 - 5 Días Hábiles'),
-        ('P', 'Especificar días manualmente'),
-    }
-
-    OPCIONES = {
-        'ESTADO': ESTADO,
-        'LIMITE_DE_DIA': LIMITE_DE_DIA
-    }
-
     minutos = 0
     hora = 0
     usuarios = User.objects.all()
@@ -138,6 +140,8 @@ def solicitude_llegadas(request, dia_p=None):
         # Calcular los días restantes hasta la fecha límite
         if solicitud.fecha_T:
             dias_restantes = "Trabajo terminado"
+
+            # solicitud.fecha_L el la fecha limite de la entrega 
         elif solicitud.fecha_L:
             # Calcular la diferencia en segundos
             total_segundos = (solicitud.fecha_L - now()).total_seconds()
@@ -347,53 +351,37 @@ def Gestion_imagen(request):
     return render(request, 'Gestion_imagen.html', {'form': form, 'imagenes': imagenes,'page_obj': page_obj})
 
 @csrf_exempt
-def actualizar_estado(request):
+def actualizar_estado_solicitud(request):
     if request.method == 'POST':
         solicitud_id = request.POST.get('solicitud_id')
         nuevo_estado = request.POST.get('estado')
-        ArchivoProtocolo = request.POST.get('files')
-        solicitud = ProtocoloSolicitud.objects.get(id=solicitud_id)
-        tdc = None
 
-        if nuevo_estado =="EJECUTADO" and solicitud.profesional != None:
-            solicitud.estado = nuevo_estado
-            solicitud.fecha_T = timezone.now()
-            solicitud.save()
-            tdc,tpr = Calculor_de_trabajo()
-
-        elif nuevo_estado =="RECHAZADO":
+        try:
             solicitud = ProtocoloSolicitud.objects.get(id=solicitud_id)
-            solicitud.estado = nuevo_estado
-           
-            solicitud.save()
-        else:
-            solicitud = ProtocoloSolicitud.objects.get(id=solicitud_id)
-            solicitud.estado = nuevo_estado
-            solicitud.save()
+            if nuevo_estado == "EJECUTADO" and solicitud.profesional:
+                solicitud.estado = nuevo_estado
+                solicitud.fecha_T = timezone.now()
+                solicitud.save()
+            elif nuevo_estado == "RECHAZADO":
+                solicitud.estado = nuevo_estado
+                solicitud.save()
+            else:
+                solicitud.estado = nuevo_estado
+                solicitud.save()
 
-        if  tdc:
-            try:
-                    # Establecer conexión con ArcGIS (ajusta esta parte según tu configuración)
-                    feature_layer = FeatureLayer("https://services8.arcgis.com/5BaAHTQ4nRVz57H5/arcgis/rest/services/total_carga_laboral/FeatureServer/0")
+            # 🔥 Notificar a WebSockets 🔥
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
 
-                    # Consulta para seleccionar la característica
-                    query = feature_layer.query(where="id = 0")
+            return JsonResponse({'success': True, 'message': 'Estado actualizado correctamente'})
 
-                    # Modificación del atributo 'Visita'
-                    for feature in query.features:
-                        feature.attributes['cumpli'] = tdc
-                        feature.attributes['ejec'] = tpr
-                    
-                    # Aplicar cambios a la capa de ArcGIS
-                    feature_layer.edit_features(updates=query.features)
+        except ProtocoloSolicitud.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Solicitud no encontrada'})
 
-            except Exception as e:
-                # Manejo de errores
-                    print(f"Error al realizar la consulta o la actualización")
-
-        return JsonResponse({'success': True})
-    else:
-        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
 
 @csrf_exempt
 def actualizar_profesional(request):
@@ -403,13 +391,18 @@ def actualizar_profesional(request):
         motivo = request.POST.get('motivo')
         solicitud = get_object_or_404(ProtocoloSolicitud, id=solicitud_id)
 
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
+
+
 
         if not nuevo_profesional_id or not solicitud_id:
             return JsonResponse({'success': False, 'message': 'Necesita'})
 
-
         if solicitud.profesional:
-            
             Reg = Registro_designio(
                 objetivos = motivo,
                 protocolo = solicitud,
@@ -573,242 +566,6 @@ def Calculor_de_trabajo():
 
     return tdc,tpr
 
-# @csrf_exempt  # Solo usar esto si estás probando; para producción, configura CSRF correctamente
-# def Envio_de_correo(request):
-#     if request.method == 'POST':
-#         user = request.user
-#         emails = json.loads(request.POST.get('emails', '[]'))
-#         archivos = request.FILES.getlist('files')
-#         total_size = sum(archivo.size for archivo in archivos)
-
-#         urls_archivos = []
-#         archivos_adjuntos = []
-#         dominio = f"{request.scheme}://{request.get_host()}"
-
-
-#         if user.is_superuser:
-#             try:
-#                 # Obtener los datos
-#                 message = request.POST.get('message', '')
-#                 ficha_id = request.POST.get('ficha_id')
-#                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
-#                 Protocolo.enviado_correo = True
-#                 profesional = Protocolo.profesional
-#                 Protocolo.estado = 'EN PROCESO'
-#                 Protocolo.save()
-
-#                 # Verificar el tamaño de los archivos
-#                 if total_size > 10 * 1024 * 1024:  # Más de 10 MB
-#                     for archivo in archivos:
-#                         archivo_link = Archivo_Link.objects.create(protocolo=Protocolo, archivo=archivo)
-#                         url_relativa = default_storage.url(archivo_link.archivo.name)
-#                         urls_archivos.append(f"{dominio}{url_relativa}")
-
-#                 else:  # Menor o igual a 10 MB
-#                     for archivo in archivos:
-#                         archivo_adjunto = MIMEApplication(archivo.read())
-#                         nombre_archivo = encode_rfc2231(archivo.name, 'utf-8')
-#                         archivo_adjunto.add_header(
-#                             'Content-Disposition',
-#                             'attachment',
-#                             filename=nombre_archivo
-#                         )
-#                         archivos_adjuntos.append(archivo_adjunto)
-
-#                 # Generar PDF
-#                 buffer = Generar_PDF(ficha_id)
-
-#                 # Configuración del correo
-#                 superusers = User.objects.filter(is_superuser=True).exclude(username="osvaldo.moya").values_list('email', flat=True)
-#                 superuser_emails = list(superusers)
-
-#                 mi_correo = f'{user.username}@munivalpo.cl'.strip()
-#                 asunto = f'Solicitud N°{Protocolo.codigo} Asignada'
-#                 mensaje = MIMEMultipart()
-#                 mensaje['From'] = mi_correo
-#                 destinatarios = list(set([profesional.email] + emails))
-#                 mensaje['To'] = ', '.join(destinatarios)
-#                 mensaje['Subject'] = asunto
-
-#                 bcc_destinatarios = [mi_correo]
-
-#                 # Cargar la firma
-#                 firma_path = os.path.join('media/assets/Firma', f'{user.username}.png')
-#                 if os.path.exists(firma_path):
-#                     with open(firma_path, 'rb') as firma_file:
-#                         firma_img = MIMEImage(firma_file.read())
-#                         firma_img.add_header('Content-ID', '<firma>')
-#                         mensaje.attach(firma_img)
-
-#                 # Generar el contenido HTML
-#                 html_archivos = ""
-#                 if urls_archivos:
-#                     html_archivos = f"""
-#                     <p>Los siguientes archivos superan el límite de 10 MB y están disponibles en los siguientes enlaces:</p>
-#                     <ul>
-#                         {''.join(f'<li><a href="{url}" target="_blank">{url}</a></li>' for url in urls_archivos)}
-#                     </ul>
-#                     """
-#                 else:
-#                     html_archivos = "<p>Los archivos están adjuntos al correo.</p>"
-
-#                 html_content = f"""
-#                 <html>
-#                     <body>
-#                         <p>{escape(message)}</p>
-#                         <br>
-#                         {html_archivos}
-#                         <br>
-#                         <img src="cid:firma" alt="Firma" width="600" height="auto" />
-#                     </body>
-#                 </html>
-#                 """
-#                 mensaje.attach(MIMEText(html_content, 'html'))
-
-#                 # Adjuntar PDF
-#                 archivo_pdf = buffer.getvalue()
-#                 pdf_adjunto = MIMEApplication(archivo_pdf)
-#                 pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
-#                 mensaje.attach(pdf_adjunto)
-
-#                 # Adjuntar archivos menores a 10 MB
-#                 for archivo_adjunto in archivos_adjuntos:
-#                     mensaje.attach(archivo_adjunto)
-
-#                 # Configuración del servidor SMTP
-#                 smtp_server = 'mail.munivalpo.cl'
-#                 smtp_port = 587
-#                 smtp_usuario = f'servervalpo\\{user.username}'
-#                 smtp_contrasena = encotra_contraseña(user.username)
-
-#                 # Enviar el correo
-#                 server = smtplib.SMTP(smtp_server, smtp_port)
-#                 server.starttls()
-#                 server.login(smtp_usuario, smtp_contrasena)
-#                 server.sendmail(
-#                     mi_correo,
-#                     destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
-#                     mensaje.as_string()
-#                 )
-#                 server.quit()
-
-#                 return JsonResponse({'success': True})
-#             except Exception as e:
-#                 return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-#         else:
-#             try:
-#                 message = request.POST.get('message', '')
-#                 ficha_id = request.POST.get('ficha_id')
-#                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
-#                 Protocolo.enviado_correo_t = True
-#                 profesional = Protocolo.profesional
-#                 Protocolo.estado = 'EJECUTADO'
-#                 solicitante = Protocolo.corre_solicitante
-
-#                 Protocolo.save()
-
-#                 # Verificar el tamaño de los archivos
-#                 if total_size > 10 * 1024 * 1024:  # Más de 10 MB
-#                     for archivo in archivos:
-#                         archivo_link = Archivo_Link.objects.create(protocolo=Protocolo, archivo=archivo)
-#                         url_relativa = default_storage.url(archivo_link.archivo.name)
-#                         urls_archivos.append(f"{dominio}{url_relativa}")
-
-#                 else:  # Menor o igual a 10 MB
-#                     for archivo in archivos:
-#                         archivo_adjunto = MIMEApplication(archivo.read())
-#                         nombre_archivo = encode_rfc2231(archivo.name, 'utf-8')
-#                         archivo_adjunto.add_header(
-#                             'Content-Disposition',
-#                             'attachment',
-#                             filename=nombre_archivo
-#                         )
-#                         archivos_adjuntos.append(archivo_adjunto)
-
-#                 # Generar PDF
-#                 buffer = Generar_PDF(ficha_id)
-
-#                 # Configuración del correo
-#                 superusers = User.objects.filter(is_superuser=True).exclude(username="osvaldo.moya").values_list('email', flat=True)
-#                 superuser_emails = list(superusers)
-
-#                 mi_correo = f'{user.username}@munivalpo.cl'.strip()
-#                 asunto = f'Solicitud N°{Protocolo.codigo} Asignada'
-#                 mensaje = MIMEMultipart()
-#                 mensaje['From'] = mi_correo
-#                 destinatarios = list(set([solicitante] + emails + superuser_emails))
-#                 mensaje['To'] = ', '.join(destinatarios)
-#                 mensaje['Subject'] = asunto
-
-#                 bcc_destinatarios = [mi_correo]
-
-#                 # Cargar la firma
-#                 firma_path = os.path.join('media/assets/Firma', f'{user.username}.png')
-#                 if os.path.exists(firma_path):
-#                     with open(firma_path, 'rb') as firma_file:
-#                         firma_img = MIMEImage(firma_file.read())
-#                         firma_img.add_header('Content-ID', '<firma>')
-#                         mensaje.attach(firma_img)
-
-#                 # Generar el contenido HTML
-#                 html_archivos = ""
-#                 if urls_archivos:
-#                     html_archivos = f"""
-#                     <p>Los siguientes archivos superan el límite de 10 MB y están disponibles en los siguientes enlaces:</p>
-#                     <ul>
-#                         {''.join(f'<li><a href="{url}" target="_blank">{url}</a></li>' for url in urls_archivos)}
-#                     </ul>
-#                     """
-#                 else:
-#                     html_archivos = "<p></p>"
-
-#                 html_content = f"""
-#                 <html>
-#                     <body>
-#                         <p>{escape(message)}</p>
-#                         <br>
-#                         {html_archivos}
-#                         <br>
-#                         <img src="cid:firma" alt="Firma" width="600" height="auto" />
-#                     </body>
-#                 </html>
-#                 """
-#                 mensaje.attach(MIMEText(html_content, 'html'))
-
-#                 # Adjuntar PDF
-#                 archivo_pdf = buffer.getvalue()
-#                 pdf_adjunto = MIMEApplication(archivo_pdf)
-#                 pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
-#                 mensaje.attach(pdf_adjunto)
-
-#                 # Adjuntar archivos menores a 10 MB
-#                 for archivo_adjunto in archivos_adjuntos:
-#                     mensaje.attach(archivo_adjunto)
-
-#                 # Configuración del servidor SMTP
-#                 smtp_server = 'mail.munivalpo.cl'
-#                 smtp_port = 587
-#                 smtp_usuario = f'servervalpo\\{user.username}'
-#                 smtp_contrasena = encotra_contraseña(user.username)
-
-#                 # Enviar el correo
-#                 server = smtplib.SMTP(smtp_server, smtp_port)
-#                 server.starttls()
-#                 server.login(smtp_usuario, smtp_contrasena)
-#                 server.sendmail(
-#                     mi_correo,
-#                     destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
-#                     mensaje.as_string()
-#                 )
-#                 server.quit()
-
-#                 return JsonResponse({'success': True})
-#             except Exception as e:
-#                 return JsonResponse({'success': False, 'error': str(e)}, status=555)  
-                              
-#     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
-
 @csrf_exempt  # Solo usar esto si estás probando; para producción, configura CSRF correctamente
 def Envio_de_correo(request):
     if request.method == 'POST':
@@ -927,7 +684,15 @@ def Envio_de_correo(request):
                     destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
                     mensaje.as_string()
                 )
+
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                        "solicitudes",
+                        {"type": "send_update", "message": "actualizar"}
+                    )
                 server.quit()
+
+                
 
                 return JsonResponse({'success': True})
             except Exception as e:
@@ -940,6 +705,7 @@ def Envio_de_correo(request):
                 ficha_id = request.POST.get('ficha_id')
                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
                 Protocolo.enviado_correo_t = True
+                Protocolo.fecha_T = timezone.now()
                 profesional = Protocolo.profesional
                 Protocolo.estado = 'EJECUTADO'
                 solicitante = Protocolo.corre_solicitante
@@ -1040,6 +806,12 @@ def Envio_de_correo(request):
                     mensaje.as_string()
                 )
                 server.quit()
+                
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                        "solicitudes",
+                        {"type": "send_update", "message": "actualizar"}
+                    )
 
                 return JsonResponse({'success': True})
             except Exception as e:
@@ -1131,22 +903,136 @@ def resert_limite(request):
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Método no permitido.'}, status=405)
 
-def descargar_NW_pdf(resquest,id=0):
-    Protocolo = ProtocoloSolicitud.objects.get(id = id)
-    Protocolo.codigo = str(Protocolo.id)
+def solicitudes_json(request):
+    # Filtrar solicitudes según si el usuario es superusuario o no
+    if request.user.is_superuser:
+        solicitudes = ProtocoloSolicitud.objects.all().order_by("-id")  # Orden descendente por ID
+    else:
+        solicitudes = ProtocoloSolicitud.objects.filter(profesional=request.user).order_by("-id")
+
+
+    # Obtener lista de usuarios
+    usuarios = list(User.objects.values('id', 'username','first_name','last_name'))
+
+    # Lista con información procesada de solicitudes
+    solicitudes_data = []
+
+    for solicitud in solicitudes:
+        # Obtener el número de designios asociados a la solicitud
+        numero_designios = Registro_designio.objects.filter(protocolo=solicitud).count()
+
+        # Calcular los días restantes hasta la fecha límite
+        if solicitud.fecha_T:
+            dias_restantes = "Trabajo terminado"
+        elif solicitud.fecha_L:
+            # Calcular la diferencia en segundos
+            total_segundos = (solicitud.fecha_L - now()).total_seconds()
+
+            if total_segundos < 0:  # Si el tiempo ya pasó
+                total_segundos = abs(total_segundos)
+                dias_pasados = int(total_segundos // (24 * 3600))
+                horas_pasadas = int((total_segundos % (24 * 3600)) // 3600)
+                minutos_pasados = int((total_segundos % 3600) // 60)
+
+                if dias_pasados > 0 or horas_pasadas > 0 or minutos_pasados > 0:
+                    dias_restantes = f"Pasada por {dias_pasados} días, {horas_pasadas} horas y {minutos_pasados} minutos"
+                else:
+                    dias_restantes = "El tiempo límite ha pasado recientemente"
+            else:  # Tiempo restante
+                # Calcular días hábiles restantes
+                dias_habiles_restantes = calcular_dias_habiles(now().date(), solicitud.fecha_L.date())
+                horas_restantes = int((total_segundos % (24 * 3600)) // 3600)
+                minutos_restantes = int((total_segundos % 3600) // 60)
+                
+
+                if dias_habiles_restantes > 1:
+                    dias_restantes = f"Te quedan {dias_habiles_restantes-1} días hábiles"
+                elif horas_restantes > 0:
+                    dias_restantes = f"Te quedan {horas_restantes} horas y {minutos_restantes} minutos"
+                else:
+                    dias_restantes = f"Te quedan {minutos_restantes} minutos"
+        else:
+            dias_restantes = "Sin fecha límite"
+
+        archivos_adjuntos = ArchivoProtocolo.objects.filter(protocolo=solicitud)
+        archivos_adjuntos_urls = [archivo.archivo.url for archivo in archivos_adjuntos] if archivos_adjuntos.exists() else []
+
+        solicitudes_data.append({
+            'id': solicitud.id,
+            'departamento': solicitud.departamento,
+            'direccion': solicitud.direccion,
+            'nombre_solicitante': solicitud.nombre_solicitante,
+            'nombre_proyecto': solicitud.nombre_proyecto,
+            'corre_solicitante': solicitud.corre_solicitante,
+            'area': solicitud.area,
+            'objetivos': solicitud.objetivos,
+            'insumo': solicitud.insumo,
+            'producto': solicitud.producto,
+            'cambios_posible': solicitud.cambios_posible,
+            'fecha': solicitud.fecha.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha else None,
+            'codigo': solicitud.codigo,
+            'orden_trabajo': solicitud.orden_trabajo,
+            'fecha_D': solicitud.fecha_D.strftime('%Y-%m-%d') if solicitud.fecha_D else None,
+            'fecha_T': solicitud.fecha_T.strftime('%Y-%m-%d') if solicitud.fecha_T else None,
+            'fecha_L': solicitud.fecha_L.strftime('%Y-%m-%d') if solicitud.fecha_L else None,
+            'profesional_id': solicitud.profesional.id if solicitud.profesional else None,
+            'profesional_nombre': f"{solicitud.profesional.first_name} {solicitud.profesional.last_name}" if solicitud.profesional else "Sin asignar",
+            'profesional_correo':  solicitud.profesional.email if solicitud.profesional else "Sin asignar",
+            'tipo_limite': solicitud.tipo_limite,
+            'estado': solicitud.estado,
+            'enviado_correo': solicitud.enviado_correo,
+            'enviado_correo_t': solicitud.enviado_correo_t,
+            'numero_designios': numero_designios,
+            'dias_restantes': dias_restantes,
+            'archivos_adjuntos_urls': archivos_adjuntos_urls, # ESTO ESTA MAL
+        })
+
+
+    # Estructurar la respuesta en JSON
+    data = {
+        'es_superuser': request.user.is_superuser,  # Indica si el usuario es superusuario
+        'OPCIONES': OPCIONES,  # Opciones de selección
+        'Solicitudes': solicitudes_data,  # Datos de solicitudes con información adicional
+        'Usuarios': usuarios  # Lista de usuarios
+    }
+
+    return JsonResponse(data, safe=False)
+
+def actualizar_limite_solicitud(request):
+    if request.method == 'POST':
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'message': 'No tienes permisos para cambiar la carga de trabajo'}, status=403)
+
+        solicitud_id = request.POST.get('id')
+        nuevo_limite = request.POST.get('tipo_limite')
+
+        try:
+            solicitud = ProtocoloSolicitud.objects.get(id=solicitud_id)
+            solicitud.tipo_limite = nuevo_limite
+            solicitud.save()
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                    "solicitudes",
+                    {"type": "send_update", "message": "actualizar"}
+                )
+            return JsonResponse({'success': True, 'message': 'Carga de trabajo actualizada correctamente'})
+        except ProtocoloSolicitud.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Solicitud no encontrada'})
+
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+def detalle_solicitud(request, solicitud_id):
+    solicitud = get_object_or_404(ProtocoloSolicitud, id=solicitud_id)
 
     data = {
-        "Protocolo":Protocolo
-
+        'id': solicitud.id,
+        'nombre_solicitante': solicitud.nombre_solicitante,
+        'fecha': solicitud.fecha.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha else 'No disponible',
+        'departamento': solicitud.departamento,
+        'estado': solicitud.estado,
+        'numero_designios': solicitud.registro_designio_set.count(),  # Contar los registros relacionados
+        'dias_restantes': "Sin fecha límite" if not solicitud.fecha_T else "Trabajo terminado" if solicitud.fecha_T else "En proceso"
     }
-    print("XXXX")
-    Protocolo_nombre =  "Protocolo_"+str(Protocolo.id)+".pdf"
-    file_name, status = save_pdf_2(data, Protocolo_nombre)
 
-    if not status:
-        print("----------------")
-        print("Error al generar PDF")
-        print("----------------")
-        return HttpResponse("Error al generar PDF")
-
-    return FileResponse(open(file_name, 'rb'), content_type='application/pdf', filename=Protocolo_nombre, as_attachment=True)
+    return JsonResponse(data)

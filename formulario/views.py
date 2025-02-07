@@ -24,6 +24,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 import random
 import string
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 def generar_codigo():
@@ -275,6 +277,12 @@ def crear_protocolo(request):
 
         # # Cierra la conexión con el servidor SMTP
         # server.quit()
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "solicitudes",
+            {"type": "send_update", "message": "actualizar"}
+        )
 
 
         return response

@@ -1,0 +1,96 @@
+{% load static %}
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <style>
+            table , td, th {
+                border: 1px solid #000000;
+                border-collapse: collapse;
+                line-height: 1;
+                vertical-align: middle;
+                
+            }
+           
+            td.no-border-design {
+                border: none !important; /* Elimina el borde para esta celda en particular */
+            }
+
+
+            td, th {
+                padding: 3px;
+            }
+
+            .expandable-cell {
+                height: 120px; /* Ajusta la altura según tus necesidades */
+                overflow: auto; /* Agrega barras de desplazamiento si el contenido es demasiado grande para mostrar */
+                white-space: pre-line; /* Mantiene los saltos de línea en el texto */
+                vertical-align: top; /* Alinea el contenido al principio de la celda */
+            }
+
+            table {
+                width: 100%;
+            }
+
+            .special > tbody > tr > td, th {
+                width: 80%;
+            }
+            
+            .bg-blue{
+                background-color: #daeef3;
+                color: black;
+                font-weight: bold;
+            }
+            .center {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+                width: 50%;
+            }
+
+            .text-center{
+                text-align: center;
+                
+            }
+            .text-left{
+                text-align: left;
+            }
+            .text-right{
+                text-align: right;
+            }
+            
+
+            @page {
+                size: letter portrait;
+                margin: 30pt;
+            }
+            table { -pdf-keep-with-next: true; }
+            section { -pdf-keep-with-next: true; }
+            p.separator { -pdf-keep-with-next: false; font-size: 6pt; }
+            
+
+            .image-and-text-container {
+                overflow: hidden; /* Limpia el float */
+            }
+
+            .text-content {
+                float: left; /* Hace que el texto flote a la izquierda */
+                width: 70%; /* Establece el ancho del texto (ajusta según sea necesario) */
+            }
+
+            .right-aligned-image {
+                float: right; /* Hace que la imagen flote a la derecha */
+                width: 30%; /* Establece el ancho de la imagen (ajusta según sea necesario) */
+            }
+
+        </style>
+    </head>
+    <body>
+        <h1> Protocolo Traspaso Datos Geoespaciales </h1>
+
+
+    </body>
+</html>
+
+{% block custom_js %}
+
+{% endblock custom_js %}

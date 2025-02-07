@@ -25,10 +25,10 @@ SECRET_KEY = 'sz308p48$%9_v+&$*=d)gd2dak5*n-2-zr5989(c#d(r+9)h55'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.12.80','departamentosig.munivalpo.cl','localhost',"*",' https://18dc-200-50-126-98.ngrok-free.app']
+ALLOWED_HOSTS = ['192.168.12.80','departamentosig.munivalpo.cl','localhost',"*",'5ae8-200-50-126-98.ngrok-free.app']
 
 CORS_ALLOWED_ORIGINS = [
-    " https://18dc-200-50-126-98.ngrok-free.app ",
+    "5ae8-200-50-126-98.ngrok-free.app",
 ]
 
 
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'auditlog',
     'control_creacion_usuario',
     'formulario',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
 
 ROOT_URLCONF = 'web_control_usuario.urls'
 
@@ -75,7 +78,14 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'web_control_usuario.wsgi.application'
+ASGI_APPLICATION = "web_control_usuario.asgi.application"
+
+# Configuración de Django Channels
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Para desarrollo
+    },
+}
 
 
 # Database
@@ -97,7 +107,7 @@ DATABASES = {
 #         'ENGINE':'django.db.backends.postgresql_psycopg2',
 #         'NAME':'departamento_sig_c',
 #         'USER':'postgres',
-#         'PASSWORD':'osval217K',
+#         'PASSWORD':'1234',
 #         'HOST':'localhost',
 #         'PORT':'5432',
 #     }
