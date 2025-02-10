@@ -693,11 +693,11 @@ def Envio_de_correo(request):
 
                 
                 server.quit()
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                        "solicitudes",
-                        {"type": "send_update", "message": "actualizar"}
-                    )
+                # channel_layer = get_channel_layer()
+                # async_to_sync(channel_layer.group_send)(
+                #         "solicitudes",
+                #         {"type": "send_update", "message": "actualizar"}
+                #     )
                 
 
                 return JsonResponse({'success': True})
@@ -813,11 +813,11 @@ def Envio_de_correo(request):
                 )
                 server.quit()
                 
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                        "solicitudes",
-                        {"type": "send_update", "message": "actualizar"}
-                    )
+                # channel_layer = get_channel_layer()
+                # async_to_sync(channel_layer.group_send)(
+                #         "solicitudes",
+                #         {"type": "send_update", "message": "actualizar"}
+                #     )
 
                 return JsonResponse({'success': True})
             except Exception as e:
