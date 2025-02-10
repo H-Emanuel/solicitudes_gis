@@ -314,9 +314,6 @@ tr:nth-child(even) {
                 var totalItems = response.Solicitudes.length; // Usamos el total real de elementos
                  totalPages = Math.ceil(totalItems / itemsPerPage); // Calculamos totalPages aquí
                 // Lista de profesionales
-
-                // Calculamos la paginación
-                // **Ordenamos los datos por ID descendente (últimos primero)**
                 response.Solicitudes.sort((a, b) => b.id - a.id);
 
                 var start = (currentPage - 1) * itemsPerPage;
@@ -357,11 +354,6 @@ tr:nth-child(even) {
                         selectProfesional += `<option value="${usuario.id}" ${selected}>${usuario.first_name} ${usuario.last_name}</option>`;
                     });
                     selectProfesional += `</select>`;
-
-
-                    
-                    
-                    
 
                     // Botón de Enviar Correo
                     var colorCorreo = esSuperuser
@@ -834,7 +826,9 @@ tr:nth-child(even) {
 
 
 <script>
-    var socket = new WebSocket("ws://" + window.location.host + "/ws/solicitudes/");
+    var protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    var socket = new WebSocket(protocol + window.location.host + "/ws/solicitudes/");
+
 
     socket.onmessage = function (event) {
         var data = JSON.parse(event.data);
