@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'control_creacion_usuario',
     'formulario',
     'channels',
+    'daphne',
+
 ]
 
 MIDDLEWARE = [
