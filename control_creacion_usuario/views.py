@@ -63,7 +63,7 @@ OPCIONES = {
     'ESTADO': ESTADO,
     'LIMITE_DE_DIA': LIMITE_DE_DIA
 }
-
+@csrf_exempt
 def login(request):
     if request.user.is_authenticated:
         return redirect('control')
@@ -391,11 +391,7 @@ def actualizar_profesional(request):
         motivo = request.POST.get('motivo')
         solicitud = get_object_or_404(ProtocoloSolicitud, id=solicitud_id)
 
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-                "solicitudes",
-                {"type": "send_update", "message": "actualizar"}
-            )
+        
 
 
 
@@ -416,6 +412,11 @@ def actualizar_profesional(request):
         solicitud.fecha_D = timezone.now()
         solicitud.save()
 
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
         return JsonResponse({'success': True})
     else:
         return JsonResponse({'success': False, 'message': 'Método no permitido'})
@@ -860,8 +861,15 @@ def delegar_admin(request):
                 user = User.objects.get(id=user_id)
                 user.is_superuser = is_superuser
                 user.save()
+            
             except User.DoesNotExist:
                 return JsonResponse({'status': 'error', 'message': f'Usuario con ID {user_id} no encontrado.'}, status=404)
+            
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
 
         return JsonResponse({'status': 'success', 'message': 'Usuarios actualizados correctamente.'})
 
@@ -972,8 +980,8 @@ def solicitudes_json(request):
             'fecha': solicitud.fecha.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha else None,
             'codigo': solicitud.codigo,
             'orden_trabajo': solicitud.orden_trabajo,
-            'fecha_D': solicitud.fecha_D.strftime('%Y-%m-%d') if solicitud.fecha_D else None,
-            'fecha_T': solicitud.fecha_T.strftime('%Y-%m-%d') if solicitud.fecha_T else None,
+            'fecha_D': solicitud.fecha_D.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_D else "Sin Fecha",
+            'fecha_T': solicitud.fecha_T.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_T else "Sin Fecha",
             'fecha_L': solicitud.fecha_L.strftime('%Y-%m-%d') if solicitud.fecha_L else None,
             'profesional_id': solicitud.profesional.id if solicitud.profesional else None,
             'profesional_nombre': f"{solicitud.profesional.first_name} {solicitud.profesional.last_name}" if solicitud.profesional else "Sin asignar",
@@ -995,6 +1003,8 @@ def solicitudes_json(request):
         'Solicitudes': solicitudes_data,  # Datos de solicitudes con información adicional
         'Usuarios': usuarios  # Lista de usuarios
     }
+
+    
 
     return JsonResponse(data, safe=False)
 

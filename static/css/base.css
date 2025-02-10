@@ -121,7 +121,7 @@
     /* Sombra externa clara adaptada al fondo del body */
     /* Sombra externa clara ahora coincide con el color de fondo del body */
     text-align: center;
-    height: -webkit-fill-available;
+    /* height: -webkit-fill-available; */
     margin-block: 1.5rem;
 }
 
