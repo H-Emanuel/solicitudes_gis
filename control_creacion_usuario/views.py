@@ -471,6 +471,11 @@ def actualizar_limite(request):
             solicitud.tipo_limite = tipo_limite
             solicitud.fecha_L = fecha_limite
             solicitud.save()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
 
             return JsonResponse({'success': True, 'message': 'Límite actualizado correctamente'})
 
@@ -686,13 +691,13 @@ def Envio_de_correo(request):
                     mensaje.as_string()
                 )
 
+                
+                server.quit()
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
                         "solicitudes",
                         {"type": "send_update", "message": "actualizar"}
                     )
-                server.quit()
-
                 
 
                 return JsonResponse({'success': True})
