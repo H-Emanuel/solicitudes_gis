@@ -702,7 +702,10 @@ def Envio_de_correo(request):
 
                 return JsonResponse({'success': True})
             except Exception as e:
-                return JsonResponse({'success': False, 'error': str(e)}, status=500)
+                import traceback
+                error_trace = traceback.format_exc()  # Obtiene el error detallado
+                return JsonResponse({'success': False, 'error': str(e), 'traceback': error_trace}, status=555)
+
 
         else:
             try:
@@ -821,7 +824,10 @@ def Envio_de_correo(request):
 
                 return JsonResponse({'success': True})
             except Exception as e:
-                return JsonResponse({'success': False, 'error': str(e)}, status=555)  
+                import traceback
+                error_trace = traceback.format_exc()  # Obtiene el error detallado
+                return JsonResponse({'success': False, 'error': str(e), 'traceback': error_trace}, status=555)
+
                               
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
