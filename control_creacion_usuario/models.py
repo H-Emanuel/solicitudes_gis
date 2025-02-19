@@ -25,7 +25,6 @@ def content_file_name_adjunto_pdf(instance, filename):
 
 class PDF_sig(models.Model):
     id = models.BigAutoField(primary_key=True, unique=True)
-
     archivo_adjunto = models.FileField(upload_to=content_file_name_adjunto_pdf, blank=True, null=True)
     nombre = models.TextField()
     class Meta:

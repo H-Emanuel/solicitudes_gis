@@ -9,6 +9,11 @@ from io import BytesIO
 from django.http import HttpResponse
 import uuid
 from datetime import datetime
+from io import BytesIO, StringIO
+from django.template.loader import get_template
+import xhtml2pdf.pisa as pisa
+import uuid
+from django.conf import settings
 
 
 def Generar_PDF(id):
@@ -161,3 +166,29 @@ def Generar_PDF(id):
 
         
         return buffer
+
+def save_pdf_3(params, filename):
+    template = get_template('pdf_protocolo.html')
+    html = template.render(params)
+    # file_name = str(uuid.uuid4())
+    file_name = filename
+    output_filename = str(settings.BASE_DIR) + '/media/' + str(file_name) + '.pdf'
+    
+    try: 
+        resultFile = open(output_filename, "w+b")
+
+        # convert HTML to PDF
+        pisaStatus = pisa.CreatePDF(html, dest=resultFile, encoding='utf-8', show_error_as_pdf=True, debug=True)
+
+        print("ººººººººººººººººº")
+        print(pisaStatus.error("Error"))
+        print("ººººººººººººººººº")
+
+        # close output file
+        resultFile.close()
+    except Exception as e:
+        print("-------------------")
+        print(e)
+        print("-------------------")
+
+    return output_filename, pisaStatus.error

@@ -42,16 +42,17 @@ th {
 
 /* Ajustar el ancho de los encabezados para que controlen sus columnas */
 th:nth-child(1) { width: 90px; } /* Id de la solicitud */
-th:nth-child(2) { width: 110px; } /* Solicitante */
-th:nth-child(3) { width: 130px; } /* Fecha de llegada */
-th:nth-child(4) { width: 130px; } /* Departamento */
-th:nth-child(5) { width: 180px; } /* Acciones */
-th:nth-child(6) { width: 120px; } /* Estado */
-th:nth-child(7) { width: 190px; } /* Carga de trabajo */
-th:nth-child(8) { width: 180px; } /* Profesional SIG */
-th:nth-child(9) { width: 150px; } /* Fecha Designio */
-th:nth-child(10) { width: 150px; } /* Fecha Enviado */
-th:nth-child(11) { width: 120px; } /* Días Hábiles */
+th:nth-child(2) { width: 90px; } /* Id de la solicitud */
+th:nth-child(3) { width: 110px; } /* Solicitante */
+th:nth-child(4) { width: 130px; } /* Fecha de llegada */
+th:nth-child(5) { width: 130px; } /* Departamento */
+th:nth-child(6) { width: 180px; } /* Acciones */
+th:nth-child(7) { width: 120px; } /* Estado */
+th:nth-child(8) { width: 190px; } /* Carga de trabajo */
+th:nth-child(9) { width: 180px; } /* Profesional SIG */
+th:nth-child(10) { width: 150px; } /* Fecha Designio */
+th:nth-child(11) { width: 150px; } /* Fecha Enviado */
+th:nth-child(12) { width: 120px; } /* Días Hábiles */
 
 /* Alternar colores en filas */
 tr:nth-child(even) {
@@ -110,19 +111,41 @@ tr:nth-child(even) {
 
 <link rel="stylesheet" href="{% static 'css/table.css' %}" />
 
+<style>
 
+
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=text_snippet" />
 <section class="d-flex justify-content-center">
     <div class="row">
         <div class="col" style="display: flex;justify-content: center;flex-wrap: wrap;">
+            <div class="container_new">
+                {% if request.user.is_superuser %}
 
-            <div class="container">
-                <div id="paginacion" class="pagination-container"></div>
+                <div class="container" style="margin: 1rem;">
+                    <div class="wrapper">
+                        <a class="enviado" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal" class="dropdown-item" href="#"><span>Solicitud expres</span>
+                            <i class="fa-solid fa-file-lines"></i>
+                        </a>
+                    </div>
+                    
+                </div>
+                {% endif %}
+
+                
+                  
+                <div class="container" style="margin: 1rem;">
+                    <div id="paginacion" class="pagination-container"></div>
+                </div>
+
             </div>
 
             <table id="tabla_registro" class="display table-custom">
                 <thead>
                     <tr>
                         <th>Id de la solicitud</th>
+                        <th>Orden Trabajo</th>
+
                         <th>Solicitante</th>
                         <th>Fecha de llegada</th>
                         <th>Departamento</th>
@@ -182,17 +205,10 @@ tr:nth-child(even) {
                             <label for="emailInput" class="form-label">2. Agregar en copia</label>
                             <input type="email" class="form-control" id="emailInput" placeholder="Ingresa un correo">
                         </div>
-
-                        <!-- Botón para agregar correo -->
-                        <button type="button" class="btn btn-primary mb-3" onclick="addEmail()">Agregar Correo</button>
-
-                        <!-- Lista de correos agregados -->
-                        <ul id="emailList" class="list-group mb-3">
-                        </ul>
-
+                        
                         <textarea class="form-control" id="messageText" rows="5" placeholder="Escribe tu mensaje aquí">{% if request.user.is_superuser %}Estimado,
                         Por favor, proceda con la solicitud según corresponda.
-                        Agradezco de antemano su atención.
+                        Agradezco su atención.
                         Atte.{% else %}Estimado Solicitante,
                         Atte.{% endif %}
                         </textarea>
@@ -201,7 +217,7 @@ tr:nth-child(even) {
 
                         <!-- Campo para adjuntar archivos -->
                         <div class="mb-3">
-                            <label for="fileInput" class="form-label">4. Adjuntar archivos(10 mb se adjuntar
+                            <label for="fileInput" class="form-label">4. Adjuntar el o los archivos(10 mb se adjuntar
                                 normalmente, 300mb sera exportado a link. )</label>
                             <input type="file" class="form-control" id="fileInput" multiple>
                         </div>
@@ -382,11 +398,18 @@ tr:nth-child(even) {
 
 
                     // Botón de "Descargar Ficha"
-                    var btnDescargar = `
+                   
+
+                        var btnDescargar = `
                         <a style="text-decoration: none; position: relative;" href="/solicitud/descargar_pdf/${item.id}"download>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones">
                                 <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v242.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
                             </svg>
+                        </a>`;
+
+                        var btnAgregar = `
+                        <a style="text-decoration: none; position: relative;" href="/solicitud/descargar_pdf/${item.id}"download>
+                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="acciones"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/></svg>
                         </a>`;
 
                     var btnRegistroPreview = "";
@@ -425,15 +448,17 @@ tr:nth-child(even) {
 
                     var row = `<tr>
                         <td>${item.id}</td>
+                        <td class="text-danger">${item.order_trabajo}</td>
                         <td>${item.nombre_solicitante}</td>
                         <td>${item.fecha}</td>
                         <td>${item.departamento}</td>
                         <td>${btnPreview} ${btnDescargar} ${btnEmail} ${btnRegistroPreview}</td>
                         <td>${selectEstado}</td>
                         <td>${selectLimite}</td>
-                        <td>${selectProfesional}</td>
+                        <td>${selectProfesional}  </td>
                         <td>${item.fecha_D}</td>
                         <td>${item.fecha_T}</td>
+
                         ${diasRestantesTd}
 
                     </tr>`;

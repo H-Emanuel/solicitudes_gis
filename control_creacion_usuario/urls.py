@@ -35,5 +35,6 @@ urlpatterns = [
     path('solicitud/detalle/<int:solicitud_id>/', views.detalle_solicitud, name='detalle_solicitud'),
 
 
+    path('solicitud-express/', views.solicitud_express, name='solicitud_express'),
 
 ]

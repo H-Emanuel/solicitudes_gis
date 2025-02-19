@@ -145,6 +145,8 @@ class Archivo_Link(models.Model):
         return str(self.protocolo.id) + ' - ' + str(self.id)
     
 class Registro_designio(models.Model):
+
+    
     id = models.BigAutoField(primary_key=True, unique=True)
 
     protocolo = models.ForeignKey(ProtocoloSolicitud, on_delete=models.CASCADE, related_name='protocolo')
@@ -158,3 +160,15 @@ class Registro_designio(models.Model):
 
     def __str__(self):
         return str(self.profesional.first_name) + ' - ' + str(self.protocolo.id)
+    
+
+class Apoyo_Protocolo(models.Model):
+    protocolo = models.ForeignKey(ProtocoloSolicitud, on_delete=models.CASCADE, related_name='solicitud')
+    profesional = models.ForeignKey(User, on_delete=models.CASCADE )
+
+    class Meta:
+        verbose_name = "archivo_protocolo"
+        verbose_name_plural = "archivos_protocolo"
+
+    def __str__(self):
+        return str(self.protocolo.id) + ' - ' + str(self.id)

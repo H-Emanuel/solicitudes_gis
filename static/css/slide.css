@@ -132,3 +132,70 @@ body {
     color: var(--tiffany-blue);
     /* Utiliza Tiffany Blue para el color al pasar el cursor */
 }
+
+.container_new{
+    display: flex;
+    align-items: flex-end;
+}
+    
+
+
+.enviado{
+    display: flex;
+    width: 200px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 18px;
+    font-family: sans-serif;
+    text-decoration: none;
+    color: #333;
+    border: 2px solid #333;
+    letter-spacing: 2px;
+    text-align: center;
+    position: relative;
+    transition: all .35s;
+    border-radius: 13px;
+    align-items: center;
+    justify-content: center;
+  }
+
+
+
+  .enviado span {
+    display: flex;
+    position: inherit;
+    z-index: 2;
+    align-items: center;
+    /* justify-content: space-around; */
+}
+
+.enviado svg {
+    display: flex;
+    position: inherit;
+    z-index: 2;
+    align-items: center;
+    /* justify-content: space-around; */
+}
+
+.enviado:after{
+  position: absolute;
+  content: "";
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  border-radius: 10px;
+
+  background: #0f52a9;
+  transition: all .35s;
+}
+
+.enviado:hover{
+  color: #fff;
+}
+
+.enviado:hover:after{
+      border-radius: 10px;
+
+  width: 100%;
+}

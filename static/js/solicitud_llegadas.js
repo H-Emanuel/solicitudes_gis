@@ -55,11 +55,12 @@ document.getElementById('fileInput').addEventListener('change', function () {
 function sendData() {
     document.getElementById('loadingSpinner').style.display = 'block';
 
-    const emailList = Array.from(document.getElementById('emailList').children).map(item => item.textContent);
+    const emailInput = document.getElementById('emailInput').value; // Tomar solo el emailInput
     const messageText = document.getElementById('messageText').value;
     const fileInput = document.getElementById('fileInput');
     const formData = new FormData();
-    formData.append('emails', JSON.stringify(emailList));
+
+    formData.append('email', emailInput); // Enviar solo un email en lugar de una lista
     formData.append('message', messageText);
     formData.append('ficha_id', selectedFichaId);
 
@@ -97,18 +98,16 @@ function sendData() {
                 title: "Oops...",
                 text: "Hubo un problema al enviar los datos",
             });
-
         }
     })
     .catch(error => {
-
         document.getElementById('loadingSpinner').style.display = 'none';
         console.error('Error:', error);
         Swal.fire({
-                icon: "error",
-                title: "Oops...",
-                text: "Ocurrió un error al enviar los datos",
-            });
+            icon: "error",
+            title: "Oops...",
+            text: "Ocurrió un error al enviar los datos",
+        });
     });
 }
 
@@ -174,3 +173,4 @@ function getCSRFToken() {
     return '';
 };
 
+// tiene que hacer cambios aqui tambien

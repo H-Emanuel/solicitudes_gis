@@ -38,11 +38,10 @@ from django.core.files.storage import default_storage
 from django.utils.html import escape
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
+from .pdf_generator import *
 
 gis = GIS("https://www.arcgis.com", "emanuel.venegas_munivalpo", "Godzilla_2016")
 
-from .pdf_generator import *
 
 ESTADO = [
     ('RECIBIDO', 'RECIBIDO'),
@@ -576,7 +575,11 @@ def Calculor_de_trabajo():
 def Envio_de_correo(request):
     if request.method == 'POST':
         user = request.user
-        emails = json.loads(request.POST.get('emails', '[]'))
+        email_input = request.POST.get('email', '').strip()
+
+        # Convertir la entrada en una lista separando por comas, eliminando espacios y vacíos
+        emails = [email.strip() for email in email_input.split(',') if email.strip()] if email_input else []
+
         archivos = request.FILES.getlist('files')
         total_size = sum(archivo.size for archivo in archivos)
 
@@ -616,7 +619,19 @@ def Envio_de_correo(request):
                         archivos_adjuntos.append(archivo_adjunto)
 
                 # Generar PDF
-                buffer = Generar_PDF(ficha_id)
+
+                data = {
+                    'Protocolo': Protocolo,
+                }
+
+                nombre_ficha = "Solicitud" + str(Protocolo.id) + "_" + str(Protocolo)
+
+                # Generar el PDF
+                pdf_path, status = save_pdf_3(data, nombre_ficha)
+
+                # Leer el archivo generado en modo binario
+                with open(pdf_path, "rb") as pdf_file:
+                    archivo_pdf = pdf_file.read()
 
                 # Configuración del correo
                 superusers = User.objects.filter(is_superuser=True).exclude(username="osvaldo.moya").values_list('email', flat=True)
@@ -666,7 +681,6 @@ def Envio_de_correo(request):
                 mensaje.attach(MIMEText(html_content, 'html'))
 
                 # Adjuntar PDF
-                archivo_pdf = buffer.getvalue()
                 pdf_adjunto = MIMEApplication(archivo_pdf)
                 pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
                 mensaje.attach(pdf_adjunto)
@@ -693,11 +707,11 @@ def Envio_de_correo(request):
 
                 
                 server.quit()
-                # channel_layer = get_channel_layer()
-                # async_to_sync(channel_layer.group_send)(
-                #         "solicitudes",
-                #         {"type": "send_update", "message": "actualizar"}
-                #     )
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                        "solicitudes",
+                        {"type": "send_update", "message": "actualizar"}
+                    )
                 
 
                 return JsonResponse({'success': True})
@@ -740,7 +754,19 @@ def Envio_de_correo(request):
                         archivos_adjuntos.append(archivo_adjunto)
 
                 # Generar PDF
-                buffer = Generar_PDF(ficha_id)
+                data ={
+                    'Protocolo':Protocolo,
+                }
+
+                nombre_ficha = "Solicitud" + str(Protocolo.id) + "_" + str(Protocolo)
+
+                buffer, status = save_pdf_3(data, nombre_ficha)
+
+                if not status:
+                    print("----------------")
+                    print("Error al generar PDF")
+                    print("----------------")
+                    return HttpResponse("Error al generar PDF")
 
                 # Configuración del correo
                 superusers = User.objects.filter(is_superuser=True).exclude(username="osvaldo.moya").values_list('email', flat=True)
@@ -816,11 +842,11 @@ def Envio_de_correo(request):
                 )
                 server.quit()
                 
-                # channel_layer = get_channel_layer()
-                # async_to_sync(channel_layer.group_send)(
-                #         "solicitudes",
-                #         {"type": "send_update", "message": "actualizar"}
-                #     )
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                        "solicitudes",
+                        {"type": "send_update", "message": "actualizar"}
+                    )
 
                 return JsonResponse({'success': True})
             except Exception as e:
@@ -997,6 +1023,7 @@ def solicitudes_json(request):
             'profesional_id': solicitud.profesional.id if solicitud.profesional else None,
             'profesional_nombre': f"{solicitud.profesional.first_name} {solicitud.profesional.last_name}" if solicitud.profesional else "Sin asignar",
             'profesional_correo':  solicitud.profesional.email if solicitud.profesional else "Sin asignar",
+            'order_trabajo':  solicitud.orden_trabajo if solicitud.orden_trabajo else "Sin asignar",
             'tipo_limite': solicitud.tipo_limite,
             'estado': solicitud.estado,
             'enviado_correo': solicitud.enviado_correo,
@@ -1057,3 +1084,40 @@ def detalle_solicitud(request, solicitud_id):
     }
 
     return JsonResponse(data)
+
+def solicitud_express(request):
+    if request.method == "POST":
+        try:
+            Protocolo = ProtocoloSolicitud(
+                direccion=request.POST.get('direccion'),
+                departamento=request.POST.get('departamento'),
+                nombre_solicitante=request.POST.get('nombre_solicitante').title(),
+                nombre_proyecto=request.POST.get('nombre_proyecto'),
+                corre_solicitante=request.POST.get('corre_solicitante'),
+                area=request.POST.get('area'),
+                objetivos=request.POST.get('objetivos'),
+                insumo=request.POST.get('insumo'),
+                producto=request.POST.get('producto'),
+                cambios_posible=request.POST.get('cambios_posible'),
+            )
+
+            Protocolo.save()
+            Protocolo.codigo = str(Protocolo.id)
+            Protocolo.save()
+
+            archivos_adjuntos = request.FILES.getlist('archivo')
+            for archivo in archivos_adjuntos:
+                ArchivoProtocolo.objects.create(protocolo=Protocolo, archivo=archivo)
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
+
+            return JsonResponse({'success': True, 'message': 'Se creó la solicitud correctamente'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error al crear una solicitud: {str(e)}'})
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
