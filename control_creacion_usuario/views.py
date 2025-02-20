@@ -754,13 +754,19 @@ def Envio_de_correo(request):
                         archivos_adjuntos.append(archivo_adjunto)
 
                 # Generar PDF
-                data ={
-                    'Protocolo':Protocolo,
+                data = {
+                    'Protocolo': Protocolo,
                 }
 
                 nombre_ficha = "Solicitud" + str(Protocolo.id) + "_" + str(Protocolo)
 
-                buffer, status = save_pdf_3(data, nombre_ficha)
+                # Generar el PDF
+                pdf_path, status = save_pdf_3(data, nombre_ficha)
+
+                # Leer el archivo generado en modo binario
+                with open(pdf_path, "rb") as pdf_file:
+                    archivo_pdf = pdf_file.read()
+
 
                 if not status:
                     print("----------------")
@@ -816,7 +822,6 @@ def Envio_de_correo(request):
                 mensaje.attach(MIMEText(html_content, 'html'))
 
                 # Adjuntar PDF
-                archivo_pdf = buffer.getvalue()
                 pdf_adjunto = MIMEApplication(archivo_pdf)
                 pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
                 mensaje.attach(pdf_adjunto)
