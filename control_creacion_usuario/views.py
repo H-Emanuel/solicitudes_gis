@@ -40,7 +40,6 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .pdf_generator import *
 
-gis = GIS("https://www.arcgis.com", "emanuel.venegas_munivalpo", "Godzilla_2016")
 
 
 ESTADO = [
@@ -62,6 +61,8 @@ OPCIONES = {
     'ESTADO': ESTADO,
     'LIMITE_DE_DIA': LIMITE_DE_DIA
 }
+
+
 @csrf_exempt
 def login(request):
     if request.user.is_authenticated:
@@ -1126,3 +1127,68 @@ def solicitud_express(request):
             return JsonResponse({'success': False, 'message': f'Error al crear una solicitud: {str(e)}'})
     
     return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+def usuarios_disponibles(request):
+    protocolo_id = request.GET.get('protocolo_id')
+
+    try:
+        protocolo = ProtocoloSolicitud.objects.get(id=protocolo_id)
+        # Excluir el profesional asignado principal
+        profesional_id = protocolo.profesional.id if protocolo.profesional else None
+
+        # Obtener todos los usuarios, excluyendo el profesional principal
+        usuarios = User.objects.exclude(id=profesional_id).values('id', 'first_name', 'last_name')
+
+        # Obtener los apoyos ya registrados para este protocolo
+        apoyo_qs = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
+        apoyo_user_ids = list(apoyo_qs.values_list('profesional_id', flat=True))
+
+        usuarios_list = []
+        for u in usuarios:
+            u['ya_agregado'] = u['id'] in apoyo_user_ids
+            usuarios_list.append(u)
+
+        return JsonResponse({"usuarios": usuarios_list}, safe=False)
+
+    except ProtocoloSolicitud.DoesNotExist:
+        return JsonResponse({"error": "Protocolo no encontrado"}, status=404)
+
+    
+@csrf_exempt
+def agregar_apoyo(request):
+    if request.method == "POST":
+        protocolo_id = request.POST.get("protocolo_id")
+        usuarios_json = request.POST.get("usuarios", "[]")
+        usuarios_ids = json.loads(usuarios_json)
+
+        try:
+            protocolo = ProtocoloSolicitud.objects.get(id=protocolo_id)
+
+            # Obtiene todos los apoyos actuales para este protocolo
+            apoyos_actuales = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
+            # Extrae los IDs de los usuarios que ya están asignados como apoyo
+            apoyos_ids_actuales = list(apoyos_actuales.values_list('profesional_id', flat=True))
+
+            # Elimina aquellos apoyos que ya no están en la lista seleccionada
+            Apoyo_Protocolo.objects.filter(protocolo=protocolo).exclude(profesional_id__in=usuarios_ids).delete()
+
+            # Agrega los nuevos apoyos que no existan ya
+            for usuario_id in usuarios_ids:
+                if usuario_id not in apoyos_ids_actuales:
+                    usuario = User.objects.get(id=usuario_id)
+                    Apoyo_Protocolo.objects.create(protocolo=protocolo, profesional=usuario)
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
+
+            return JsonResponse({"success": True})
+
+        except ProtocoloSolicitud.DoesNotExist:
+            return JsonResponse({"error": "Protocolo no encontrado"}, status=404)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "Algún usuario no se encontró"}, status=404)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)

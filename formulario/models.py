@@ -90,6 +90,8 @@ class ProtocoloSolicitud(models.Model):
     enviado_correo = models.BooleanField(default=False)
 
     enviado_correo_t = models.BooleanField(default=False)
+
+    orden_trabajo_t = models.BooleanField(default=False)
     
     class Meta:
         verbose_name = "protocolo_solicitud"
