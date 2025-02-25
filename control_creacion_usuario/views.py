@@ -959,7 +959,10 @@ def solicitudes_json(request):
     if request.user.is_superuser:
         solicitudes = ProtocoloSolicitud.objects.all().order_by("-id")  # Orden descendente por ID
     else:
-        solicitudes = ProtocoloSolicitud.objects.filter(profesional=request.user).order_by("-id")
+        solicitudes = ProtocoloSolicitud.objects.filter(
+            Q(profesional=request.user) | Q(solicitud__profesional=request.user)
+        ).distinct().order_by("-id")
+
 
 
     # Obtener lista de usuarios

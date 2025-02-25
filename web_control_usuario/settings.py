@@ -47,8 +47,17 @@ INSTALLED_APPS = [
     'formulario',
     'channels',
     'daphne',
+    'tareas', 
+    'rest_framework',
+    'widget_tweaks',
 
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

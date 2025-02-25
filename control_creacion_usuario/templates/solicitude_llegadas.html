@@ -477,14 +477,14 @@ tr:nth-child(even) {
 
                     var row = `<tr>
                         <td>${item.id}</td>
-                        <td style="color: #0f52a9;font-weight: bold;">${item.order_trabajo}</td>
+                        <td style="color: ${ isNaN(item.order_trabajo) ? 'black' : '#0f52a9' }; font-weight: bold;">${item.order_trabajo}</td>                   
                         <td>${item.nombre_solicitante}</td>
                         <td>${item.fecha}</td>
                         <td>${item.departamento}</td>
                         <td>${btnPreview} ${btnDescargar} ${btnEmail} ${btnRegistroPreview} </td>
                         <td>${selectEstado}</td>
                         <td>${selectLimite}</td>
-                        <td>${selectProfesional}</td>
+                        <td>${selectProfesional} ${btnAgregar}</td>
                         <td>${item.fecha_D}</td>
                         <td>${item.fecha_T}</td>
 

@@ -23,6 +23,8 @@ urlpatterns = [
     path('',include('core.urls')),
     path('',include('control_creacion_usuario.urls')),
     path('solicitud/',include('formulario.urls')),
+    path('tareas/', include('tareas.urls')),  # Incluye las URLs de la aplicación tareas
+
 ]
 urlpatterns += static(settings.STATIC_URL, document_root = settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
