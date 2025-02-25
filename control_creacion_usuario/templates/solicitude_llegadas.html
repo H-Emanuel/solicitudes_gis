@@ -241,7 +241,6 @@ tr:nth-child(even) {
             </div>
         </div>
     </div>
-
     <!-- Modal Bootstrap para el motivo del cambio -->
     <div class="modal fade" id="registro_De_Designio" tabindex="-1" role="dialog"
         aria-labelledby="registro_De_DesignioLabel" aria-hidden="true">
@@ -307,6 +306,31 @@ tr:nth-child(even) {
             </div>
         </div>
     </div>
+
+<!-- Modal para agregar apoyos al protocolo -->
+<div class="modal fade" id="apoyoModal" tabindex="-1" aria-labelledby="apoyoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apoyoModalLabel">Agregar Apoyos al Protocolo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Protocolo ID:</strong> <span id="protocoloId"></span></p>
+          <p><strong>Profesional Responsable:</strong> <span id="profesionalActual"></span></p>
+          <p>Selecciona los usuarios que deseas agregar como apoyo:</p>
+          <div id="listaApoyos">
+            <!-- Aquí se insertarán dinámicamente los checkboxes de usuarios -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="guardarApoyo">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 </section>
 {% endblock %}
 
@@ -408,9 +432,14 @@ tr:nth-child(even) {
                         </a>`;
 
                         var btnAgregar = `
-                        <a style="text-decoration: none; position: relative;" href="/solicitud/descargar_pdf/${item.id}"download>
-                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="acciones"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/></svg>
+                        <a style="text-decoration: none; position:relative;" href="#" class="apoyo-link" 
+                        data-item='${JSON.stringify(item)}'> 
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="acciones">
+                            <path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/>
+                        </svg>
                         </a>`;
+
+
 
                     var btnRegistroPreview = "";
                         if (esSuperuser) {
@@ -448,14 +477,14 @@ tr:nth-child(even) {
 
                     var row = `<tr>
                         <td>${item.id}</td>
-                        <td class="text-danger">${item.order_trabajo}</td>
+                        <td style="color: #0f52a9;font-weight: bold;">${item.order_trabajo}</td>
                         <td>${item.nombre_solicitante}</td>
                         <td>${item.fecha}</td>
                         <td>${item.departamento}</td>
                         <td>${btnPreview} ${btnDescargar} ${btnEmail} ${btnRegistroPreview} </td>
                         <td>${selectEstado}</td>
                         <td>${selectLimite}</td>
-                        <td>${selectProfesional} </td>
+                        <td>${selectProfesional}</td>
                         <td>${item.fecha_D}</td>
                         <td>${item.fecha_T}</td>
 
@@ -840,7 +869,75 @@ tr:nth-child(even) {
         });
     }
 
-    // setInterval(actualizarTabla, 10000);
+    function guardarApoyo() {
+    var protocoloId = $("#protocoloId").text();
+    var usuariosSeleccionados = [];
+    
+    $(".apoyo-checkbox:checked").each(function () {
+        usuariosSeleccionados.push($(this).val());
+    });
+
+    if (usuariosSeleccionados.length === 0) {
+        alert("Por favor, selecciona al menos un usuario.");
+        return;
+    }
+
+    $.ajax({
+        url: "{% url 'agregar_apoyo' %}",
+        type: "POST",
+        data: {
+            protocolo_id: protocoloId,
+            usuarios: JSON.stringify(usuariosSeleccionados),
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+            alert("Apoyos agregados con éxito.");
+            $("#apoyoModal").modal("hide");
+            actualizarTabla();
+        },
+        error: function () {
+            alert("Error al agregar los apoyos.");
+        }
+    });
+}
+
+function abrirModalApoyo(item) {
+    var protocoloId = item.id;
+    
+    var profesionalActual = item.profesional ? `${item.profesional.first_name} ${item.profesional.last_name}` : "No asignado";
+    $("#protocoloId").text(protocoloId);
+    $("#profesionalActual").text(profesionalActual);
+
+    // Llamada AJAX para obtener usuarios disponibles
+    $.ajax({
+        url: "{% url 'usuarios_disponibles' %}",
+        type: "GET",
+        data: { protocolo_id: protocoloId },
+        success: function (response) {
+            var container = $("#listaApoyos");
+            container.empty();
+
+            response.usuarios.forEach(function (usuario) {
+                var checked = usuario.ya_agregado ? "checked" : "";
+                container.append(`
+                    <div class="form-check">
+                      <input class="form-check-input apoyo-checkbox" type="checkbox" value="${usuario.id}" id="usuario_${usuario.id}" ${checked}>
+                      <label class="form-check-label" for="usuario_${usuario.id}">
+                        ${usuario.first_name} ${usuario.last_name}
+                      </label>
+                    </div>
+                `);
+            });
+
+            $("#apoyoModal").modal("show");
+        },
+        error: function () {
+            alert("Error al obtener usuarios disponibles.");
+        }
+    });
+}
+    
+// setInterval(actualizarTabla, 10000);
 
     // Cargar la tabla al cargar la página
     $(document).ready(function () {
@@ -873,6 +970,79 @@ tr:nth-child(even) {
 
 </script>
 <script src="/static/js/solicitud_llegadas.js">
+</script>
+<script>
+$(document).on("click", ".apoyo-link", function (event) {
+    event.preventDefault();
+
+    var item = JSON.parse($(this).attr("data-item"));
+    var protocoloId = item.id;
+    var profesionalActual = item.profesional_id ? `${item.profesional_nombre}` : "No asignado";
+
+    $("#protocoloId").text(protocoloId);
+    $("#profesionalActual").text(profesionalActual);
+
+    // Llamada AJAX para obtener usuarios disponibles
+    $.ajax({
+        url: "{% url 'usuarios_disponibles' %}",
+        type: "GET",
+        data: { protocolo_id: protocoloId },
+        success: function (response) {
+            var container = $("#listaApoyos");
+            container.empty();
+
+            response.usuarios.forEach(function (usuario) {
+                // Si ya está agregado, el checkbox se marca por defecto
+                var checked = usuario.ya_agregado ? "checked" : "";
+                container.append(`
+                    <div class="form-check">
+                      <input class="form-check-input apoyo-checkbox" type="checkbox" value="${usuario.id}" id="usuario_${usuario.id}" ${checked}>
+                      <label class="form-check-label" for="usuario_${usuario.id}">
+                        ${usuario.first_name} ${usuario.last_name}
+                      </label>
+                    </div>
+                `);
+            });
+
+            $("#apoyoModal").modal("show");
+        },
+        error: function () {
+            alert("Error al obtener usuarios disponibles.");
+        }
+    });
+});
+
+
+$("#guardarApoyo").click(function () {
+    var protocoloId = $("#protocoloId").text();
+    var usuariosSeleccionados = [];
+    $(".apoyo-checkbox:checked").each(function () {
+        usuariosSeleccionados.push($(this).val());
+    });
+
+    if (usuariosSeleccionados.length === 0) {
+        alert("Por favor, selecciona al menos un usuario.");
+        return;
+    }
+
+    $.ajax({
+        url: "{% url 'agregar_apoyo' %}",
+        type: "POST",
+        data: {
+            protocolo_id: protocoloId,
+            usuarios: JSON.stringify(usuariosSeleccionados),
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function (response) {
+            alert("Apoyos agregados con éxito.");
+            $("#apoyoModal").modal("hide");
+            location.reload();
+        },
+        error: function () {
+            alert("Error al agregar los apoyos.");
+        }
+    });
+});
 
 </script>
 
