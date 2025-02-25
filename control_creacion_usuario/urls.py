@@ -34,7 +34,12 @@ urlpatterns = [
 
     path('solicitud/detalle/<int:solicitud_id>/', views.detalle_solicitud, name='detalle_solicitud'),
 
-
     path('solicitud-express/', views.solicitud_express, name='solicitud_express'),
+
+    path("usuarios_disponibles/", views.usuarios_disponibles, name="usuarios_disponibles"),
+    path("agregar_apoyo/", views.agregar_apoyo, name="agregar_apoyo"),
+
+
+
 
 ]
