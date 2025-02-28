@@ -1028,7 +1028,7 @@ def solicitudes_json(request):
             'orden_trabajo': solicitud.orden_trabajo,
             'fecha_D': solicitud.fecha_D.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_D else "Sin Fecha",
             'fecha_T': solicitud.fecha_T.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_T else "Sin Fecha",
-            'fecha_L': solicitud.fecha_L.strftime('%Y-%m-%d') if solicitud.fecha_L else None,
+            'fecha_L': solicitud.fecha_L.strftime('%Y-%m-%d') if solicitud.fecha_L else  "Sin Fecha",
             'profesional_id': solicitud.profesional.id if solicitud.profesional else None,
             'profesional_nombre': f"{solicitud.profesional.first_name} {solicitud.profesional.last_name}" if solicitud.profesional else "Sin asignar",
             'profesional_correo':  solicitud.profesional.email if solicitud.profesional else "Sin asignar",
@@ -1039,13 +1039,15 @@ def solicitudes_json(request):
             'enviado_correo_t': solicitud.enviado_correo_t,
             'numero_designios': numero_designios,
             'dias_restantes': dias_restantes,
-            'archivos_adjuntos_urls': archivos_adjuntos_urls, # ESTO ESTA MAL
+            'archivos_adjuntos_urls': archivos_adjuntos_urls,
         })
 
 
     # Estructurar la respuesta en JSON
     data = {
+        'id_user': request.user.id,  # Indica si el usuario es superusuario
         'es_superuser': request.user.is_superuser,  # Indica si el usuario es superusuario
+
         'OPCIONES': OPCIONES,  # Opciones de selección
         'Solicitudes': solicitudes_data,  # Datos de solicitudes con información adicional
         'Usuarios': usuarios  # Lista de usuarios
