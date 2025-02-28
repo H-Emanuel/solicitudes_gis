@@ -130,10 +130,7 @@ tr:nth-child(even) {
                     </div>
                     
                 </div>
-                {% endif %}
-
-                
-                  
+                {% endif %}           
                 <div class="container" style="margin: 1rem;">
                     <div id="paginacion" class="pagination-container"></div>
                 </div>
@@ -306,31 +303,30 @@ tr:nth-child(even) {
             </div>
         </div>
     </div>
-
-<!-- Modal para agregar apoyos al protocolo -->
-<div class="modal fade" id="apoyoModal" tabindex="-1" aria-labelledby="apoyoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="apoyoModalLabel">Agregar Apoyos al Protocolo</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Modal para agregar apoyos al protocolo -->
+    <div class="modal fade" id="apoyoModal" tabindex="-1" aria-labelledby="apoyoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="apoyoModalLabel">Agregar Apoyos al Protocolo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <p><strong>Protocolo ID:</strong> <span id="protocoloId"></span></p>
+            <p><strong>Profesional Responsable:</strong> <span id="profesionalActual"></span></p>
+            <p>Selecciona los usuarios que deseas agregar como apoyo:</p>
+            <div id="listaApoyos">
+                <!-- Aquí se insertarán dinámicamente los checkboxes de usuarios -->
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="guardarApoyo">Guardar</button>
+            </div>
         </div>
-        <div class="modal-body">
-          <p><strong>Protocolo ID:</strong> <span id="protocoloId"></span></p>
-          <p><strong>Profesional Responsable:</strong> <span id="profesionalActual"></span></p>
-          <p>Selecciona los usuarios que deseas agregar como apoyo:</p>
-          <div id="listaApoyos">
-            <!-- Aquí se insertarán dinámicamente los checkboxes de usuarios -->
-          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-primary" id="guardarApoyo">Guardar</button>
-        </div>
-      </div>
     </div>
-  </div>
-  
+    
 </section>
 {% endblock %}
 
@@ -531,6 +527,12 @@ tr:nth-child(even) {
                 ? `<ul>` + item.archivos_adjuntos_urls.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('') + `</ul>`
                 : "<p>No hay archivos adjuntos.</p>";
 
+                // Generar lista de apoyos
+                var apoyosHTML = (item.apoyos && Array.isArray(item.apoyos) && item.apoyos.length > 0)
+                    ? `<ul>` + item.apoyos.map(apoyo => `<li>${apoyo.nombre} (${apoyo.correo})</li>`).join('') + `</ul>`
+                    : "<p>No hay apoyos asignados.</p>";
+
+
 
                 // Insertar los datos directamente en el modal
                 $('#previewData').html(`
@@ -559,6 +561,8 @@ tr:nth-child(even) {
                     <strong>Número de Designios:</strong> ${item.numero_designios} <br>
                     <strong>Días Restantes:</strong> ${item.dias_restantes} <br>
                     <strong>Archivos Adjuntos:</strong> ${archivosHTML} <br>
+                    <strong>Apoyos Asignados:</strong> ${apoyosHTML} <br> <!-- Aquí agregamos los apoyos -->
+
                 `);
 
                 // Mostrar el modal

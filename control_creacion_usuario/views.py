@@ -975,6 +975,17 @@ def solicitudes_json(request):
         # Obtener el número de designios asociados a la solicitud
         numero_designios = Registro_designio.objects.filter(protocolo=solicitud).count()
 
+        # Obtener los apoyos asociados a la solicitud
+        apoyos = Apoyo_Protocolo.objects.filter(protocolo=solicitud)
+        apoyos_lista = [
+            {
+                "id": apoyo.profesional.id,
+                "nombre": f"{apoyo.profesional.first_name} {apoyo.profesional.last_name}",
+                "correo": apoyo.profesional.email,
+            }
+            for apoyo in apoyos
+        ]
+
         # Calcular los días restantes hasta la fecha límite
         if solicitud.fecha_T:
             dias_restantes = "Trabajo terminado"
@@ -993,11 +1004,9 @@ def solicitudes_json(request):
                 else:
                     dias_restantes = "El tiempo límite ha pasado recientemente"
             else:  # Tiempo restante
-                # Calcular días hábiles restantes
                 dias_habiles_restantes = calcular_dias_habiles(now().date(), solicitud.fecha_L.date())
                 horas_restantes = int((total_segundos % (24 * 3600)) // 3600)
                 minutos_restantes = int((total_segundos % 3600) // 60)
-                
 
                 if dias_habiles_restantes > 1:
                     dias_restantes = f"Te quedan {dias_habiles_restantes-1} días hábiles"
@@ -1028,11 +1037,11 @@ def solicitudes_json(request):
             'orden_trabajo': solicitud.orden_trabajo,
             'fecha_D': solicitud.fecha_D.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_D else "Sin Fecha",
             'fecha_T': solicitud.fecha_T.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_T else "Sin Fecha",
-            'fecha_L': solicitud.fecha_L.strftime('%Y-%m-%d') if solicitud.fecha_L else  "Sin Fecha",
+            'fecha_L': solicitud.fecha_L.strftime('%Y-%m-%d') if solicitud.fecha_L else "Sin Fecha",
             'profesional_id': solicitud.profesional.id if solicitud.profesional else None,
             'profesional_nombre': f"{solicitud.profesional.first_name} {solicitud.profesional.last_name}" if solicitud.profesional else "Sin asignar",
-            'profesional_correo':  solicitud.profesional.email if solicitud.profesional else "Sin asignar",
-            'order_trabajo':  solicitud.orden_trabajo if solicitud.orden_trabajo else "Sin asignar",
+            'profesional_correo': solicitud.profesional.email if solicitud.profesional else "Sin asignar",
+            'order_trabajo': solicitud.orden_trabajo if solicitud.orden_trabajo else "Sin asignar",
             'tipo_limite': solicitud.tipo_limite,
             'estado': solicitud.estado,
             'enviado_correo': solicitud.enviado_correo,
@@ -1040,7 +1049,9 @@ def solicitudes_json(request):
             'numero_designios': numero_designios,
             'dias_restantes': dias_restantes,
             'archivos_adjuntos_urls': archivos_adjuntos_urls,
+            'apoyos': apoyos_lista,  # Agregar la lista de apoyos
         })
+
 
 
     # Estructurar la respuesta en JSON
