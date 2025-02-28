@@ -25,7 +25,7 @@
     border-bottom: none; /* Opcional: elimina el borde inferior si es necesario */
 }
 body {
-    background: linear-gradient(to right, #ece9e6, #ffffff);
+    background: #d1efee;
     font-family: 'Roboto', sans-serif;
     color: #333;
     margin: 0;
@@ -256,11 +256,11 @@ h1.text-primary {
 
 .btn {
     align-items: center;
-    border-radius: 29px;
+    border-radius: 10px;
     display: inline-flex;
-    font-size: 0.875rem;
+    font-size: 0.7rem;
     margin-left: 8px;
-    padding: 6px 12px;
+    padding: 6px 7px;
     text-decoration: none;
     transition: background-color 0.3s ease;
 }
@@ -394,7 +394,7 @@ h1.text-primary {
 
 <body class="container py-4">
     <div class="text-center mb-4">
-        <h1 class="text-primary"> ✏️ Repositorio de Tareas</h1>
+        <h1 class="text-primary"> ✏️ Tareas SIG</h1>
     </div>
     
     
@@ -417,7 +417,7 @@ h1.text-primary {
         <button type="button" id="verTareasBtn" class="btn btn-primary btn-sm">Tareas completadas</button>
     </div>
     
-    <div class="card shadow">
+    <div class="card shadow mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Lista de Tareas </h5>
         </div>
@@ -494,6 +494,10 @@ h1.text-primary {
             {% endif %}
         </div>
     </div>
+    <div class="text-center mb-4 col">
+        <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-primary btn-sm ">Volver</a>
+    </div>
+    
     <div id="pagination-container"></div>
     
     <div class="modal fade" id="agregarTareaModal" tabindex="-1" aria-labelledby="agregarTareaModalLabel" aria-hidden="true">
