@@ -425,42 +425,41 @@ h1.text-primary {
             {% if tareas %}
             <ul class="list-group">
                 {% for tarea in tareas %}
-                <li class="list-group-item d-flex justify-content-between align-items-center task-item">
-                    <span>
-                        <strong>{{ tarea.descripcion }}</strong> - {{ tarea.funcionario }}<br>
-                        Sección: {{ tarea.funcionario.cargo }}<br>  <!-- Aquí agregamos el cargo -->
-                        Fecha de creación: {{ tarea.fecha_creacion|date:"d-m-Y" }}<br>
-                        Fecha de entrega: {{ tarea.fecha_entrega|date:"d-m-Y" }}<br>
-                        
-                        <strong>Prioridad:</strong> 
-                        <span class="{% if tarea.prioridad == 'alta' %}text-danger{% elif tarea.prioridad == 'media' %}text-warning{% else %}text-success{% endif %}">
-                            {{ tarea.get_prioridad_display }}
-                        </span><br>
-                
-                        
-                    </span>
-                    <div>
-                        <strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Apoyo:</strong>
+                <li class="list-group-item d-flex justify-content-between align-items-center task-item" data-tarea-id="{{ tarea.id }}">
+                    <div class="col-3">
+                        <span>
+                            <strong>{{ tarea.descripcion }}</strong> - {{ tarea.funcionario.nombre }}<br>
+                            Fecha de Creación: {{ tarea.fecha_creacion|date:"d-m-Y" }} <br>
+                            Fecha de Entrega: {{ tarea.fecha_entrega|date:"d-m-Y" }}<br>
+                            <span style="font-weight: bold; color: #333;">Prioridad:</span> 
+                            <span class="{% if tarea.prioridad == 'alta' %}text-danger{% elif tarea.prioridad == 'media' %}text-warning{% else %}text-success{% endif %}">
+                                {{ tarea.get_prioridad_display }}
+                            </span><br>
+                        </span>
+                    </div>
+                    <div class="justify-content-center text-align-start" style="width: 250px;">
+                        <strong>Apoyo(s):</strong>
                         {% if tarea.apoyo.all %}
-                            <ul>
+                            <ul class="apoyo-lista">
                                 {% for apoyo in tarea.apoyo.all %}
-                                    <li>
-                                        <strong>{{ apoyo.nombre }}:</strong> {{ apoyo.descripcion }}
+                                    <li class="apoyo-item">
+                                        <strong>{{ apoyo.nombre }}:</strong> {{ apoyo.descripcion|default:"No disponible" }}
                                     </li>
                                 {% endfor %}
                             </ul>
                         {% else %}
-                            <span>No hay descripción de apoyo disponible.</span>
+                            <span>No hay funcionarios de apoyo.</span>
                         {% endif %}
                     </div>
                     <div>
-                        
+                        <strong style="color: green; font-weight: bold;">En Proceso</strong>
+                    </div>
+                    <div>
                         <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-sm btn-warning">✏️ Editar</a>
-                        {% if request.user.is_superuser %}                       
+                        {% if request.user.is_superuser %}
                         <a href="{% url 'eliminar_tarea' tarea.id %}" class="btn btn-sm btn-danger"onclick="confirmarEliminacion(event, this)" data-tarea-id="{{ tarea.id }}">️ Eliminar</a>
-                            </a>
-
-                        <button type="button" class="btn btn-sm btn-success completar-tarea" data-tarea-id="{{ tarea.id }}">✅ Completar</button>
+                    </a>
+                            <button type="button" class="btn btn-sm btn-success completar-tarea" data-tarea-id="{{ tarea.id }}">✅ Completar</button>
                         {% endif %}
                     </div>
                 </li>
