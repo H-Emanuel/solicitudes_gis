@@ -1032,11 +1032,11 @@ def solicitudes_json(request):
             'insumo': solicitud.insumo.capitalize(),
             'producto': solicitud.producto.capitalize(),
             'cambios_posible': solicitud.cambios_posible.capitalize(),
-            'fecha': solicitud.fecha.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha else None,
+            'fecha': timezone.localtime(solicitud.fecha).strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha else None,
             'codigo': solicitud.codigo,
             'orden_trabajo': solicitud.orden_trabajo,
-            'fecha_D': solicitud.fecha_D.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_D else "Sin Fecha",
-            'fecha_T': solicitud.fecha_T.strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_T else "Sin Fecha",
+            'fecha_D': timezone.localtime(solicitud.fecha_D).strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_D else "Sin Fecha",
+            'fecha_T': timezone.localtime(solicitud.fecha_T).strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha_T else "Sin Fecha",
             'fecha_L': solicitud.fecha_L.strftime('%Y-%m-%d') if solicitud.fecha_L else "Sin Fecha",
             'profesional_id': solicitud.profesional.id if solicitud.profesional else None,
             'profesional_nombre': f"{solicitud.profesional.first_name} {solicitud.profesional.last_name}" if solicitud.profesional else "Sin asignar",
@@ -1051,6 +1051,7 @@ def solicitudes_json(request):
             'archivos_adjuntos_urls': archivos_adjuntos_urls,
             'apoyos': apoyos_lista,  # Agregar la lista de apoyos
         })
+
 
 
 
