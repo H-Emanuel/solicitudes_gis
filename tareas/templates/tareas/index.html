@@ -783,7 +783,7 @@ function loadTasks(urlWithParam, page = 1) {
             console.log("ALGO PASO AQUI")
 
             
-            const tasksPerPage = 2;
+            const tasksPerPage = 10;
             let isServerPagination = (data.count !== undefined);
             let totalTasks = isServerPagination ? data.count : ((data.results || data.tareas || data).length);
             let totalPages = Math.ceil(totalTasks / tasksPerPage);

@@ -25,7 +25,7 @@ def index(request):
     page_number = request.GET.get('page', 1)
 
     # Crear el objeto Paginator, con 10 tareas por página
-    paginator = Paginator(tareas, 2)
+    paginator = Paginator(tareas, 10)
 
     # Obtener las tareas de la página solicitada
     page_obj = paginator.get_page(page_number)
