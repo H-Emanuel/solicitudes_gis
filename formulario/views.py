@@ -53,9 +53,14 @@ def crear_protocolo(request):
         producto = request.POST['producto'],
         cambios_posible = request.POST['cambios_posible'],        
         )
-
+        
         Protocolo.save()
         Protocolo.codigo = str(Protocolo.id)
+
+        archivos_adjuntos = request.FILES.getlist('archivo')
+        if archivos_adjuntos:
+            for archivo in archivos_adjuntos:
+                ArchivoProtocolo.objects.create(protocolo=Protocolo, archivo=archivo)
 
         data ={
              'Protocolo':Protocolo,
