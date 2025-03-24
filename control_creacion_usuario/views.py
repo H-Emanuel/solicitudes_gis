@@ -19,16 +19,13 @@ from django.shortcuts import get_object_or_404, redirect
 from django.core.paginator import Paginator, Page
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
-
 from formulario.models import *
-
 from django.db.models import Q,F, Sum,Count
 import os
 from django.contrib import messages
 from django.utils.timezone import now
-from arcgis.gis import GIS
-from arcgis.features import FeatureLayer
 import smtplib
+from smtplib import *
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
@@ -39,7 +36,7 @@ from django.utils.html import escape
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .pdf_generator import *
-
+from tareas.models import *
 
 
 ESTADO = [
@@ -199,24 +196,69 @@ def calcular_dias_habiles(fecha_inicio, fecha_fin):
     
     return dias_habiles
 
+# Relacionar Funcionario con User basado en nombres y apellidos
+def obtener_usuario_por_funcionario(funcionario):
+    return User.objects.filter(
+        first_name=funcionario.nombre, last_name=funcionario.apellido
+    ).first()
+
 @login_required(login_url='/login/')
 def control(request):
-    # Obtener todas las solicitudes
+    # Obtener todas las solicitudes y tareas
     total_solicitudes = ProtocoloSolicitud.objects.count()
+    total_tareas = Tarea.objects.filter(completada=True).count()
 
     # Contar solicitudes por estado
-    estados = ProtocoloSolicitud.objects.values("estado").annotate(
-        total=Count("estado")
-    )
-    # Convertir a un diccionario para facilitar el acceso
+    estados = ProtocoloSolicitud.objects.values("estado").annotate(total=Count("estado"))
     estado_counts = {estado["estado"]: estado["total"] for estado in estados}
 
-    # Asegurarse de que todos los estados estén representados, incluso si son 0
+    # Definir estados posibles
     estados_posibles = ["RECIBIDO", "EN PROCESO", "EJECUTADO", "RECHAZADO"]
     for estado in estados_posibles:
         estado_counts.setdefault(estado, 0)
 
-    # Contar solicitudes por profesional SIG
+    # Trabajo Propio (Puntaje y Total de Solicitudes)
+    profesionales_solicitudes = (
+        ProtocoloSolicitud.objects.filter(profesional__isnull=False)
+        .values("profesional__first_name", "profesional__last_name", "profesional_id")
+        .annotate(
+            trabajo_propio=Sum("valor_de_trabajo_funcionario"),
+            total_solicitudes=Count("id")
+        )
+    )
+
+    # Trabajo de Apoyo (Puntaje y Total de Solicitudes)
+    profesionales_apoyos = (
+        Apoyo_Protocolo.objects.filter(profesional__isnull=False)
+        .values("profesional__first_name", "profesional__last_name", "profesional_id")
+        .annotate(
+            trabajo_apoyo=Sum("valor_de_trabajo"),
+            total_solicitudes_apoyo=Count("id")
+        )
+    )
+
+    # Tareas Internas (Filtrar solo tareas completadas)
+    tareas_completadas = (
+        Tarea.objects.filter(completada=True)
+        .values("funcionario__nombre", "funcionario__apellido", "funcionario_id")
+        .annotate(total_tareas=Count("id"))
+    )
+
+    # Combinar datos
+    puntajes_por_profesional = {}
+
+    # Agregar ProtocoloSolicitud
+    for item in profesionales_solicitudes:
+        full_name = f"{item['profesional__first_name']} {item['profesional__last_name']}"
+        puntajes_por_profesional[item["profesional_id"]] = {
+            "name": full_name,
+            "trabajo_propio": float(item["trabajo_propio"] or 0),
+            "trabajo_apoyo": 0,
+            "total_solicitudes": item["total_solicitudes"],
+            "total_solicitudes_apoyo": 0,
+            "total_tareas": 0  # Inicialmente 0
+        }
+    
     solicitudes_per_profesional = (
         ProtocoloSolicitud.objects.filter(profesional__isnull=False)
         .values("profesional__first_name", "profesional__last_name")
@@ -224,88 +266,79 @@ def control(request):
         .order_by("-total")
     )
 
-    # Crear listas para etiquetas y datos del gráfico
     labels = [
-        f"{item['profesional__first_name']} {item['profesional__last_name']}"
-        for item in solicitudes_per_profesional
+    f"{item['profesional__first_name']} {item['profesional__last_name']}"
+    for item in solicitudes_per_profesional
     ]
-    data = [item["total"] for item in solicitudes_per_profesional]
 
-    # Convertir las listas a JSON para utilizarlas en JavaScript
+    # Agregar Apoyo_Protocolo
+    for item in profesionales_apoyos:
+        full_name = f"{item['profesional__first_name']} {item['profesional__last_name']}"
+        if item["profesional_id"] in puntajes_por_profesional:
+            puntajes_por_profesional[item["profesional_id"]]["trabajo_apoyo"] = float(item["trabajo_apoyo"] or 0)
+            puntajes_por_profesional[item["profesional_id"]]["total_solicitudes_apoyo"] = item["total_solicitudes_apoyo"]
+        else:
+            puntajes_por_profesional[item["profesional_id"]] = {
+                "name": full_name,
+                "trabajo_propio": 0,
+                "trabajo_apoyo": float(item["trabajo_apoyo"] or 0),
+                "total_solicitudes": 0,
+                "total_solicitudes_apoyo": item["total_solicitudes_apoyo"],
+                "total_tareas": 0
+            }
+
+    # Agregar Tareas Internas
+    for item in tareas_completadas:
+        funcionario = Funcionario.objects.get(id=item["funcionario_id"])
+        user = obtener_usuario_por_funcionario(funcionario)
+        
+        if user:
+            if user.id in puntajes_por_profesional:
+                puntajes_por_profesional[user.id]["total_tareas"] = item["total_tareas"]
+            else:
+                full_name = f"{funcionario.nombre} {funcionario.apellido}"
+                puntajes_por_profesional[user.id] = {
+                    "name": full_name,
+                    "trabajo_propio": 0,
+                    "trabajo_apoyo": 0,
+                    "total_solicitudes": 0,
+                    "total_solicitudes_apoyo": 0,
+                    "total_tareas": item["total_tareas"]
+                }
+
+    # Ordenar por total de trabajo
+    sorted_puntajes = sorted(puntajes_por_profesional.values(), key=lambda x: x["trabajo_propio"] + x["trabajo_apoyo"] + x["total_tareas"], reverse=True)
+
+    # Listas para gráficos
+    labels = [item["name"] for item in sorted_puntajes]
+    trabajo_propio_data = [item["trabajo_propio"] for item in sorted_puntajes]
+    trabajo_apoyo_data = [item["trabajo_apoyo"] for item in sorted_puntajes]
+    total_solicitudes_data = [item["total_solicitudes"] for item in sorted_puntajes]
+    total_solicitudes_apoyo_data = [item["total_solicitudes_apoyo"] for item in sorted_puntajes]
+    total_tareas_data = [item["total_tareas"] for item in sorted_puntajes]
+
+    # Convertir a JSON
     labels_json = json.dumps(labels)
-    data_json = json.dumps(data)
+    trabajo_propio_json = json.dumps(trabajo_propio_data)
+    trabajo_apoyo_json = json.dumps(trabajo_apoyo_data)
+    total_solicitudes_json = json.dumps(total_solicitudes_data)
+    total_solicitudes_apoyo_json = json.dumps(total_solicitudes_apoyo_data)
+    total_tareas_json = json.dumps(total_tareas_data)
 
-    # Mapeo de tipo_limite a días máximos
-    tipo_limite_days = {
-        "L": 2,  # LIVIANA
-        "M": 4,  # MEDIA
-        "A": 5,  # ALTO
-    }
-
-    # Contar solicitudes por tipo_limite
-    counts_per_tipo = (
-        ProtocoloSolicitud.objects.filter(tipo_limite__in=tipo_limite_days.keys())
-        .values("tipo_limite")
-        .annotate(total=Count("tipo_limite"))
-    )
-
-    # Calcular el promedio ponderado de carga de trabajo
-    weighted_sum = sum(
-        tipo_limite_days[item["tipo_limite"]] * item["total"]
-        for item in counts_per_tipo
-    )
-    total_tipo = sum(item["total"] for item in counts_per_tipo)
-    average_carga_trabajo = round(weighted_sum / total_tipo, 2) if total_tipo > 0 else 0
-
-    # Preparar datos de tipo_limite para la plantilla
-    tipo_limite_stats = [
-        {
-            "tipo_limite": "ALTO",
-            "dias_maximos": 5,
-            "total": next(
-                (
-                    item["total"]
-                    for item in counts_per_tipo
-                    if item["tipo_limite"] == "A"
-                ),
-                0,
-            ),
-        },
-        {
-            "tipo_limite": "MEDIA",
-            "dias_maximos": 4,
-            "total": next(
-                (
-                    item["total"]
-                    for item in counts_per_tipo
-                    if item["tipo_limite"] == "M"
-                ),
-                0,
-            ),
-        },
-        {
-            "tipo_limite": "LIVIANA",
-            "dias_maximos": 2,
-            "total": next(
-                (
-                    item["total"]
-                    for item in counts_per_tipo
-                    if item["tipo_limite"] == "L"
-                ),
-                0,
-            ),
-        },
-    ]
+    
 
     context = {
         "total_solicitudes": total_solicitudes,
+        "total_tareas": total_tareas,
+        "labels_json": labels_json,
+        "trabajo_porcentual_apoyo_json": trabajo_apoyo_json,
+        "trabajo_porcentual_propio_json": trabajo_propio_json,
+        "total_unitario_solicitudes_json": total_solicitudes_json,
+        "total_unitario_solicitudes_apoyo_json": total_solicitudes_apoyo_json,
+        "total_tareas_json": total_tareas_json,
         "en_proceso": estado_counts.get("EN PROCESO", 0),
         "ejecutado": estado_counts.get("EJECUTADO", 0),
         "rechazado": estado_counts.get("RECHAZADO", 0),
-        "labels_json": labels_json,
-        "data_json": data_json,
-        "average_carga_trabajo": average_carga_trabajo,
-        "tipo_limite_stats": tipo_limite_stats,
     }
 
     return render(request, "Control.html", context)
@@ -689,53 +722,66 @@ def Envio_de_correo(request):
                 # Adjuntar archivos menores a 10 MB
                 for archivo_adjunto in archivos_adjuntos:
                     mensaje.attach(archivo_adjunto)
-
                 # Configuración del servidor SMTP
                 smtp_server = 'mail.munivalpo.cl'
                 smtp_port = 587
                 smtp_usuario = f'servervalpo\\{user.username}'
                 smtp_contrasena = encotra_contraseña(user.username)
 
-                # Enviar el correo
                 server = smtplib.SMTP(smtp_server, smtp_port)
                 server.starttls()
                 server.login(smtp_usuario, smtp_contrasena)
-                server.sendmail(
-                    mi_correo,
-                    destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
-                    mensaje.as_string()
-                )
 
-                
-                server.quit()
+                # Intentar enviar el correo
+                try:
+                    server.sendmail(
+                        mi_correo,
+                        destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
+                        mensaje.as_string()
+                    )
+                    server.quit()
+
+                    email_sent = True
+                except SMTPException as smtp_error:
+                    print(f"Error al enviar el correo: {smtp_error}")
+                    email_sent = False  # Indicar que no se envió el correo
+
+                # Enviar señal para actualizar en tiempo real (independiente de si el correo se envió)
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                        "solicitudes",
-                        {"type": "send_update", "message": "actualizar"}
-                    )
-                
+                    "solicitudes",
+                    {"type": "send_update", "message": "actualizar"}
+                )
 
-                return JsonResponse({'success': True})
+                return JsonResponse({
+                    'success': True,
+                    'email_sent': email_sent  # Agregar este campo a la respuesta
+                })
+
             except Exception as e:
                 import traceback
-                error_trace = traceback.format_exc()  # Obtiene el error detallado
-                return JsonResponse({'success': False, 'error': str(e), 'traceback': error_trace}, status=555)
+                error_trace = traceback.format_exc()
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e),
+                    'traceback': error_trace
+                }, status=555)
 
 
         else:
+            
             try:
+                
                 message = request.POST.get('message', '')
                 formatted_message = escape(message).replace("\n", "<br>")
                 ficha_id = request.POST.get('ficha_id')
                 Protocolo = ProtocoloSolicitud.objects.get(id=ficha_id)
-                Protocolo.enviado_correo_t = True
                 Protocolo.fecha_T = timezone.now()
                 profesional = Protocolo.profesional
                 Protocolo.estado = 'EJECUTADO'
                 solicitante = Protocolo.corre_solicitante
-
                 Protocolo.save()
-
+                
                 # Verificar el tamaño de los archivos
                 if total_size > 10 * 1024 * 1024:  # Más de 10 MB
                     for archivo in archivos:
@@ -837,28 +883,59 @@ def Envio_de_correo(request):
                 smtp_usuario = f'servervalpo\\{user.username}'
                 smtp_contrasena = encotra_contraseña(user.username)
 
-                # Enviar el correo
                 server = smtplib.SMTP(smtp_server, smtp_port)
                 server.starttls()
                 server.login(smtp_usuario, smtp_contrasena)
-                server.sendmail(
-                    mi_correo,
-                    destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
-                    mensaje.as_string()
-                )
-                server.quit()
+
                 
+
+
+                # Intentar enviar el correo
+                try:
+                    server.sendmail(
+                        mi_correo,
+                        destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
+                        mensaje.as_string()
+                    )
+                    server.quit()
+
+                    email_sent = True
+                    Protocolo.enviado_correo_t = True
+                    Protocolo.save()
+                except SMTPException as smtp_error:
+
+                    print(f"Error al enviar el correo: {smtp_error}")
+                    email_sent = False  # Indicar que no se envió el correo
+
+                # Enviar señal para actualizar en tiempo real (independiente de si el correo se envió)
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                        "solicitudes",
-                        {"type": "send_update", "message": "actualizar"}
-                    )
+                    "solicitudes",
+                    {"type": "send_update", "message": "actualizar"}
+                )
 
-                return JsonResponse({'success': True})
+                return JsonResponse({
+                    'success': True,
+                    'email_sent': email_sent  # Agregar este campo a la respuesta
+                })
+
             except Exception as e:
                 import traceback
-                error_trace = traceback.format_exc()  # Obtiene el error detallado
-                return JsonResponse({'success': False, 'error': str(e), 'traceback': error_trace}, status=555)
+                
+                Respuesta = Respuesta_protocolo.objects.create(
+                        protocolo = Protocolo,
+                        respuesta = message
+                        )
+                Respuesta.save()
+                for archivo in archivos:   
+                    Archivo_respuesta.objects.create(respuesta=Respuesta, archivo=archivo)
+
+                error_trace = traceback.format_exc()
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e),
+                    'traceback': error_trace
+                }, status=555)
 
                               
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
@@ -922,19 +999,24 @@ def delegar_admin(request):
     }
     return render(request, 'admin.html', data)
 
-def encotra_contraseña(usuario):
+def encotra_contraseña(usuario, tipo='munivalpo'):
+    """
+    tipo: 'munivalpo' o 'gmail'
+    """
     secrets_file_path = 'pass.txt'
 
     with open(secrets_file_path, 'r') as file:
         secrets = file.readlines()
 
-    # Buscar un usuario específico
     for secret in secrets:
-        saved_user, saved_password = secret.strip().split(':')
-        if saved_user == usuario:
-            return saved_password
+        partes = secret.strip().split(':')
+        if len(partes) >= 2 and partes[0] == usuario:
+            if tipo == 'munivalpo':
+                return partes[1]  # Contraseña municipal
+            elif tipo == 'gmail' and len(partes) >= 3:
+                return partes[2]  # Contraseña Gmail
+    return None
 
-    return None 
 
 @csrf_exempt
 def resert_limite(request):
@@ -987,7 +1069,9 @@ def solicitudes_json(request):
         ]
 
         # Calcular los días restantes hasta la fecha límite
-        if solicitud.fecha_T:
+        if solicitud.estado == "RECHAZADO":
+            dias_restantes = "Rechazado"
+        elif solicitud.fecha_T:
             dias_restantes = "Trabajo terminado"
         elif solicitud.fecha_L:
             # Calcular la diferencia en segundos
@@ -1051,7 +1135,6 @@ def solicitudes_json(request):
             'archivos_adjuntos_urls': archivos_adjuntos_urls,
             'apoyos': apoyos_lista,  # Agregar la lista de apoyos
         })
-
 
 
 
@@ -1154,7 +1237,7 @@ def usuarios_disponibles(request):
         profesional_id = protocolo.profesional.id if protocolo.profesional else None
 
         # Obtener todos los usuarios, excluyendo el profesional principal
-        usuarios = User.objects.exclude(id=profesional_id).values('id', 'first_name', 'last_name')
+        usuarios = User.objects.exclude(id=profesional_id,) .values('id', 'first_name', 'last_name')
 
         # Obtener los apoyos ya registrados para este protocolo
         apoyo_qs = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
@@ -1209,3 +1292,120 @@ def agregar_apoyo(request):
             return JsonResponse({"error": "Algún usuario no se encontró"}, status=404)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+
+
+def apoyo_trabajo(request):
+    protocolo_id = request.GET.get("protocolo_id")
+
+    if not protocolo_id:
+        return JsonResponse({"error": "Protocolo no encontrado"}, status=400)
+
+    try:
+        protocolo = ProtocoloSolicitud.objects.get(id=protocolo_id)
+        apoyos = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
+
+        apoyo_data = [
+            {
+                "id": apoyo.profesional.id,
+                "first_name": apoyo.profesional.first_name,
+                "last_name": apoyo.profesional.last_name,
+                "ya_agregado": True
+            }
+            for apoyo in apoyos
+        ]
+
+        return JsonResponse({"apoyos": apoyo_data})
+
+    except ProtocoloSolicitud.DoesNotExist:
+        return JsonResponse({"error": "Protocolo no encontrado"}, status=404)
+
+@csrf_exempt  # Deshabilita CSRF solo para pruebas (en producción usa @csrf_protect y pasa el token en AJAX)
+def guardar_nota(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            protocolo_id = data.get("protocolo_id")
+            porcentaje_total = float(data.get("porcentaje_total")) / 100  # Convertir 100% -> 1.0
+            porcentaje_profesional = float(data.get("porcentaje_profesional")) / 100  # Convertir 100% -> 1.0
+            porcentaje_apoyo = float(data.get("porcentaje_apoyo")) / 100  # Convertir 100% -> 1.0
+            apoyos_ids = data.get("apoyos", [])  # Lista de IDs de usuarios seleccionados como apoyo
+            print("Apoyos:", apoyos_ids)
+            # Buscar el protocolo
+            protocolo = ProtocoloSolicitud.objects.get(id=protocolo_id)
+
+            # Verificar que la distribución es válida
+            if porcentaje_profesional + porcentaje_apoyo > porcentaje_total:
+                return JsonResponse({"success": False, "error": "La distribución de trabajo no puede exceder el total asignado"}, status=400)
+
+            # Guardar el nuevo valor en ProtocoloSolicitud
+            protocolo.valor_de_trabajo = porcentaje_total
+            protocolo.valor_de_trabajo_funcionario = porcentaje_profesional
+            protocolo.puntaje = 1 * porcentaje_profesional
+            protocolo.save()
+
+
+            # Si hay apoyos, guardar los valores distribuidos
+            apoyos = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
+            total_apoyos = apoyos.count()
+
+            if total_apoyos > 0 and porcentaje_apoyo > 0:
+                valor_por_apoyo = porcentaje_apoyo / total_apoyos
+
+                for apoyo in apoyos:
+                    apoyo.valor_de_trabajo = valor_por_apoyo
+                    apoyo.puntaje = valor_por_apoyo  # Multiplicado por 1
+                    apoyo.save()
+
+
+
+            return JsonResponse({"success": True, "message": "Datos guardados correctamente"})
+
+        except ProtocoloSolicitud.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Protocolo no encontrado"}, status=404)
+        except User.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Usuario de apoyo no encontrado"}, status=404)
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+    
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
+@csrf_exempt
+def obtener_nota(request):
+    protocolo_id = request.GET.get("protocolo_id")
+
+    if not protocolo_id:
+        return JsonResponse({"error": "Protocolo no encontrado"}, status=400)
+
+    try:
+        protocolo = ProtocoloSolicitud.objects.get(id=protocolo_id)
+        apoyos = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
+
+        # Obtener valores en formato 1-100 (convertir de 0.XX a XX)
+        porcentaje_total = (protocolo.valor_de_trabajo or 0) * 100
+        porcentaje_profesional = (protocolo.valor_de_trabajo_funcionario or 0) * 100
+        porcentaje_apoyo = sum(
+            apoyo.valor_de_trabajo if apoyo.valor_de_trabajo is not None else 0
+            for apoyo in apoyos
+        ) * 100
+
+        # Construir respuesta JSON
+        apoyo_data = [
+            {
+                "id": apoyo.profesional.id,
+                "first_name": apoyo.profesional.first_name,
+                "last_name": apoyo.profesional.last_name,
+                "ya_agregado": True
+            }
+            for apoyo in apoyos
+        ]
+
+        return JsonResponse({
+            "porcentaje_total": int(porcentaje_total),  # Convertir a entero
+            "porcentaje_profesional": int(porcentaje_profesional),  # Convertir a entero
+            "porcentaje_apoyo": int(porcentaje_apoyo),  # Convertir a entero
+            "apoyos": apoyo_data
+        })
+
+    except ProtocoloSolicitud.DoesNotExist:
+        return JsonResponse({"error": "Protocolo no encontrado"}, status=404)

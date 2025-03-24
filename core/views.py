@@ -53,9 +53,6 @@ def gestionsig(request):
     departamento_seleccionado = request.COOKIES.get('departamento')
 
 
-
-
-
     if departamento_seleccionado:
         user_activity = UserActivity(page='Gestion SIG', departamento=departamento_seleccionado)
         user_activity.save()   
@@ -80,18 +77,48 @@ def SSregistro(request):
 
 
 def buscar_protocolo(request):
-  if request.method == "POST":
-    codigo = request.POST.get("codigo")
-    
-    try:
-      solicitud = ProtocoloSolicitud.objects.get(codigo=codigo)
-      estado_protocolo = solicitud.estado
-    except ProtocoloSolicitud.DoesNotExist:
-      estado_protocolo = "No existe el código de protocolo"
-    data = {
-      "estado": estado_protocolo
-    }
-    return JsonResponse(data)
+    if request.method == "POST":
+        codigo = request.POST.get("codigo")
+        correo_input = request.POST.get("correo_input")  # Podría ser None
+
+        try:
+            protocolo = ProtocoloSolicitud.objects.get(codigo=codigo)
+            correo_registrado = protocolo.corre_solicitante
+
+            data = {
+                "estado": protocolo.estado,
+                "correo": correo_registrado,
+                "error": False
+            }
+
+            # Si se ingresó correo, validar
+            if correo_input:
+                if correo_input.strip().lower() == correo_registrado.strip().lower():
+                    # Coincide: enviar respuesta y archivos
+                    respuesta = Respuesta_protocolo.objects.filter(protocolo=protocolo).first()
+                    if respuesta:
+                        data["respuesta"] = respuesta.respuesta
+                        archivos = Archivo_respuesta.objects.filter(respuesta=respuesta)
+                        data["archivos"] = [
+                            {
+                                "url": archivo.archivo.url,
+                                "nombre": archivo.archivo.name.split("/")[-1]
+                            } for archivo in archivos
+                        ]
+                    else:
+                        data["respuesta"] = None
+                        data["archivos"] = []
+                else:
+                    return JsonResponse({"error": True, "message": "El correo ingresado no coincide con el registrado."})
+            # Si no hay correo_input, solo devuelve estado y correo
+            return JsonResponse(data)
+
+        except ProtocoloSolicitud.DoesNotExist:
+            return JsonResponse({"error": True, "message": "Protocolo no encontrado."})
+
+    return JsonResponse({"error": True, "message": "Método no permitido."})
+
+
 
 def Registro_arcgis(depa, pagina):
     try:

@@ -6,6 +6,7 @@
   <link href="{% static 'css/control.css' %}" rel="stylesheet" />
 {% endblock %}
 {% block main_content %}
+
   <section class="container">
     <div class="flex-column-red">
       <div class="flex-row-content p-1">
@@ -13,11 +14,17 @@
         <div class="flex-row-dashboard fill-available">
           <div class="flex-column-gap fill-available">
             <div class="info-box p-1 fill-available">
-              <h3>Solicitudes por Profesional</h3>
-              <canvas id="solicitudesPorProfesionalChart"></canvas>
+              <h3>Gráfico de Solicitudes y Trabajos Interno</h3>
+              <!-- Botón para cambiar entre gráficos -->
+              <button id="toggleChart" class="btn btn-primary">Ver Gráfico Porcentual</button>
+
+              <!-- Espacio para el gráfico -->
+              <canvas id="puntajePorProfesionalChart"></canvas>
+
             </div>
           </div>
         </div>
+        
 
         <!-- Sección de Dashboard -->
         <div class="flex-row-dashboard">
@@ -59,23 +66,7 @@
           </div>
 
           <!-- Parte Inferior del Dashboard: Promedio de Carga de Trabajo -->
-          <div class="dashboard-bottom">
-            <div class="flex-column-gap fill-available">
-              <div class="dashboard-box-2 p-1 h-full">
-                <h3>Promedio de carga de trabajo</h3>
-                <p>
-                  <span class="counter" data-target="{{ average_carga_trabajo }}">0</span> Días máximos
-                </p>
-                <ul>
-                  {% for tipo in tipo_limite_stats %}
-                    <li>
-                      <strong>{{ tipo.tipo_limite }}</strong>: {{ tipo.dias_maximos }} Días máximos (<span class="counter" data-target="{{ tipo.total }}">0</span> solicitudes)
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -89,9 +80,18 @@
   <!-- Definir las variables necesarias para el gráfico de barras -->
   <script>
     var labels = {{ labels_json|safe }};
-    var data = {{ data_json|safe }};
-  </script>
+    var trabajo_propio = {{ total_unitario_solicitudes_json|safe }};
+    var trabajo_apoyo = {{ total_unitario_solicitudes_apoyo_json|safe }};
+    var total_tareas = {{ total_tareas_json|safe }};
+    var trabajo_porcentual_propio = {{ trabajo_porcentual_propio_json|safe }};
+    var trabajo_porcentual_apoyo = {{ trabajo_porcentual_apoyo_json|safe }};
+
+</script>
+
+
+
+
 
   <!-- Incluir el script externo de control.js -->
-  <script src="{% static 'js/control.js' %}"></script>
+  <script src="{% static 'js/control_v.js' %}"></script>
 {% endblock %}

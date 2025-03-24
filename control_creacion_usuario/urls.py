@@ -38,8 +38,10 @@ urlpatterns = [
 
     path("usuarios_disponibles/", views.usuarios_disponibles, name="usuarios_disponibles"),
     path("agregar_apoyo/", views.agregar_apoyo, name="agregar_apoyo"),
+    path("apoyo_trabajo/", views.apoyo_trabajo, name="apoyo_trabajo"),
 
-
+    path("guardar_nota/", views.guardar_nota, name="guardar_nota"),
+    path("obtener_nota/", views.obtener_nota, name="obtener_nota"), 
 
 
 ]

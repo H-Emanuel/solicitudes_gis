@@ -83,15 +83,22 @@ class ProtocoloSolicitud(models.Model):
 
     tipo_limite = models.CharField(max_length=100, blank=True, default='',choices=LIMITE_DE_DIA)
 
-    estado = models.CharField(max_length=100, blank=True, default='RECIBIDO',choices=ESTADO)
-
     archivo_adjunto = models.FileField(upload_to=content_file_name_adjunto, blank=True, null=True)
+
+    estado = models.CharField(max_length=100, blank=True, default='RECIBIDO',choices=ESTADO)
 
     enviado_correo = models.BooleanField(default=False)
 
     enviado_correo_t = models.BooleanField(default=False)
 
     orden_trabajo_t = models.BooleanField(default=False)
+
+    valor_de_trabajo = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+
+    valor_de_trabajo_funcionario = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+
+    puntaje = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+
     
     class Meta:
         verbose_name = "protocolo_solicitud"
@@ -163,10 +170,12 @@ class Registro_designio(models.Model):
     def __str__(self):
         return str(self.profesional.first_name) + ' - ' + str(self.protocolo.id)
     
-
 class Apoyo_Protocolo(models.Model):
+
     protocolo = models.ForeignKey(ProtocoloSolicitud, on_delete=models.CASCADE, related_name='solicitud')
     profesional = models.ForeignKey(User, on_delete=models.CASCADE )
+    valor_de_trabajo = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+    puntaje = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)  # Se almacena en BD
 
     class Meta:
         verbose_name = "archivo_protocolo"
@@ -174,3 +183,48 @@ class Apoyo_Protocolo(models.Model):
 
     def __str__(self):
         return str(self.protocolo.id) + ' - ' + str(self.id)
+
+class Respuesta_protocolo(models.Model):
+    id = models.BigAutoField(primary_key=True, unique=True)
+    protocolo = models.ForeignKey(ProtocoloSolicitud, on_delete=models.CASCADE, related_name='protocolo_respuesta')
+    respuesta = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Respuesta_protocolo"
+        verbose_name_plural = "Respuestas_protocolos"
+
+    def __str__(self):
+        return str(self.protocolo.id) + ' - ' + str(self.id)
+
+    
+def content_file_respuesta_adjunto(instance, filename):
+    # Extraer la extensión del archivo original
+    ext = filename.split('.')[-1]
+    
+    # Carpeta específica basada en el ID del objeto
+    folder = f"assets/document/respuesta/{instance.respuesta.protocolo.id}/"
+    
+    # Base name del archivo
+    base_filename = "adjunto_respuesta_"
+    
+    # Ruta completa del archivo inicial
+    file_path = os.path.join(folder, f"{base_filename}.{ext}")
+
+    # Verificar si ya existe un archivo con el mismo nombre
+    counter = 1
+    while os.path.exists(os.path.join(folder, file_path)):
+        # Crear una versión con un sufijo incremental
+        file_path = os.path.join(folder, f"{base_filename}_{counter}.{ext}")
+        counter += 1
+
+    return file_path
+class Archivo_respuesta(models.Model):
+    respuesta = models.ForeignKey(Respuesta_protocolo, on_delete=models.CASCADE, related_name='respuesta_form')
+    archivo = models.FileField(upload_to=content_file_respuesta_adjunto)
+
+    class Meta:
+        verbose_name = "archivo_respuesta"
+        verbose_name_plural = "archivos_respuestas"
+
+    def __str__(self):
+        return str(self.respuesta.protocolo.id) + ' - ' + str(self.id)

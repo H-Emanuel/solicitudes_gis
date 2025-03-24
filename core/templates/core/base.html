@@ -290,6 +290,13 @@
                         <input type="text" id="codigo_protocolo" class="form-control" placeholder="Ingrese el código">
                         <button class="btn btn-primary" type="button" id="buscar_protocolo">Buscar</button>
                     </div>
+
+                    <div class="input-group mb-3" id="correo_container" style="display:none;">
+                        <input type="email" id="correo_protocolo" class="form-control" placeholder="Ingrese su correo">
+                        <button class="btn btn-success" type="button" id="verificar_correo">Verificar</button>
+                    </div>
+                    
+                    
                 </div>
             </div>
         </div>
@@ -336,42 +343,104 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        $(document).ready(function() {
-            $("#buscar_protocolo").click(function() {
-                var codigo = $("#codigo_protocolo").val();
-                $.ajax({
-                    url: "{% url 'buscar_protocolo' %}",
-                    type: "POST",
-                    data: {
-                        codigo: codigo,
-                        csrfmiddlewaretoken: "{{ csrf_token }}"
-                    },
-                    success: function(response) {
-                        if (response.error) {
-                            $("#estado_protocolo").text(response.message).css("color", "red");
-                        } else {
-                            $("#estado_protocolo").text(response.estado);
-                            switch(response.estado) {
-                                case "RECIBIDO":
-                                    $("#estado_protocolo").css("color", "green");
-                                    break;
-                                case "EN PROCESO":
-                                    $("#estado_protocolo").css("color", "blue");
-                                    break;
-                                case "EJECUTADO":
-                                    $("#estado_protocolo").css("color", "purple");
-                                    break;
-                                case "RECHAZADO":
-                                    $("#estado_protocolo").css("color", "red");
-                                    break;
-                            }
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error al buscar el protocolo:", error);
+        let correoCorrecto = "";
+
+
+$(document).ready(function () {
+    // Paso 1: Buscar por código
+    $("#buscar_protocolo").click(function () {
+        const codigo = $("#codigo_protocolo").val().trim();
+
+        $.ajax({
+            url: "{% url 'buscar_protocolo' %}",
+            type: "POST",
+            data: {
+                codigo: codigo,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                if (response.error) {
+                    $("#estado_protocolo").html("<span class='text-danger'>" + response.message + "</span>");
+                    $("#correo_container").hide();
+                } else {
+                    // Mostrar estado
+                    $("#estado_protocolo").html("Estado: <strong>" + response.estado + "</strong>");
+                    correoCorrecto = response.correo;
+
+                    // Mostrar input de correo y limpiar anteriores
+                    $("#correo_container").show();
+                    $("#correo_protocolo").val("");
+                    $("#correo_container").data("codigo", codigo);  // Guardamos el código en el DOM
+                    $("#estado_protocolo").append("<br><span class='text-muted'>Ingrese el correo con el que registró la solicitud</span>");
+                }
+            },
+            error: function () {
+                $("#estado_protocolo").html("<span class='text-danger'>Error al buscar el protocolo.</span>");
+            }
+        });
+    });
+
+    // Paso 2: Verificar correo
+    $("#verificar_correo").click(function () {
+        const codigo = $("#correo_container").data("codigo");
+        const correo_input = $("#correo_protocolo").val().trim();
+
+        $.ajax({
+            url: "{% url 'buscar_protocolo' %}",
+            type: "POST",
+            data: {
+                codigo: codigo,
+                correo_input: correo_input,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                if (response.error) {
+                    $("#estado_protocolo").append("<br><span class='text-danger'>" + response.message + "</span>");
+                } else {
+                    if (response.respuesta) {
+                        $("#estado_protocolo").append("<br><strong>Respuesta:</strong> " + response.respuesta);
                     }
-                });
-            });
+
+                    if (response.archivos && response.archivos.length > 0) {
+                        let archivosHtml = "<br><strong>Archivos adjuntos:</strong><ul>";
+                        response.archivos.forEach(function (archivo) {
+                            archivosHtml += "<li><a href='" + archivo.url + "' target='_blank'>" + archivo.nombre + "</a></li>";
+                        });
+                        archivosHtml += "</ul>";
+                        $("#estado_protocolo").append(archivosHtml);
+                    }
+                }
+            },
+            error: function () {
+                $("#estado_protocolo").append("<br><span class='text-danger'>Error al verificar el correo.</span>");
+            }
+        });
+    });
+
+        // Verificar correo ingresado
+        $("#verificar_correo").click(function () {
+            const correoIngresado = $("#correo_protocolo").val().trim();
+
+            if (correoIngresado === correoCorrecto) {
+                let respuesta = $("#correo_container").data("respuesta");
+                let archivos = $("#correo_container").data("archivos");
+
+                if (respuesta) {
+                    $("#estado_protocolo").append("<br><strong>Respuesta:</strong> " + respuesta);
+                }
+
+                if (archivos && archivos.length > 0) {
+                    let archivosHtml = "<br><strong>Archivos adjuntos:</strong><ul>";
+                    archivos.forEach(function (archivo) {
+                        archivosHtml += "<li><a href='" + archivo.url + "' target='_blank'>" + archivo.nombre + "</a></li>";
+                    });
+                    archivosHtml += "</ul>";
+                    $("#estado_protocolo").append(archivosHtml);
+                }
+            } else {
+                $("#estado_protocolo").append("<br><span class='text-danger'>El correo no coincide.</span>");
+            }
+        });
 
             function setCookie(name, value, days) {
                 var expires = "";
@@ -399,12 +468,12 @@
                 $("#seleccionarDepartamentoModal").modal("show");
             }
 
-            $("#guardarDepartamentoBtn").click(function() {
-                var departamentoSeleccionado = $("#departamentoSelect").val();
-                setCookie("departamento", departamentoSeleccionado, 365);
-                $("#seleccionarDepartamentoModal").modal("hide");
-            });
+        $("#guardarDepartamentoBtn").click(function() {
+            var departamentoSeleccionado = $("#departamentoSelect").val();
+            setCookie("departamento", departamentoSeleccionado, 365);
+            $("#seleccionarDepartamentoModal").modal("hide");
         });
+    });
     </script>
 </body>
 </html>
