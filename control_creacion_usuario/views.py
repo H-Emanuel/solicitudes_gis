@@ -642,7 +642,8 @@ def Envio_de_correo(request):
                         urls_archivos.append(f"{dominio}{url_relativa}")
 
                 else:  # Menor o igual a 10 MB
-                    for archivo in archivos:
+                    for archivo in enumerate(archivos):
+
                         archivo_adjunto = MIMEApplication(archivo.read())
                         nombre_archivo = encode_rfc2231(archivo.name, 'utf-8')
                         archivo_adjunto.add_header(
@@ -651,6 +652,7 @@ def Envio_de_correo(request):
                             filename=nombre_archivo
                         )
                         archivos_adjuntos.append(archivo_adjunto)
+
 
                 # Generar PDF
 
@@ -671,92 +673,135 @@ def Envio_de_correo(request):
                 superusers = User.objects.filter(is_superuser=True).exclude(username="osvaldo.moya").values_list('email', flat=True)
                 superuser_emails = list(superusers)
 
-                mi_correo = f'{user.username}@munivalpo.cl'.strip()
-                asunto = f'Solicitud N°{Protocolo.codigo} Asignada'
-                mensaje = MIMEMultipart()
-                mensaje['From'] = mi_correo
-                destinatarios = list(set([profesional.email] + emails))
-                mensaje['To'] = ', '.join(destinatarios)
-                mensaje['Subject'] = asunto
+                credenciales = {
+                    'munivalpo': {
+                        'correo': lambda user: f'{user.username}@munivalpo.cl'.strip(),
+                        'usuario_smtp': lambda user: f'servervalpo\\{user.username}',
+                        'contrasena': lambda user: encotra_contraseña(user.username, 'munivalpo'),
+                        'smtp_server': 'mail.munivalpo.cl',
+                        'smtp_port': 587
+                    },
+                    'gmail': {
+                        'correo': lambda user: f'{user.username}.sig@gmail.com'.strip(),
+                        'usuario_smtp': lambda user: f'{user.username}.sig@gmail.com',
+                        'contrasena': lambda user: encotra_contraseña(user.username, 'gmail'),
+                        'smtp_server': 'smtp.gmail.com',
+                        'smtp_port': 587
+                    }
+                }
 
-                bcc_destinatarios = [mi_correo]
 
-                # Cargar la firma
-                firma_path = os.path.join('media/assets/Firma', f'{user.username}.png')
-                if os.path.exists(firma_path):
-                    with open(firma_path, 'rb') as firma_file:
-                        firma_img = MIMEImage(firma_file.read())
-                        firma_img.add_header('Content-ID', '<firma>')
-                        mensaje.attach(firma_img)
+                # Usar primer intento con 'munivalpo', si falla, intentar con 'gmail'
+                for proveedor in ['munivalpo', 'gmail']:
+                    try:
+                        if proveedor == 'munivalpo':
+                            correo_profesional = str(profesional.email)
+                        else:  # gmail
+                            correo_profesional = f"{profesional.username}.sig@gmail.com"
 
-                # Generar el contenido HTML
-                html_archivos = ""
-                if urls_archivos:
-                    html_archivos = f"""
-                    <p>Los siguientes archivos superan el límite de 10 MB y están disponibles en los siguientes enlaces:</p>
-                    <ul>
-                        {''.join(f'<li><a href="{url}" target="_blank">{url}</a></li>' for url in urls_archivos)}
-                    </ul>
-                    """
-                # else:
-                #     html_archivos = "<p>Los archivos están adjuntos al correo.</p>"
+                        # Preparar destinatarios
 
-                html_content = f"""
-                <html>
-                    <body>
-                        <p>{formatted_message}</p>
-                        <br>
-                        {html_archivos}
-                        <br>
-                        <img src="cid:firma" alt="Firma" width="600" height="auto" />
-                    </body>
-                </html>
-                """
-                mensaje.attach(MIMEText(html_content, 'html'))
+     
+                        mi_correo = credenciales[proveedor]['correo'](user)
+                        asunto = f'Solicitud N°{Protocolo.codigo} Asignada'
+                        destinatarios = list(set([correo_profesional] + [str(e) for e in emails]))
+                        bcc_destinatarios = [mi_correo]
 
-                # Adjuntar PDF
-                pdf_adjunto = MIMEApplication(archivo_pdf)
-                pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
-                mensaje.attach(pdf_adjunto)
+                        mensaje = MIMEMultipart()
+                        mensaje['From'] = mi_correo
+                        mensaje['To'] = ', '.join(destinatarios)
+                        mensaje['Bcc'] = ', '.join(bcc_destinatarios)  # Mejor práctica
+                        mensaje['Subject'] = asunto
 
-                # Adjuntar archivos menores a 10 MB
-                for archivo_adjunto in archivos_adjuntos:
-                    mensaje.attach(archivo_adjunto)
-                # Configuración del servidor SMTP
-                smtp_server = 'mail.munivalpo.cl'
-                smtp_port = 587
-                smtp_usuario = f'servervalpo\\{user.username}'
-                smtp_contrasena = encotra_contraseña(user.username)
+                        print("Destinatarios:", destinatarios)
+                        print("BCC:", bcc_destinatarios)
 
-                server = smtplib.SMTP(smtp_server, smtp_port)
-                server.starttls()
-                server.login(smtp_usuario, smtp_contrasena)
 
-                # Intentar enviar el correo
-                try:
-                    server.sendmail(
-                        mi_correo,
-                        destinatarios + bcc_destinatarios,  # Incluir destinatarios normales y BCC
-                        mensaje.as_string()
-                    )
-                    server.quit()
 
-                    email_sent = True
-                except SMTPException as smtp_error:
-                    print(f"Error al enviar el correo: {smtp_error}")
-                    email_sent = False  # Indicar que no se envió el correo
+                        # Firma
+                        firma_path = os.path.join('media/assets/Firma', f'{user.username}.png')
+                        if os.path.exists(firma_path):
+                            with open(firma_path, 'rb') as firma_file:
+                                firma_img = MIMEImage(firma_file.read())
+                                firma_img.add_header('Content-ID', '<firma>')
+                                mensaje.attach(firma_img)
 
-                # Enviar señal para actualizar en tiempo real (independiente de si el correo se envió)
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                    "solicitudes",
-                    {"type": "send_update", "message": "actualizar"}
-                )
+                        # Archivos en HTML
+                        html_archivos = ""
+                        if urls_archivos:
+                            html_archivos = f"""
+                            <p>Los siguientes archivos superan el límite de 10 MB y están disponibles en los siguientes enlaces:</p>
+                            <ul>
+                                {''.join(f'<li><a href="{url}" target="_blank">{url}</a></li>' for url in urls_archivos)}
+                            </ul>
+                            """
 
-                return JsonResponse({
-                    'success': True,
-                    'email_sent': email_sent  # Agregar este campo a la respuesta
-                })
+                        html_content = f"""
+                        <html>
+                            <body>
+                                <p>{formatted_message}</p>
+                                <br>
+                                {html_archivos}
+                                <br>
+                                <img src="cid:firma" alt="Firma" width="600" height="auto" />
+                            </body>
+                        </html>
+                        """
+                        mensaje.attach(MIMEText(html_content, 'html'))
+
+                        # Adjuntar PDF
+                        pdf_adjunto = MIMEApplication(archivo_pdf)
+                        pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
+                        mensaje.attach(pdf_adjunto)
+
+                        # Adjuntar archivos menores a 10 MB
+                        for archivo_adjunto in archivos_adjuntos:
+                            mensaje.attach(archivo_adjunto)
+
+                        # Configurar SMTP
+                        smtp_server = credenciales[proveedor]['smtp_server']
+                        smtp_port = credenciales[proveedor]['smtp_port']
+                        smtp_usuario = credenciales[proveedor]['usuario_smtp'](user)
+                        smtp_contrasena = credenciales[proveedor]['contrasena'](user)
+
+                        server = smtplib.SMTP(smtp_server, smtp_port)
+                        server.starttls()
+                        server.login(smtp_usuario, smtp_contrasena)
+
+                        # Enviar correo
+                        server.sendmail(
+                            mi_correo,
+                            destinatarios + bcc_destinatarios,  # destinatarios visibles + ocultos
+                            mensaje.as_string()
+                        )
+
+                        server.quit()
+
+                        email_sent = True
+
+                        # Enviar señal en tiempo real
+                        channel_layer = get_channel_layer()
+                        async_to_sync(channel_layer.group_send)(
+                            "solicitudes",
+                            {"type": "send_update", "message": "actualizar"}
+                        )
+
+                        return JsonResponse({
+                            'success': True,
+                            'email_sent': email_sent
+                        })
+
+                    except Exception as e:
+                        print(f"Error con proveedor {proveedor}: {e}")
+                        # Si es el último intento, responde con error
+                        if proveedor == 'gmail':
+                            import traceback
+                            error_trace = traceback.format_exc()
+                            return JsonResponse({
+                                'success': False,
+                                'error': str(e),
+                                'traceback': error_trace
+                            }, status=555)
 
             except Exception as e:
                 import traceback
