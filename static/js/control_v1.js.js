@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Configuración del Gráfico de Barras con animación gradual de izquierda a derecha
     if (typeof labels !== "undefined" && typeof trabajo_propio !== "undefined" && typeof trabajo_apoyo !== "undefined" &&
-        typeof trabajo_porcentual_propio !== "undefined" && typeof trabajo_porcentual_apoyo !== "undefined") {
+        typeof trabajo_porcentual_propio !== "undefined" && typeof trabajo_porcentual_apoyo !== "undefined" && 
+        typeof total_apoyo_tareas !== "undefined") {
         
         const ctx1 = document.getElementById("puntajePorProfesionalChart").getContext("2d");
 
@@ -46,19 +47,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     borderWidth: 1
                 },
                 {
+                    label: "Tareas Internas completadas",
+                    data: total_tareas,
+                    backgroundColor: "rgba(30, 106, 229, 0.38)",
+                    borderColor: "rgb(32, 98, 203)",
+                    borderWidth: 1
+                },
+                {
                     label: "Solitudes asignada como apoyo",
                     data: trabajo_apoyo,
                     backgroundColor: "rgba(14, 174, 6, 0.53)",
                     borderColor: "rgb(9, 127, 3)",
                     borderWidth: 1
                 },
+                
                 {
-                    label: "Tareas Internas completadas",
-                    data: total_tareas,
-                    backgroundColor: "rgba(30, 106, 229, 0.38)",
-                    borderColor: "rgb(32, 98, 203)",
+                    label: "Tareas Internas como apoyo",
+                    data: total_apoyo_tareas,
+                    backgroundColor: "rgba(30, 229, 66, 0.38)",
+                    borderColor: "rgb(63, 203, 32)",
                     borderWidth: 1
-                }
+                },
             ]
         };
 
@@ -76,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     label: "Carga de trabajo Como Apoyo (%)",
                     data: trabajo_porcentual_apoyo,
                     backgroundColor: "rgba(14, 174, 6, 0.53)",
-                    borderColor: "rgb(9, 127, 3)",
+                    borderColor: "rgb(14, 104, 9)",
                     borderWidth: 1
                 }
             ]

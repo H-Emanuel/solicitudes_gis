@@ -83,6 +83,8 @@
     var trabajo_propio = {{ total_unitario_solicitudes_json|safe }};
     var trabajo_apoyo = {{ total_unitario_solicitudes_apoyo_json|safe }};
     var total_tareas = {{ total_tareas_json|safe }};
+    var total_apoyo_tareas = {{ total_apoyos_tareas_json|safe }};
+
     var trabajo_porcentual_propio = {{ trabajo_porcentual_propio_json|safe }};
     var trabajo_porcentual_apoyo = {{ trabajo_porcentual_apoyo_json|safe }};
 
@@ -93,5 +95,5 @@
 
 
   <!-- Incluir el script externo de control.js -->
-  <script src="{% static 'js/control_v.js' %}"></script>
+  <script src="{% static 'js/control_v1.js' %}"></script>
 {% endblock %}

@@ -244,6 +244,11 @@ def control(request):
         .annotate(total_tareas=Count("id"))
     )
 
+    tareas_con_apoyo = (
+        Tarea.objects.filter(completada=True, apoyo__isnull=False)
+        .values("funcionario_id")
+        .annotate(total_apoyos=Count("id"))
+    )
     # Combinar datos
     puntajes_por_profesional = {}
 
@@ -306,8 +311,33 @@ def control(request):
                     "total_tareas": item["total_tareas"]
                 }
 
+    for item in tareas_con_apoyo:
+        funcionario = Funcionario.objects.get(id=item["funcionario_id"])
+        user = obtener_usuario_por_funcionario(funcionario)
+
+        if user:
+            if user.id in puntajes_por_profesional:
+                puntajes_por_profesional[user.id]["total_apoyos_tareas"] = item["total_apoyos"]
+            else:
+                full_name = f"{funcionario.nombre} {funcionario.apellido}"
+                puntajes_por_profesional[user.id] = {
+                    "name": full_name,
+                    "trabajo_propio": 0,
+                    "trabajo_apoyo": 0,
+                    "total_solicitudes": 0,
+                    "total_solicitudes_apoyo": 0,
+                    "total_tareas": 0,
+                    "total_apoyos_tareas": item["total_apoyos"]
+                }
+
+
+
     # Ordenar por total de trabajo
-    sorted_puntajes = sorted(puntajes_por_profesional.values(), key=lambda x: x["trabajo_propio"] + x["trabajo_apoyo"] + x["total_tareas"], reverse=True)
+    sorted_puntajes = sorted(
+        puntajes_por_profesional.values(),
+        key=lambda x: x["trabajo_propio"] + x["trabajo_apoyo"] + x["total_tareas"] + x.get("total_apoyos_tareas", 0),
+        reverse=True
+    )
 
     # Listas para gráficos
     labels = [item["name"] for item in sorted_puntajes]
@@ -316,6 +346,7 @@ def control(request):
     total_solicitudes_data = [item["total_solicitudes"] for item in sorted_puntajes]
     total_solicitudes_apoyo_data = [item["total_solicitudes_apoyo"] for item in sorted_puntajes]
     total_tareas_data = [item["total_tareas"] for item in sorted_puntajes]
+    total_apoyos_tareas_data = [item.get("total_apoyos_tareas", 0) for item in sorted_puntajes]
 
     # Convertir a JSON
     labels_json = json.dumps(labels)
@@ -324,8 +355,8 @@ def control(request):
     total_solicitudes_json = json.dumps(total_solicitudes_data)
     total_solicitudes_apoyo_json = json.dumps(total_solicitudes_apoyo_data)
     total_tareas_json = json.dumps(total_tareas_data)
+    total_apoyos_tareas_json = json.dumps(total_apoyos_tareas_data)
 
-    
 
     context = {
         "total_solicitudes": total_solicitudes,
@@ -336,6 +367,7 @@ def control(request):
         "total_unitario_solicitudes_json": total_solicitudes_json,
         "total_unitario_solicitudes_apoyo_json": total_solicitudes_apoyo_json,
         "total_tareas_json": total_tareas_json,
+        "total_apoyos_tareas_json": total_apoyos_tareas_json,
         "en_proceso": estado_counts.get("EN PROCESO", 0),
         "ejecutado": estado_counts.get("EJECUTADO", 0),
         "rechazado": estado_counts.get("RECHAZADO", 0),
