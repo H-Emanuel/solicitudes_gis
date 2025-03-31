@@ -32,10 +32,33 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=text_snippet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=forward_to_inbox" />
 
+    <!-- Incluir el CSS de Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
+    
+    <!-- Incluir jQuery (Select2 depende de jQuery) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Incluir el JS de Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    
+    <!-- Incluir Select2 con casillas de verificación -->
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.0.0/dist/select2-bootstrap-5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.0.0/dist/select2-bootstrap-5.min.js"></script>
+    
 
     {% block custom_css %}
-
+    <style>
+      #form-container {
+        width: 800px; /* O usa width: 80%; para un ancho relativo */
+        margin: 0 auto; /* Centrar el contenedor horizontalmente */
+        background-color: #e7e7e7;
+        box-shadow: 1px 2px 16px rgba(0, 0, 0, 0.9);
+        padding: 1px;
+        border-radius: 5px;
+    }
+    </style>
     {% endblock %}
   </head>
   <body class="d-flex flex-column h-100" style="overflow-x: hidden;">
@@ -142,9 +165,8 @@
             <h5 class="modal-title" id="exampleModalLabel">Solicitud Express</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body ">
             
-            <div id="form-container" class="mx-auto p-1 border-1 rounded" style="background-color: #e7e7e7; box-shadow: 1px 2px 16px rgba(0, 0, 0, 0.9);">
+            <div id="form-container">
               <form method='POST' id="form-guardar-pdf" class="px-3" enctype="multipart/form-data" action="{% url 'crear_protocolo' %}">
                   {% csrf_token %}
                   <h3 class="text-center mb-4" style="color:#000000; margin-top: 20px">Formulario de Protocolo</h3>
@@ -183,6 +205,14 @@
 
                       <option value="SECPLA">SECPLA</option>
 
+                      <option value="Alcaldía">Alcaldía</option>
+
+                      <option value="Dirección de Asesoría Jurídica">Dirección de Asesoría Jurídica</option>
+
+                      <option value="Juzgados">Juzgados</option>
+
+                      <option value="Delegación territorial">Delegación territorial</option>
+                      
                       <option value="Otros">Otros</option>
 
                     </select>
@@ -219,15 +249,26 @@
               </div>
                   
               <div class="form-group mb-3">
-                    <label for="insumo">Insumo solicitado y formato(EXCEL, Desarrollo Arcgis Online, Formulario Digital, Cuadro de Mando,Planos Digitales,Planos Impresos, Aplicacion web, y otros herramientas territoriales previas a la reunión) Para los archivos KMZ, SHAPE y  CAD sólo se puede entregar la información de una porción del territorio.</label>
-                    <input type="text" name="insumo" class="form-control " maxlength="255" required="" id="id_insumo">
-              </div>
-                  
-              <div class="form-group mb-3">
-                <label for="producto">Productos(ESTUDIOS, INFORME, TABLA DE PLANO U OTROS QUE DERIVARAN DE LA INFORMACION ENTREGADA)</label>
-                <input type="text" name="producto" class="form-control " maxlength="255" required="" id="id_producto">
+                <label for="insumo">Insumo:</label>
+                <select name="insumo" class="select2 form-control" multiple="multiple" id="insumo">
+                    <option value="insumo_1">Planos Impresos</option>
+                    <option value="insumo_2">Planos Digital </option>
+                    <option value="insumo_3">Excel</option>
+                    <option value="insumo_4">Cuadro de Mando </option>
+                    <option value="insumo_5">Aplicación</option>
+                    <option value="insumo_6">KMZ</option>
+                    <option value="insumo_7">Shape</option>
+                    <option value="insumo_8">CAD</option>
+                    <option value="insumo_9">Formulario Digital</option>
+                    <option value="insumo_10">Web Experience</option>
+                    <option value="insumo_11">Story Maps</option>
+                    <option value="insumo_12">Plataforma</option>
+                    <option value="insumo_13">Estudios y otros </option>
+                    <option value="insumo_14">Soporte Web </option>
+                    <option value="insumo_15">Plataforma Web</option>
+                </select>
             </div>
-                  
+              
             <div class="form-group mb-3">
               <label for="cambios_posible">Posibles cambios en el insumo Entregado</label>
               <input type="text" name="cambios_posible" class="form-control " maxlength="255" required="" id="id_cambios_posible">
@@ -254,14 +295,9 @@
 
 
 
-          </div>
         </div>
       </div>
     </div>
-
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
       $(document).ready(function(){
           $("#form-guardar-pdf").submit(function(event){
@@ -310,7 +346,28 @@
           });
       });
       </script>
-      
+      <!-- jQuery -->
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  </body>
+      <!-- Select2 CSS -->
+      <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+      <!-- Select2 JS -->
+      <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+ 
+      
+      <script>
+        $('#exampleModal').on('shown.bs.modal', function () {
+          $('.select2').select2({
+            dropdownParent: $('#exampleModal')
+          });
+        });
+      
+        // Evita que Select2 cierre el modal al hacer clic
+        $('#exampleModal').on('select2:opening select2:closing', function (e) {
+          e.stopPropagation();
+        });
+      </script>
+  </body> 
 </html>

@@ -7,7 +7,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Protocolo</title>
     <link rel="icon" type="image/x-icon" href="/media/assets/image/iconoSIG.ico" />
+    <!-- Incluir el CSS de Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 
+<!-- Incluir jQuery (Select2 depende de jQuery) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Incluir el JS de Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+<!-- Incluir Select2 con casillas de verificación -->
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.0.0/dist/select2-bootstrap-5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.0.0/dist/select2-bootstrap-5.min.js"></script>
     
     <style>
         /* Logo */
@@ -32,6 +43,15 @@
             font-size: 2rem;
             color: #cf8401; 
         }
+        #form-container {
+        width: 800px; /* O usa width: 80%; para un ancho relativo */
+        margin: 0 auto; /* Centrar el contenedor horizontalmente */
+        background-color: #e7e7e7;
+        box-shadow: 1px 2px 16px rgba(0, 0, 0, 0.9);
+        padding: 1px;
+        border-radius: 5px;
+    }
+
     </style>
     <header class="py-0" style="background-color: #212529; box-shadow: 2px 8px 10px rgba(0, 0, 0, 0.4);">
         <div class="logo-container">
@@ -95,14 +115,30 @@
                     {{ forms.objetivos }}
                 </div>
                 
-                <div class="form-group mb-3">
-                    <label for="insumo">{{ forms.insumo.label }}</label>
-                    {{ forms.insumo }}
+                <div class="form-group">
+                    <label for="insumo">Insumo:</label>
+                    <select name="insumo" class="select2" multiple="multiple">
+                        <option value="insumo_1">Planos Impresos</option>
+                        <option value="insumo_2">Planos Digital </option>
+                        <option value="insumo_3">Excel</option>
+                        <option value="insumo_4">Cuadro de Mando </option>
+                        <option value="insumo_5">Aplicación</option>
+                        <option value="insumo_6">KMZ</option>
+                        <option value="insumo_7">Shape</option>
+                        <option value="insumo_8">CAD</option>
+                        <option value="insumo_9">Formulario Digital</option>
+                        <option value="insumo_10">Web Experience</option>
+                        <option value="insumo_11">Story Maps</option>
+                        <option value="insumo_12">Plataforma</option>
+                        <option value="insumo_13">Estudios y otros </option>
+                        <option value="insumo_14">Soporte Web </option>
+                        <option value="insumo_15">Plataforma Web</option>
+                    </select>
                 </div>
                 
                 <div class="form-group mb-3">
-                    <label for="producto">{{ forms.producto.label }}</label>
-                    {{ forms.producto }}
+                    <label for="objetivos">{{ forms.anexo.label }}</label>
+                    {{ forms.anexo }}
                 </div>
                 
                 <div class="form-group mb-3">
@@ -266,4 +302,14 @@ function myFunction() {
     });
 </script>
 
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: "Seleccione uno o más",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $(document.body)  // Importante para que se vea bien en el modal o fuera de un contenedor
+        });
+    });
+</script>
 {% endverbatim %}

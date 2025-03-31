@@ -29,24 +29,31 @@ LIMITE_DE_DIA ={
     ('P','Plazo X Asignar los Dias máximos'),
 }
 
-DIRECCION ={
-    ('',''),
-    ('Gabinete','Gabinete'),
-    ('Administración Municipal','Administración Municipal'),
-    ('Dirección de Desarrollo Comunitario','Dirección de Desarrollo Comunitario'),
-    ('Dirección de Obras Municipales','Dirección de Obras Municipales'),
-    ('Dirección de Tránsito y Transporte públicos','Dirección de Tránsito y Transporte públicos'),
-    ('Dirección de Administración y Finanzas','Dirección de Administración y Finanzas'),
-    ('Dirección desarrollo Económico y Cooperación Internacional','Dirección desarrollo Económico y Cooperación Internacional'),
-    ('Dirección de Operaciones','Dirección de Operaciones'),
-    ('Dirección de Desarrollo Cultural','Dirección de Desarrollo Cultural'),
-    ('Dirección de Seguridad Ciudadana','Dirección de Seguridad Ciudadana'),
-    ('Dirección de Vivienda, Barrio y Territorio','Dirección de Vivienda, Barrio y Territorio'),
-    ('Dirección de Medioambiente','Dirección de Medioambiente'),
-    ('SECPLA','SECPLA'),
-    ('Dirección de Género, Mujeres y Diversidades','Dirección de Género, Mujeres y Diversidades'),
-    ('Otros','Otros'),
-    }
+DIRECCION = {
+    ('', ''),
+    ('Gabinete', 'Gabinete'),
+    ('Administración Municipal', 'Administración Municipal'),
+    ('Dirección de Desarrollo Comunitario', 'Dirección de Desarrollo Comunitario'),
+    ('Dirección de Obras Municipales', 'Dirección de Obras Municipales'),
+    ('Dirección de Tránsito y Transporte públicos', 'Dirección de Tránsito y Transporte públicos'),
+    ('Dirección de Administración y Finanzas', 'Dirección de Administración y Finanzas'),
+    ('Dirección desarrollo Económico y Cooperación Internacional', 'Dirección desarrollo Económico y Cooperación Internacional'),
+    ('Dirección de Operaciones', 'Dirección de Operaciones'),
+    ('Dirección de Desarrollo Cultural', 'Dirección de Desarrollo Cultural'),
+    ('Dirección de Seguridad Ciudadana', 'Dirección de Seguridad Ciudadana'),
+    ('Dirección de Vivienda, Barrio y Territorio', 'Dirección de Vivienda, Barrio y Territorio'),
+    ('Dirección de Medioambiente', 'Dirección de Medioambiente'),
+    ('SECPLA', 'SECPLA'),
+    ('Dirección de Género, Mujeres y Diversidades', 'Dirección de Género, Mujeres y Diversidades'),
+    ('Otros', 'Otros'),
+    ('Alcaldía', 'Alcaldía'),
+    ('Dirección de Asesoría Jurídica', 'Dirección de Asesoría Jurídica'),
+    ('Juzgados', 'Juzgados'),
+    ('Delegación territorial', 'Delegación territorial'),
+}
+
+class Insumo(models.Model):
+    nombre = models.CharField(max_length=255, unique=True)
 
 # Create your models here.
 def content_file_name_adjunto(instance, filename):
@@ -55,7 +62,8 @@ def content_file_name_adjunto(instance, filename):
     folder = "assets/document/" + str("archivo")# Puedes ajustar la carpeta según tus necesidades
     return os.path.join(folder, filename)
 
-
+class Insumo(models.Model):
+    nombre = models.CharField(max_length=255, unique=True)  
 class ProtocoloSolicitud(models.Model):
     id = models.BigAutoField(primary_key=True, unique=True)
     departamento = models.CharField(max_length=100, blank=True, default='')
@@ -65,8 +73,13 @@ class ProtocoloSolicitud(models.Model):
     corre_solicitante = models.CharField(max_length=255, blank=True, default='')
     area = models.CharField(max_length=50, blank=True, default='')
     objetivos = models.TextField()
-    insumo = models.CharField(max_length=255, blank=True, default='')
-    producto = models.CharField(max_length=255, blank=True, default='')
+
+    insumo = models.ManyToManyField(Insumo, through='ProtocoloSolicitudInsumo')
+    anexo=models.CharField(max_length=100, blank=True, default='')
+
+
+
+
     cambios_posible = models.CharField(max_length=255, blank=True, default='')
     fecha = models.DateTimeField(auto_now_add=True)
     codigo = models.CharField(max_length=10, blank=True, default='')
@@ -106,6 +119,16 @@ class ProtocoloSolicitud(models.Model):
 
     def __str__(self):
         return str(self.id) + ' - ' + self.departamento 
+    
+# Este campo almacena los insumos como 'insumo_1'
+    
+class ProtocoloSolicitudInsumo(models.Model):
+    protocolosolicitud = models.ForeignKey(ProtocoloSolicitud, on_delete=models.CASCADE)
+    insumo = models.ForeignKey(Insumo, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField(default=1)  # Agrega el campo cantidad con valor predeterminado 1
+    
+    class Meta:
+        unique_together = ('protocolosolicitud', 'insumo') 
     
 class ArchivoProtocolo(models.Model):
     protocolo = models.ForeignKey(ProtocoloSolicitud, on_delete=models.CASCADE, related_name='archivos')

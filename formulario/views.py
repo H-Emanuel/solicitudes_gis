@@ -8,6 +8,7 @@ from .models import *
 from .forms import CrearFormulario
 import pytz
 import uuid
+from django.db import transaction
 
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -39,58 +40,82 @@ def codigo_es_duplicado(codigo):
 
 def crear_protocolo(request):
     if request.method == "POST":
+        print("Entrando en el método POST del formulario")
         archivo_adjunto = request.FILES.get('archivo_adjunto', None)
-
-        Protocolo =  ProtocoloSolicitud(
-        direccion = request.POST['direccion'],
-        departamento = request.POST['departamento'],
-        nombre_solicitante = request.POST['nombre_solicitante'].title(),
-        nombre_proyecto = request.POST['nombre_proyecto'],
-        corre_solicitante = request.POST['corre_solicitante'],
-        area = request.POST['area'],
-        objetivos = request.POST['objetivos'],
-        insumo = request.POST['insumo'],
-        producto = request.POST['producto'],
-        cambios_posible = request.POST['cambios_posible'],        
-        )
         
-        Protocolo.save()
-        Protocolo.codigo = str(Protocolo.id)
-
-        archivos_adjuntos = request.FILES.getlist('archivo')
-        if archivos_adjuntos:
-            for archivo in archivos_adjuntos:
-                ArchivoProtocolo.objects.create(protocolo=Protocolo, archivo=archivo)
-
-        data ={
-             'Protocolo':Protocolo,
-        }
-
-        nombre_ficha = "Solicitud" + str(Protocolo.id) + "_" + str(Protocolo)
-
-        file_name, status = save_pdf_3(data, nombre_ficha)
-
-        if not status:
-            print("----------------")
-            print("Error al generar PDF")
-            print("----------------")
-            return HttpResponse("Error al generar PDF")
-
-        nombre_archivo = nombre_ficha + ".pdf"
-        Protocolo.save()
-
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "solicitudes",
-            {"type": "send_update", "message": "actualizar"}
-        )
-
-        nombre_archivo = nombre_ficha + ".pdf"
+        print("Datos POST recibidos:", request.POST)
+        print("Insumos recibidos:", request.POST.getlist('insumo'))
         
-        return FileResponse(open(file_name, 'rb'), content_type='application/pdf', filename=nombre_archivo, as_attachment=True)
+        try:
+            with transaction.atomic():
+                Protocolo = ProtocoloSolicitud.objects.create(
+                    direccion=request.POST['direccion'],
+                    departamento=request.POST['departamento'],
+                    nombre_solicitante=request.POST['nombre_solicitante'].title(),
+                    nombre_proyecto=request.POST['nombre_proyecto'],
+                    corre_solicitante=request.POST['corre_solicitante'],
+                    area=request.POST['area'],
+                    objetivos=request.POST['objetivos'],
+                    cambios_posible=request.POST['cambios_posible'],
+                    archivo_adjunto=archivo_adjunto,
+                    anexo=request.POST['anexo'],
+                )
+                archivos_adjuntos = request.FILES.getlist('archivo')
+                if archivos_adjuntos:
+                    for archivo in archivos_adjuntos:
+                        ArchivoProtocolo.objects.create(protocolo=Protocolo, archivo=archivo)
 
-    return render(request,'formulario.html',{
-            'forms':CrearFormulario()})
+
+                insumo_ids = [int(insumo.split('_')[1]) for insumo in request.POST.getlist('insumo') if insumo.startswith('insumo_')]
+                
+                if not insumo_ids:
+                    print("No se seleccionaron insumos válidos.")
+                    return HttpResponse("No se seleccionaron insumos válidos.", status=400)
+
+                insumos_a_guardar = []
+                for insumo_id in insumo_ids:
+                    try:
+                        insumo = Insumo.objects.get(id=insumo_id)
+                        print(f"Insumo encontrado con ID {insumo_id}: {insumo}")
+                    except Insumo.DoesNotExist:
+                        print(f"Insumo con ID {insumo_id} no encontrado, creando nuevo insumo.")
+                        insumo = Insumo.objects.create(id=insumo_id, nombre=f"Insumo {insumo_id}")
+                    insumos_a_guardar.append(insumo)
+
+                Protocolo.insumo.set(insumos_a_guardar)
+
+                producto_ids = [int(producto.split('_')[1]) for producto in request.POST.getlist('producto') if producto.startswith('producto_')]
+                print("Producto IDs extraídos:", producto_ids)
+                
+          
+
+            data = {'Protocolo': Protocolo}
+            nombre_ficha = f"Solicitud{Protocolo.id}_{Protocolo}"
+            file_name, status = save_pdf_3(data, nombre_ficha)
+
+            if not status:
+                print("Error al generar PDF")
+                return HttpResponse("Error al generar PDF", status=500)
+
+            nombre_archivo = nombre_ficha + ".pdf"
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)( 
+                "solicitudes",
+                {"type": "send_update", "message": "actualizar"}
+            )
+
+            return FileResponse(open(file_name, 'rb'), content_type='application/pdf', filename=nombre_archivo, as_attachment=True)
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return HttpResponse(f"Hubo un error al crear el protocolo: {e}", status=500)
+
+    insumos = Insumo.objects.all()
+    return render(request, 'formulario.html', {
+        'insumos': insumos,
+        'forms': CrearFormulario()
+    })
 def vista_previa(resquest,id):
 
     protocolo = ProtocoloSolicitud.objects.get(id=id)

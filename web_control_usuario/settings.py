@@ -25,10 +25,10 @@ SECRET_KEY = 'sz308p48$%9_v+&$*=d)gd2dak5*n-2-zr5989(c#d(r+9)h55'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.12.80','departamentosig.munivalpo.cl','localhost',"*",'5ae8-200-50-126-98.ngrok-free.app','www.departamentosig.munivalpo.cl']
+ALLOWED_HOSTS = ['192.168.12.80','departamentosig.munivalpo.cl','localhost',"*",'b2c6-200-50-126-98.ngrok-free.app','www.departamentosig.munivalpo.cl']
 
 CORS_ALLOWED_ORIGINS = [
-    "5ae8-200-50-126-98.ngrok-free.app",
+    "b2c6-200-50-126-98.ngrok-free.app",
 ]
 
 
@@ -102,27 +102,27 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE':'django.db.backends.postgresql_psycopg2',
-        'NAME':'departamento_sig_c',
-        'USER':'departamento_sig_c',
-        'PASSWORD':'Sigcontrol2023',
-        'HOST':'localhost',
-        'PORT':'5432',
-    }
-}
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE':'django.db.backends.postgresql_psycopg2',
 #         'NAME':'departamento_sig_c',
-#         'USER':'postgres',
-#         'PASSWORD':'1234',
+#         'USER':'departamento_sig_c',
+#         'PASSWORD':'Sigcontrol2023',
 #         'HOST':'localhost',
 #         'PORT':'5432',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE':'django.db.backends.postgresql_psycopg2',
+        'NAME':'departamento_sig_c',
+        'USER':'postgres',
+        'PASSWORD':'1234',
+        'HOST':'localhost',
+        'PORT':'5432',
+    }
+}
 
 
 # Password validation

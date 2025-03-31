@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es" class="h-100">
 <head>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -109,7 +111,7 @@
 
         .service-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
         }
 
@@ -220,16 +222,17 @@
             <b><div class="service-grid mb-5">
                 <a href="{% url 'arcgis' %}?departamento={{ departamento_seleccionado }}" target="_blank" class="service-item text-decoration-none">
                     <i class="fa-solid fa-laptop icon-color"></i>
-                    <span class="d-block">Plataformas <br> SIG</span>
+                    <span class="d-block">Mapa<br> Digitales</span>
                 </a>
                 <a href="{% url 'SS' %}" target="_blank" class="service-item text-decoration-none">
                     <i class="fa-regular fa-pen-to-square icon-color"></i>
-                    <span class="d-block">Solicitud SIG</span>
+                    <span class="d-block">Solicitud <br> SIG</span>
                 </a>
                 <a href="#" class="service-item text-decoration-none" data-bs-toggle="modal" data-bs-target="#timeManagementModal">
                     <i class="fa-regular fa-calendar icon-color"></i>
                     <span class="d-block">Gestión de <br> Tiempo</span>
                 </a>
+                
                 <a href="{% url 'gestionsig' %}" target="_blank" class="service-item text-decoration-none">
                     <i class="fa-regular fa-handshake icon-color"></i>
                     <span class="d-block">Gestión SIG</span>
@@ -242,6 +245,7 @@
                     <i class="fa-solid fa-earth-americas icon-color"></i>
                     <span class="d-block">Geoportal Valparaíso</span>
                 </a>
+              
             </div></b>
 
             <div class="card mb-3" style="border: none;">
@@ -474,6 +478,44 @@ $(document).ready(function () {
             $("#seleccionarDepartamentoModal").modal("hide");
         });
     });
+
+
+    if (window.location.pathname === "/") { // Asumiendo que "/" es la URL de la página principal
+    function actualizarVisitasDepartamentosig() {
+        // ... tu código ...
+    }
+
+    function contarVisitaDepartamentosig() {
+        // ... tu código ...
+    }
+
+    contarVisitaDepartamentosig();
+    setInterval(actualizarVisitasDepartamentosig, 5000);
+}
+
+document.getElementById("guardarDepartamentoBtn").addEventListener("click", function() {
+    var departamentoSeleccionado = document.getElementById("departamentoSelect").value;
+
+    fetch("/guardar_departamento/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": getCSRFToken() // Función para obtener el token CSRF
+        },
+        body: "departamento=" + encodeURIComponent(departamentoSeleccionado)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.mensaje);
+    })
+    .catch(error => console.error("Error:", error));
+});
+
+// Función para obtener el token CSRF
+function getCSRFToken() {
+    let csrfToken = document.querySelector("[name=csrfmiddlewaretoken]");
+    return csrfToken ? csrfToken.value : "";
+}
     </script>
 </body>
 </html>

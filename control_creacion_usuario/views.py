@@ -37,6 +37,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .pdf_generator import *
 from tareas.models import *
+from django.db import transaction
 
 
 ESTADO = [
@@ -175,14 +176,16 @@ def solicitude_llegadas(request, dia_p=None):
             'numero_designios': numero_designios,
             'dias_restantes': dias_restantes
         })
+    insumos = Insumo.objects.all()
 
     data = {
         'OPCIONES': OPCIONES,
         'Solicitudes': solicitudes_data,  # Lista con la información adicional
-        'Usuarios': usuarios,  # Lista de usuarios
+        'Usuarios': usuarios,
+        'insumos': insumos,  # Lista de usuarios
     }
 
-    return render(request, 'solicitude_llegadas.html', data)
+    return render(request, 'solicitude_llegadas.html', data,)
 
 def calcular_dias_habiles(fecha_inicio, fecha_fin):
     dias_habiles = 0
@@ -1190,8 +1193,6 @@ def solicitudes_json(request):
             'corre_solicitante': solicitud.corre_solicitante,
             'area': solicitud.area.capitalize(),
             'objetivos': solicitud.objetivos.capitalize(),
-            'insumo': solicitud.insumo.capitalize(),
-            'producto': solicitud.producto.capitalize(),
             'cambios_posible': solicitud.cambios_posible.capitalize(),
             'fecha': timezone.localtime(solicitud.fecha).strftime('%Y-%m-%d %H:%M:%S') if solicitud.fecha else None,
             'codigo': solicitud.codigo,
@@ -1271,22 +1272,47 @@ def detalle_solicitud(request, solicitud_id):
 def solicitud_express(request):
     if request.method == "POST":
         try:
-            Protocolo = ProtocoloSolicitud(
-                direccion=request.POST.get('direccion'),
-                departamento=request.POST.get('departamento'),
-                nombre_solicitante=request.POST.get('nombre_solicitante').title(),
-                nombre_proyecto=request.POST.get('nombre_proyecto'),
-                corre_solicitante=request.POST.get('corre_solicitante'),
-                area=request.POST.get('area'),
-                objetivos=request.POST.get('objetivos'),
-                insumo=request.POST.get('insumo'),
-                producto=request.POST.get('producto'),
-                cambios_posible=request.POST.get('cambios_posible'),
-            )
+            with transaction.atomic():
+                Protocolo = ProtocoloSolicitud.objects.create(
+                    direccion=request.POST['direccion'],
+                    departamento=request.POST['departamento'],
+                    nombre_solicitante=request.POST['nombre_solicitante'].title(),
+                    nombre_proyecto=request.POST['nombre_proyecto'],
+                    corre_solicitante=request.POST['corre_solicitante'],
+                    area=request.POST['area'],
+                    objetivos=request.POST['objetivos'],
+                    cambios_posible=request.POST['cambios_posible'],
+                    anexo=request.POST['anexo'],
+                )
+                archivos_adjuntos = request.FILES.getlist('archivo')
+                if archivos_adjuntos:
+                    for archivo in archivos_adjuntos:
+                        ArchivoProtocolo.objects.create(protocolo=Protocolo, archivo=archivo)
 
-            Protocolo.save()
-            Protocolo.codigo = str(Protocolo.id)
-            Protocolo.save()
+
+                insumo_ids = [int(insumo.split('_')[1]) for insumo in request.POST.getlist('insumo') if insumo.startswith('insumo_')]
+                
+                if not insumo_ids:
+                    print("No se seleccionaron insumos válidos.")
+                    return HttpResponse("No se seleccionaron insumos válidos.", status=400)
+
+                insumos_a_guardar = []
+                for insumo_id in insumo_ids:
+                    try:
+                        insumo = Insumo.objects.get(id=insumo_id)
+                        print(f"Insumo encontrado con ID {insumo_id}: {insumo}")
+                    except Insumo.DoesNotExist:
+                        print(f"Insumo con ID {insumo_id} no encontrado, creando nuevo insumo.")
+                        insumo = Insumo.objects.create(id=insumo_id, nombre=f"Insumo {insumo_id}")
+                    insumos_a_guardar.append(insumo)
+
+                Protocolo.insumo.set(insumos_a_guardar)
+
+                producto_ids = [int(producto.split('_')[1]) for producto in request.POST.getlist('producto') if producto.startswith('producto_')]
+                print("Producto IDs extraídos:", producto_ids)
+                
+                Protocolo.codigo = str(Protocolo.id)
+                Protocolo.save()
 
             archivos_adjuntos = request.FILES.getlist('archivo')
             for archivo in archivos_adjuntos:
