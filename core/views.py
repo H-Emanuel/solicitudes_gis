@@ -229,7 +229,7 @@ def datos_estadisticas(request):
 
             total = archivos + planos_impresos + planos_digitales + plataformas + productos + numeros_fijos['total']
 
-            cursor.execute("SELECT MAX(id) FROM formulario_protocolosolicitud")
+            cursor.execute("SELECT MAX(orden_trabajo::INTEGER)FROM public.formulario_protocolosolicitud;")
             id_mas_alto = cursor.fetchone()[0]
 
 
