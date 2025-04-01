@@ -201,7 +201,7 @@ def datos_estadisticas(request):
         "Dirección de Género, Mujeres y Diversidades":36,
         "Dirección de Asesoría Jurídica":7,
         "SECPLA":6515,
-        
+        "Dirección de Operaciones":31,
         "Gabinete":1,
         "Administración Municipal":35,
         "Otros":0
@@ -221,7 +221,7 @@ def datos_estadisticas(request):
         "Dirección de Género, Mujeres y Diversidades":33,
         "Dirección de Asesoría Jurídica":104,
         "SECPLA":2218,
-        
+        "Dirección de Operaciones":31,
         "Gabinete":1,
         "Administración Municipal":35,
         "Otros":0
