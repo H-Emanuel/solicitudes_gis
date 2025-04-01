@@ -200,11 +200,11 @@ def datos_estadisticas(request):
     }
     
     numeros_fijos = {
-        'archivos': 1000,
-        'planos_impresos': 0,
-        'planos_digitales': 0,
-        'plataformas': 0,
-        'productos': 0,
+        'archivos': 251,
+        'planos_impresos': 295,
+        'planos_digitales': 6391,
+        'plataformas':228,
+        'productos': 18,
         'total': 0,
         'visitas': 7740,
     }
