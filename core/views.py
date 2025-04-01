@@ -23,10 +23,24 @@ def inicio(request):
     return render(request,'core/iniciar.html')
 
 def menu(request):
-    # Registrar la visita
-    ip_address = request.META.get('REMOTE_ADDR')
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
+    ip_address = get_client_ip(request)
     if ip_address:
-       
+        user_id = request.COOKIES.get('user_id')
+        if not user_id:
+            user_id = str(uuid.uuid4())
+            response = render(request, 'core/home.html', {})
+            response.set_cookie('user_id', user_id)
+            Visita.objects.create(ip_address=ip_address)
+            return response
+        else:
             Visita.objects.create(ip_address=ip_address)
 
     current_page = 'home'
@@ -38,7 +52,6 @@ def menu(request):
         'solicitud': solicitud,
     }
     return render(request, 'core/home.html', data)
-
 def arcgisregister(request):
     departamento_seleccionado = request.COOKIES.get('departamento')
     if departamento_seleccionado:
