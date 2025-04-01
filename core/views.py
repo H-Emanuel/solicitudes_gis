@@ -270,7 +270,7 @@ def datos_estadisticas(request):
             # Datos para el gráfico general
             datos_grafico = [
                 {'label': 'Plataformas', 'cantidad': plataformas},
-                {'label': 'Planos Digitales', 'cantidad': planos_digitales},
+                {'label': 'Planos Impreso y Digitales', 'cantidad': planos_digitales+ planos_impresos},
                 {'label': 'Archivos', 'cantidad': archivos},
                 {'label': 'Productos', 'cantidad': productos},
             ]
