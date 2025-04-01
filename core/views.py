@@ -72,7 +72,7 @@ def gestionsig(request):
     if departamento_seleccionado:
         DepartamentoSeleccionado.objects.create(nombre_departamento=departamento_seleccionado)
 
-    return redirect('https://www.arcgis.com/apps/dashboards/b35864f66368465fa11b6c40b1321688')
+    return redirect('/Estadistica/')
 
 def SSregistro(request):
     departamento_seleccionado = request.COOKIES.get('departamento')
