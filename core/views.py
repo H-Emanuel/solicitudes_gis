@@ -188,9 +188,23 @@ locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 def datos_estadisticas(request):
     numeros_fijos_direcciones = {
-        'Gabinete': 3000,
-        'Otra Dirección': 3,
-        # Añade aquí los números fijos para otras direcciones
+        "Alcaldia":15,
+        "Dirección de Desarrollo Comunitario":270,
+        "Dirección de Obras Municipales":11,
+        "Dirección de Tránsito y Transporte público":9,
+        "Dirección de Administración y Finanzas":38,
+        "Dirección desarrollo Económico y Cooperación Internacional":41,
+        "Dirección de Desarrollo Cultural":11,
+        "Dirección de Seguridad Ciudadana":82,
+        "Dirección de Vivienda, Barrio y Territorio":2,
+        "Dirección de Medioambiente":29,
+        "Dirección de Género, Mujeres y Diversidades":36,
+        "Dirección de Asesoría Jurídica":7,
+        "SECPLA":6515,
+        
+        "Gabinete":1,
+        "Administración Municipal":35,
+        "Otros":0
     }
 
     numeros_fijos_departamento = {
