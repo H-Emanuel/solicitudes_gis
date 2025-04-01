@@ -206,7 +206,7 @@ def datos_estadisticas(request):
         'plataformas': 0,
         'productos': 0,
         'total': 0,
-        'visitas': 0,
+        'visitas': 7740,
     }
 
     with connection.cursor() as cursor:
