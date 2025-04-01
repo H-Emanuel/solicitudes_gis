@@ -208,9 +208,23 @@ def datos_estadisticas(request):
     }
 
     numeros_fijos_departamento = {
-        'Dirección de Administración y Finanzas': 1000,
-        'Otra Dirección': 3,
-        # Añade aquí los números fijos para otras direcciones
+        "Alcaldia":1735,
+        "Dirección de Desarrollo Comunitario":353,
+        "Dirección de Obras Municipales":282,
+        "Dirección de Tránsito y Transporte público":55,
+        "Dirección de Administración y Finanzas":198,
+        "Dirección desarrollo Económico y Cooperación Internacional":104,
+        "Dirección de Desarrollo Cultural":10,
+        "Dirección de Seguridad Ciudadana":1115,
+        "Dirección de Vivienda, Barrio y Territorio":147,
+        "Dirección de Medioambiente":154,
+        "Dirección de Género, Mujeres y Diversidades":33,
+        "Dirección de Asesoría Jurídica":104,
+        "SECPLA":2218,
+        
+        "Gabinete":1,
+        "Administración Municipal":35,
+        "Otros":0
     }
     
     numeros_fijos = {
