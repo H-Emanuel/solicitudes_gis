@@ -55,12 +55,12 @@ document.getElementById('fileInput').addEventListener('change', function () {
 function sendData() {
     document.getElementById('loadingSpinner').style.display = 'block';
 
-    const emailInput = document.getElementById('emailInput').value;
+    const emailInput = document.getElementById('emailInput').value; // Tomar solo el emailInput
     const messageText = document.getElementById('messageText').value;
     const fileInput = document.getElementById('fileInput');
     const formData = new FormData();
 
-    formData.append('email', emailInput);
+    formData.append('email', emailInput); // Enviar solo un email en lugar de una lista
     formData.append('message', messageText);
     formData.append('ficha_id', selectedFichaId);
 
@@ -80,21 +80,12 @@ function sendData() {
         document.getElementById('loadingSpinner').style.display = 'none';
 
         if (data.success) {
-            if (data.email_sent) {
-                Swal.fire({
-                    icon: "success",
-                    title: "Datos enviados con éxito",
-                    text: "El correo se envió correctamente.",
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-            } else {
-                Swal.fire({
-                    icon: "question",
-                    title: "Datos guardados, pero...",
-                    text: "El correo no pudo enviarse. Por favor, verifique manualmente.",
-                });
-            }
+            Swal.fire({
+                icon: "success",
+                title: "Datos enviados con éxito",
+                showConfirmButton: false,
+                timer: 1500
+            });
 
             setTimeout(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('dynamicEmailModal'));
@@ -103,9 +94,9 @@ function sendData() {
             }, 1500);
         } else {
             Swal.fire({
-                icon: "warning",
-                title: "Error de Correo",
-                text: "No se pudo enviar el correo, pero se guardaron las respuesta y los archivos, se puede visualizar en gestión de tiempo",
+                icon: "error",
+                title: "Oops...",
+                text: "Hubo un problema al enviar los datos",
             });
         }
     })
@@ -114,13 +105,15 @@ function sendData() {
         console.error('Error:', error);
         Swal.fire({
             icon: "error",
-            title: "Error sin definir",
-            text: "a ocurrido un error inesperado",
+            title: "Oops...",
+            text: "Ocurrió un error al enviar los datos",
         });
     });
 }
 
+
 // BOTON DE RESETEO
+
 const resetLinks = document.querySelectorAll('.reset-link');
 
 resetLinks.forEach(link => {
@@ -180,4 +173,4 @@ function getCSRFToken() {
     return '';
 };
 
-
+// tiene que hacer cambios aqui tambien
