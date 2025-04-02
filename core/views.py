@@ -23,8 +23,15 @@ def inicio(request):
     return render(request,'core/iniciar.html')
 
 def menu(request):
-    # Registrar la visita
-    ip_address = request.META.get('REMOTE_ADDR')
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
+    ip_address = get_client_ip(request)
     if ip_address:
         user_id = request.COOKIES.get('user_id')
         if not user_id:
@@ -65,7 +72,7 @@ def gestionsig(request):
     if departamento_seleccionado:
         DepartamentoSeleccionado.objects.create(nombre_departamento=departamento_seleccionado)
 
-    return redirect('https://www.arcgis.com/apps/dashboards/b35864f66368465fa11b6c40b1321688')
+    return redirect('/Estadistica/')
 
 def SSregistro(request):
     departamento_seleccionado = request.COOKIES.get('departamento')
@@ -181,25 +188,53 @@ locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 def datos_estadisticas(request):
     numeros_fijos_direcciones = {
-        'Gabinete': 3000,
-        'Otra Dirección': 3,
-        # Añade aquí los números fijos para otras direcciones
+        "Alcaldia":15,
+        "Dirección de Desarrollo Comunitario":270,
+        "Dirección de Obras Municipales":11,
+        "Dirección de Tránsito y Transporte público":9,
+        "Dirección de Administración y Finanzas":38,
+        "Dirección desarrollo Económico y Cooperación Internacional":41,
+        "Dirección de Desarrollo Cultural":11,
+        "Dirección de Seguridad Ciudadana":82,
+        "Dirección de Vivienda, Barrio y Territorio":2,
+        "Dirección de Medioambiente":29,
+        "Dirección de Género, Mujeres y Diversidades":36,
+        "Dirección de Asesoría Jurídica":7,
+        "SECPLA":6515,
+        "Dirección de Operaciones":31,
+        "Gabinete":1,
+        "Administración Municipal":35,
+        "Otros":0
     }
 
     numeros_fijos_departamento = {
-        'Dirección de Administración y Finanzas': 1000,
-        'Otra Dirección': 3,
-        # Añade aquí los números fijos para otras direcciones
+        "Alcaldia":1735,
+        "Dirección de Desarrollo Comunitario":353,
+        "Dirección de Obras Municipales":282,
+        "Dirección de Tránsito y Transporte público":55,
+        "Dirección de Administración y Finanzas":198,
+        "Dirección desarrollo Económico y Cooperación Internacional":104,
+        "Dirección de Desarrollo Cultural":10,
+        "Dirección de Seguridad Ciudadana":1115,
+        "Dirección de Vivienda, Barrio y Territorio":147,
+        "Dirección de Medioambiente":154,
+        "Dirección de Género, Mujeres y Diversidades":33,
+        "Dirección de Asesoría Jurídica":104,
+        "SECPLA":2218,
+        "Dirección de Operaciones":100,
+        "Gabinete":1,
+        "Administración Municipal":35,
+        "Otros":0
     }
     
     numeros_fijos = {
-        'archivos': 1000,
-        'planos_impresos': 0,
-        'planos_digitales': 0,
-        'plataformas': 0,
-        'productos': 0,
+        'archivos': 251,
+        'planos_impresos': 295,
+        'planos_digitales': 6391,
+        'plataformas':228,
+        'productos': 18,
         'total': 0,
-        'visitas': 0,
+        'visitas': 7740,
     }
 
     with connection.cursor() as cursor:
@@ -222,7 +257,7 @@ def datos_estadisticas(request):
 
             total = archivos + planos_impresos + planos_digitales + plataformas + productos + numeros_fijos['total']
 
-            cursor.execute("SELECT MAX(id) FROM formulario_protocolosolicitud")
+            cursor.execute("SELECT MAX(orden_trabajo::INTEGER)FROM public.formulario_protocolosolicitud;")
             id_mas_alto = cursor.fetchone()[0]
 
 
@@ -249,7 +284,7 @@ def datos_estadisticas(request):
             # Datos para el gráfico general
             datos_grafico = [
                 {'label': 'Plataformas', 'cantidad': plataformas},
-                {'label': 'Planos Digitales', 'cantidad': planos_digitales},
+                {'label': 'Planos Impreso y Digitales', 'cantidad': planos_digitales+ planos_impresos},
                 {'label': 'Archivos', 'cantidad': archivos},
                 {'label': 'Productos', 'cantidad': productos},
             ]
