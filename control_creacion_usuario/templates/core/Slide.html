@@ -165,8 +165,10 @@
             <h5 class="modal-title" id="exampleModalLabel">Solicitud Express</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
+          <div class="modal-body ">
             
-            <div id="form-container">
+            <div id="form-container" class="mx-auto p-1 border-1 rounded" style="background-color: #e7e7e7; box-shadow: 1px 2px 16px rgba(0, 0, 0, 0.9);">
+
               <form method='POST' id="form-guardar-pdf" class="px-3" enctype="multipart/form-data" action="{% url 'crear_protocolo' %}">
                   {% csrf_token %}
                   <h3 class="text-center mb-4" style="color:#000000; margin-top: 20px">Formulario de Protocolo</h3>
@@ -268,6 +270,12 @@
                     <option value="insumo_15">Plataforma Web</option>
                 </select>
             </div>
+
+            <div class="form-group mb-3">
+              <label for="anexo">anexo</label>
+              <input type="text" name="anexo" class="form-control " maxlength="255" required="" id="anexo">
+            </div>
+          
               
             <div class="form-group mb-3">
               <label for="cambios_posible">Posibles cambios en el insumo Entregado</label>
@@ -292,7 +300,7 @@
                   
               </form>
           </div>
-
+         </div>
 
 
         </div>

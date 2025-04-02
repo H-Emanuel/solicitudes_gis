@@ -1225,16 +1225,18 @@ def solicitud_express(request):
                 Protocolo.codigo = str(Protocolo.id)
                 Protocolo.save()
 
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "solicitudes",
+                    {"type": "send_update", "message": "actualizar"}
+                )
+
+
             archivos_adjuntos = request.FILES.getlist('archivo')
             for archivo in archivos_adjuntos:
                 ArchivoProtocolo.objects.create(protocolo=Protocolo, archivo=archivo)
 
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                "solicitudes",
-                {"type": "send_update", "message": "actualizar"}
-            )
-
+            
             return JsonResponse({'success': True, 'message': 'Se creó la solicitud correctamente'})
 
         except Exception as e:
