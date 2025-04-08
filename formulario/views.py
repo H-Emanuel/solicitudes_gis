@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing_extensions import Buffer
 from django.shortcuts import render
 from django.http import FileResponse, JsonResponse,HttpResponseBadRequest,HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -88,7 +89,7 @@ def crear_protocolo(request):
                 print("Producto IDs extraídos:", producto_ids)
                 
           
-
+           
             data = {'Protocolo': Protocolo}
             nombre_ficha = f"Solicitud{Protocolo.id}_{Protocolo}"
             file_name, status = save_pdf_3(data, nombre_ficha)
@@ -96,8 +97,60 @@ def crear_protocolo(request):
             if not status:
                 print("Error al generar PDF")
                 return HttpResponse("Error al generar PDF", status=500)
+            
+            archivos_adjuntos = request.FILES.getlist('archivo')
+            if archivo_adjunto:
+                cuerpo_mensaje = (
+                        'Se ha generado una nueva ficha con el código: ' + Protocolo.codigo + 
+                        '. Adjunto el archivo PDF correspondiente. Revisa la plataforma de control para ver el archivo correspondiente.'
+                    )
+            else:
+                    cuerpo_mensaje = (
+                        'Se ha generado una nueva ficha con el código: ' + Protocolo.codigo + 
+                        '. Adjunto el PDF correspondiente.'
+                    )
 
             nombre_archivo = nombre_ficha + ".pdf"
+
+            try:
+                # Obtén los datos necesarios para el correo
+                correo_destino1 = 'emanuel.venegas@munivalpo.cl' 
+                asunto = 'Nueva ficha generada'
+
+                # Construye el mensaje de correo
+                mensaje = MIMEMultipart()
+                mensaje['From'] = 'departamento.sig@munivalpo.cl'  
+                mensaje['To'] = correo_destino1
+                mensaje['Subject'] = asunto
+
+                # Cuerpo del mensaje
+                cuerpo_mensaje = cuerpo_mensaje  # Asegúrate de definir el cuerpo del mensaje
+                mensaje.attach(MIMEText(cuerpo_mensaje, 'plain'))
+
+                # Adjunta el PDF al mensaje de correo
+                pdf_adjunto = MIMEApplication(open(file_name, 'rb').read())
+                pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
+                mensaje.attach(pdf_adjunto)
+
+                # Configura el servidor SMTP
+                smtp_server = 'mail.munivalpo.cl'  # Cambia esto según tu proveedor de correo
+                smtp_port = 587    # Puerto de Gmail para TLS
+                smtp_usuario = 'servervalpo\\departamento.sig'  # Tu dirección de correo
+                smtp_contrasena = 'deptosig2024!'  # Tu contraseña de correo
+
+                # Inicia la conexión con el servidor SMTP
+                server = smtplib.SMTP(smtp_server, smtp_port)
+                server.starttls()
+
+                # Inicia sesión en tu cuenta de correo
+                server.login(smtp_usuario, smtp_contrasena)
+
+                server.sendmail("departamento.sig@munivalpo.cl", correo_destino1, mensaje.as_string())
+
+                # Cierra la conexión con el servidor SMTP
+                server.quit()
+            except Exception as e:
+                print(f"Error al enviar el correo: {e}")
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)( 
