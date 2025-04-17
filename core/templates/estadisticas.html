@@ -492,6 +492,45 @@
     flex-grow: 1;
 }
 
+.header-icon-1:hover {
+         transform: scale(1.1);
+         color: var(--primary);
+     }
+.header-icon-1 {
+         width: 40px;
+         height: 40px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         color: var(--header-text);
+         font-size: 1.5rem;
+         transition: transform 0.3s ease, color 0.3s ease;
+     }
+
+.panel-icon-1 {
+         font-size: 3.5rem;
+         color: rgba(255, 255, 255, 0.7);
+         margin-right: 1.5rem;
+         transition: transform 0.3s ease, color 0.3s ease; /* Añadido: transición para animación */
+         margin-top:-10%;
+         margin-left:40%
+         
+     }
+
+.panel:hover .panel-icon-1 {
+         transform: scale(1.1) rotate(5deg);
+         color: var(--metric-text);
+     }
+.panel-value-1 {
+         font-size: 4.5rem;
+         font-weight: bold;
+         line-height: 1.5;
+         color: var(--metric-text);
+         line-height: 1;
+         transition: transform 0.3s ease, text-shadow 0.3s ease; /* Añadido: transición para animación */
+         margin-left: 20%
+     }
+
     </style>
 </head>
 <body>
@@ -517,26 +556,28 @@
             <!-- Contenedor de paneles -->
             <div class="panels-container">
                 <div class="panel panel-toggle" data-description="Selector de vistas de Visitas o Archivos">
-                    <div class="panel-title">
-                        <span id="toggle-title">Visitas Plataforma</span>
+                      <div class="panel-title">
+                        <span id="toggle-title">Visitas </span>
                         <div class="toggle-buttons">
-                            <button class="toggle-button active" data-view="visitas">Visitas</button>
-                            <button class="toggle-button" data-view="archivos">Archivos</button>
+                          <button class="toggle-button active" data-view="visitas">Visitas</button>
+                          <button class="toggle-button" data-view="archivos">Archivos</button>
                         </div>
+                      </div>
+                      <div class="panel-content" id="toggle-content">
+                        <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
+                          <div class="panel-value-1" id="visitas_departamentosig">Cargando...</div>
+                        </div>
+                      </div>
+                      
+                      <div class="panel-description" id="toggle-description-visitas">Número total de visitas al sitio departamentosig.munivalpo.cl</div>
+                      <div class="panel-content hidden" id="archivos-content">
+                        <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
+                          <div class="panel-value" id="mapa2">Cargando...</div>
+                        </div>
+                      </div>
+                      <div class="panel-update hidden" id="toggle-update-archivos">Última actualización: hace 10 segundos</div>
+                      <div class="panel-description hidden" id="toggle-description-archivos">Cad, Kmz, Shape</div>
                     </div>
-                    <div class="panel-content" id="toggle-content">
-                        <i class="fas fa-eye panel-icon"></i>
-                        <div class="panel-value" id="visitas_departamentosig">Cargando...</div> 
-                    </div>
-
-                    <div class="panel-update" id="toggle-update-visitas">Última actualización: hace 10 segundos</div>
-    <div class="panel-description" id="toggle-description-visitas">Número total de visitas al sitio web departamentosig.munivalpo.cl</div>
-    <div class="panel-content hidden" id="archivos-content">
-        <i class="fas fa-file-archive panel-icon"></i>
-        <div class="panel-value" id="mapa2">Cargando...</div> </div>
-    <div class="panel-update hidden" id="toggle-update-archivos">Última actualización: hace 10 segundos</div>
-    <div class="panel-description hidden" id="toggle-description-archivos">Cad, Kmz, Shape</div>
-                </div>
                 
                 <div class="panel" data-description="Cantidad total de archivos disponibles en el sistema">
                     <div class="panel-title">Archivos</div>
