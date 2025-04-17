@@ -235,6 +235,7 @@ def datos_estadisticas(request):
         'productos': 18,
         'total': 0,
         'visitas': 7740,
+        'mapa2':0
     }
 
     with connection.cursor() as cursor:
@@ -254,6 +255,9 @@ def datos_estadisticas(request):
 
             cursor.execute("SELECT COALESCE(SUM(fpi.cantidad), 0) FROM formulario_protocolosolicitudinsumo fpi JOIN formulario_protocolosolicitud ps ON fpi.protocolosolicitud_id = ps.id WHERE fpi.insumo_id IN (12, 13) AND ps.estado = 'EJECUTADO'")
             productos = cursor.fetchone()[0] + numeros_fijos['productos']
+
+            cursor.execute("SELECT COUNT(*) FROM public.core_useractivity WHERE page = 'experience.arcgis.com'")
+            mapa2 = cursor.fetchone()[0] + numeros_fijos['mapa2']
 
             total = archivos + planos_impresos + planos_digitales + plataformas + productos + numeros_fijos['total']
 
@@ -314,6 +318,7 @@ def datos_estadisticas(request):
             total_formateado = locale.format_string("%d", total, grouping=True)
             id_mas_alto_formateado = locale.format_string("%d", id_mas_alto, grouping=True)
             visitas_departamentosig_formateado = locale.format_string("%d", visitas_departamentosig, grouping=True)
+            mapa2_formateado =locale.format_string("%d", mapa2, grouping=True)
 
             return JsonResponse({
                 'archivos': archivos_formateado,  # Usar el valor formateado
@@ -327,6 +332,7 @@ def datos_estadisticas(request):
                 'datos_grafico_direcciones': datos_grafico_direcciones,
                 'visitas_departamentosig': visitas_departamentosig_formateado, # Usar el valor formateado
                 'datos_grafico_departamentos': datos_grafico_departamentos,
+                'mapa2': mapa2_formateado
             })
         except Exception as e:
             print(f"Error en datos_estadisticas: {e}")
