@@ -1369,7 +1369,7 @@ function sonDatosIguales(datos1, datos2) {
             archivosValueElement.textContent = data.archivos;
 
             if (currentView === 'visitas') {
-                toggleTitle.textContent = 'Visitas Plataforma';
+                toggleTitle.textContent = 'Visitas';
                 visitasContent.classList.remove('hidden');
                 archivosContent.classList.add('hidden');
             } else if (currentView === 'archivos') {
@@ -1393,7 +1393,7 @@ function sonDatosIguales(datos1, datos2) {
             currentView = view;
 
             if (view === 'visitas') {
-                toggleTitle.textContent = 'Visitas Plataforma';
+                toggleTitle.textContent = 'Visitas';
                 visitasContent.classList.remove('hidden');
                 archivosContent.classList.add('hidden');
             } else if (view === 'archivos') {
