@@ -440,6 +440,55 @@
             font-weight: bold; /* Si quieres que el texto sea más grueso */
             color: #E3FF00; /* Puedes cambiar el color si lo deseas */
         }
+       .panel-toggle {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap
+}
+
+.toggle-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.toggle-button {
+    background-color: var(--card-hover);
+    color: var(--text-secondary);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.toggle-button:hover {
+    background-color: var(--border);
+    color: var(--text);
+}
+
+.toggle-button.active {
+    background-color: var(--primary);
+    color: var(--text);
+    font-weight: bold;
+}
+
+.toggle-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#toggle-title {
+    flex-grow: 1;
+}
 
     </style>
 </head>
@@ -465,14 +514,26 @@
         <div class="dashboard-container">
             <!-- Contenedor de paneles -->
             <div class="panels-container">
-                <div class="panel" data-description="Número total de visitas al sitio web departamentosig.munivalpo.cl">
-                    <div class="panel-title">Visitas Plataforma</div>
-                    <div class="panel-content">
-                        <i class="fas fa-eye panel-icon"></i>
-                        <div class="panel-value" id="visitas_departamentosig">Cargando...</div>
+                <div class="panel panel-toggle" data-description="Selector de vistas de Visitas o Archivos">
+                    <div class="panel-title">
+                        <span id="toggle-title">Visitas Plataforma</span>
+                        <div class="toggle-buttons">
+                            <button class="toggle-button active" data-view="visitas">Visitas</button>
+                            <button class="toggle-button" data-view="archivos">Archivos</button>
+                        </div>
                     </div>
-                    
-                    <div class="panel-update">Última actualización: hace 10 segundos</div>
+                    <div class="panel-content" id="toggle-content">
+                        <i class="fas fa-eye panel-icon"></i>
+                        <div class="panel-value" id="visitas_departamentosig">Cargando...</div> 
+                    </div>
+
+                    <div class="panel-update" id="toggle-update-visitas">Última actualización: hace 10 segundos</div>
+    <div class="panel-description" id="toggle-description-visitas">Número total de visitas al sitio web departamentosig.munivalpo.cl</div>
+    <div class="panel-content hidden" id="archivos-content">
+        <i class="fas fa-file-archive panel-icon"></i>
+        <div class="panel-value" id="mapa2">Cargando...</div> </div>
+    <div class="panel-update hidden" id="toggle-update-archivos">Última actualización: hace 10 segundos</div>
+    <div class="panel-description hidden" id="toggle-description-archivos">Cad, Kmz, Shape</div>
                 </div>
                 
                 <div class="panel" data-description="Cantidad total de archivos disponibles en el sistema">
@@ -539,6 +600,11 @@
                         <div class="panel-value" id="id_mas_alto">Cargando...</div>
                     </div>
                 </div>
+            </div>
+
+            <div id="tooltip" class="tooltip">
+                <h3 id="tooltip-title"></h3>
+                <p><span id="tooltip-value"></span> <span id="tooltip-description"></span></p>
             </div>
     
             <!-- Contenedor de gráficos -->
@@ -965,7 +1031,7 @@ function actualizarEstadisticas() {
                 // Los datos son diferentes, actualizar todo
                 datosAnteriores = data; // Actualizar los datos anteriores
 
-                // Actualizar contadores con animación
+                // cada vez que se añada un visor de datos debe añadirse aqui
                 animateCounter('archivos', data.archivos);
                 animateCounter('planos_impresos', data.planos_impresos);
                 animateCounter('planos_digitales', data.planos_digitales);
@@ -974,7 +1040,7 @@ function actualizarEstadisticas() {
                 animateCounter('id_mas_alto', data.id_mas_alto);
                 animateCounter('total', data.total);
                 animateCounter('visitas_departamentosig', data.visitas_departamentosig);
-
+                animateCounter('mapa2', data.mapa2); 
                 generarGrafico(data.datos_grafico);
                 generarGraficoDirecciones(data.datos_grafico_direcciones);
                 generarGraficoDepartamentos(data.datos_grafico_departamentos);
@@ -1239,6 +1305,72 @@ function sonDatosIguales(datos1, datos2) {
         header.addEventListener('mouseleave', () => {
             header.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+    const toggleButtons = document.querySelectorAll('.toggle-button');
+    const visitasContent = document.getElementById('toggle-content');
+    const archivosContent = document.getElementById('archivos-content');
+    const visitasValueElement = document.getElementById('visitas_departamentosig'); // ID actualizada
+    const archivosValueElement = document.getElementById('archivos'); // ID actualizada
+    const toggleTitle = document.getElementById('toggle-title');
+    const toggleUpdateVisitas = document.getElementById('toggle-update-visitas');
+    const toggleDescriptionVisitas = document.getElementById('toggle-description-visitas');
+    const toggleUpdateArchivos = document.getElementById('toggle-update-archivos');
+    const toggleDescriptionArchivos = document.getElementById('toggle-description-archivos');
+
+    let currentView = 'visitas'; // Vista inicial
+
+    function updateToggleButtonPanel(data) {
+        if (data && typeof data.visitas_departamentosig !== 'undefined' && typeof data.archivos !== 'undefined') {
+            visitasValueElement.textContent = data.visitas_departamentosig;
+            archivosValueElement.textContent = data.archivos;
+
+            if (currentView === 'visitas') {
+                toggleTitle.textContent = 'Visitas Plataforma';
+                visitasContent.classList.remove('hidden');
+                archivosContent.classList.add('hidden');
+            } else if (currentView === 'archivos') {
+                toggleTitle.textContent = 'Archivos';
+                visitasContent.classList.add('hidden');
+                archivosContent.classList.remove('hidden');
+            }
+        }
+    }
+
+    document.addEventListener('datosActualizados', (event) => {
+        updateToggleButtonPanel(event.detail);
+    });
+
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const view = this.getAttribute('data-view');
+
+            toggleButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            currentView = view;
+
+            if (view === 'visitas') {
+                toggleTitle.textContent = 'Visitas Plataforma';
+                visitasContent.classList.remove('hidden');
+                archivosContent.classList.add('hidden');
+            } else if (view === 'archivos') {
+                toggleTitle.textContent = 'Archivos';
+                visitasContent.classList.add('hidden');
+                archivosContent.classList.remove('hidden');
+            }
+        });
+    });
+
+    const initialActiveButton = document.querySelector('.toggle-button.active[data-view]');
+    if (initialActiveButton) {
+        currentView = initialActiveButton.getAttribute('data-view');
+        if (currentView === 'archivos') {
+            toggleTitle.textContent = 'Archivos';
+            visitasContent.classList.add('hidden');
+            archivosContent.classList.remove('hidden');
+        }
+    }
+});
     </script>
 </body>
 </html>
