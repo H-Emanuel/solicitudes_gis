@@ -55,17 +55,14 @@ def menu(request):
     
 def arcgisregister(request):
     # Obtener el valor de la cookie 'departamento'
+    
     departamento_seleccionado = request.COOKIES.get('departamento')
 
     if departamento_seleccionado:
+        DepartamentoSeleccionado.objects.create(nombre_departamento=departamento_seleccionado)
 
-
-        user_activity = UserActivity(page='experience.arcgis.com', departamento=departamento_seleccionado)
-        user_activity.save()
-        Registro_arcgis(departamento_seleccionado,'experience.arcgis.com')  
-
-    # Redirigir al usuario al enlace de ArcGIS
-    return redirect('https://experience.arcgis.com/experience/6a6b0cbfb2094d10ba11b439c8060a8d/?return_url=/some_view/')
+        
+        return redirect('https://experience.arcgis.com/experience/6a6b0cbfb2094d10ba11b439c8060a8d/?return_url=/some_view/')
 
 def geoportalVisita(request):
     departamento_seleccionado = request.COOKIES.get('departamento')
