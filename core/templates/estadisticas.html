@@ -169,7 +169,14 @@
             flex: 1;
             
         }
-        
+
+       .panel-content-1 {
+         display: flex;
+         align-items: center;
+         justify-content: flex-end;
+         flex: 1;
+         
+     }
         .panel-icon {
             font-size: 3.5rem;
             color: rgba(255, 255, 255, 0.7);
@@ -563,14 +570,14 @@
                           <button class="toggle-button" data-view="archivos">Mapa Digital</button>
                         </div>
                       </div>
-                      <div class="panel-content" id="toggle-content">
+                      <div class="panel-content-1" id="toggle-content">
                         <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
                           <div class="panel-value-1" id="visitas_departamentosig">Cargando...</div>
                         </div>
                       </div>
                       
                       <div class="panel-description" id="toggle-description-visitas">Número total de visitas al sitio </div>
-                      <div class="panel-content hidden" id="archivos-content">
+                      <div class="panel-content-1 hidden" id="archivos-content">
                         <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
                           <div class="panel-value-1" id="mapa2">Cargando...</div>
                         </div>
