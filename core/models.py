@@ -24,3 +24,8 @@ class Departamento(models.Model):
 
     def __str__(self):
         return self.nombre
+
+class UserActivity1(models.Model):
+    page = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)  # Cambiar a DateField o DateTimeField
+    departamento = models.CharField(max_length=100)
