@@ -1,4 +1,3 @@
-<!-- A -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,8 +8,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-   <style>
-       :root {
+  
+</head>
+
+<style>
+    :root {
          --primary: #2563eb;
          --primary-glow: rgba(37, 99, 235, 0.3);
          --secondary: #10b981;
@@ -544,10 +546,29 @@
 
 #toggle-title {
     flex-grow: 1;
-} 
+}
 
-    </style>
-</head>
+.arrow-container {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100; /* Aumentamos el z-index a 100 */
+}
+
+#mostrar-nuevos-paneles {
+    font-size: 2em;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #ddd;
+    outline: none;
+}
+ </style>
+
 <body>
     <!-- Nuevo encabezado tipo panel -->
     <header class="header" style="height: 105px; display: flex; align-items: center; padding: 0 20px; border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: box-shadow 0.3s ease;">
@@ -557,43 +578,42 @@
         </div>
         <div class="header-actions" style="display: flex; align-items: center;">
             <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_FX3dvNU.png" alt="Logo SIG" class="header-logo" style="width: 250px; height: auto;">
-            <a href="/menu" class="header-icon" title="Ir al sistema SIG">
+            <a href="menu" class="header-icon" title="Ir al sistema SIG">
                 <i class="fas fa-external-link-alt"></i>
             </a>
         </div>
     </header>
-
-    
-        
-    
-    
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard</title>
+        <link rel="stylesheet" href="style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <script src="script.js" defer></script> </head>
+    <body>
         <div class="dashboard-container">
-            <!-- Contenedor de paneles -->
-            <div class="panels-container">
+            <div class="panels-container" id="paneles-original">
                 <div class="panel panel-toggle" data-description="Selector de vistas de Visitas o Archivos">
-                      <div class="panel-title">
+                    <div class="panel-title">
                         <span id="toggle-title">Visitas </span>
                         <div class="toggle-buttons">
-                          <button class="toggle-button active" data-view="visitas">Plataforma</button>
-                          <button class="toggle-button" data-view="archivos">Mapa Digital</button>
+                            <button class="toggle-button active" data-view="visitas">Plataforma</button>
+                            <button class="toggle-button" data-view="archivos">Mapa digital</button>
                         </div>
-                      </div>
-                      <div class="panel-content-1" id="toggle-content">
-                        <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
-                          <div class="panel-value-1" id="visitas_departamentosig">Cargando...</div>
-                        </div>
-                      </div>
-                      
-                      <div class="panel-description" id="toggle-description-visitas">Número total de visitas al sitio </div>
-                      <div class="panel-content-1 hidden" id="archivos-content">
-                        <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
-                          <div class="panel-value-1" id="mapa2">Cargando...</div>
-                        </div>
-                      </div>
-                      <div class="panel-update hidden" id="toggle-update-archivos">Última actualización: hace 10 segundos</div>
-                      <div class="panel-description hidden" id="toggle-description-archivos">Número total de visitas al Mapa digital</div>
                     </div>
-                
+                    <div class="panel-content-1" id="toggle-content">
+                        <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
+                            <div class="panel-value-1" id="visitas_departamentosig">Cargando...</div>
+                        </div>
+                    </div>
+                    <div class="panel-description" id="toggle-description-visitas">Número total de visitas al sitio</div>
+                    <div class="panel-content-1 hidden" id="archivos-content">
+                        <div class="panel-inner-content"> <i class="fas fa-eye panel-icon-1"></i>
+                            <div class="panel-value-1" id="mapa2">Cargando...</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="panel" data-description="Cantidad total de archivos disponibles en el sistema">
                     <div class="panel-title">Archivos</div>
                     <div class="panel-content">
@@ -603,7 +623,6 @@
                     <div class="panel-description">Cad, Kmz, Shape</div>
                     <div class="panel-update">Última actualización: hace 10 segundos</div>
                 </div>
-                
                 <div class="panel" data-description="Número de planos impresos en el sistema">
                     <div class="panel-title">Planos Impresos</div>
                     <div class="panel-content">
@@ -612,7 +631,6 @@
                     </div>
                     <div class="panel-update">Última actualización: hace 10 segundos</div>
                 </div>
-                
                 <div class="panel" data-description="Número de planos digitales en el sistema">
                     <div class="panel-title">Planos Digitales</div>
                     <div class="panel-content">
@@ -621,19 +639,14 @@
                     </div>
                     <div class="panel-update">Última actualización: hace 10 segundos</div>
                 </div>
-    
-                <!-- Segunda fila: Plataformas y otros -->
                 <div class="panel" data-description="Número de plataformas integradas con el sistema">
                     <div class="panel-title">Plataformas Integradas</div>
                     <div class="panel-content">
                         <i class="fas fa-server panel-icon"></i>
                         <div class="panel-value" id="plataformas">Cargando...</div>
-                        <div class="panel-description">Cuadros de Mando- Web Experience - StoryMaps - Dashboard</div>
+                        <div class="panel-description">Mapa Web-StoryMaps-Dashboard</div>
                     </div>
-                    
-
                 </div>
-    
                 <div class="panel" data-description="Número total de productos disponibles">
                     <div class="panel-title">Estudios y otros </div>
                     <div class="panel-content">
@@ -642,7 +655,6 @@
                     </div>
                     <div class="panel-update">Última actualización: hace 10 segundos</div>
                 </div>
-    
                 <div class="panel" data-description="Total de elementos registrados">
                     <div class="panel-title">Trabajos Finalizados</div>
                     <div class="panel-content">
@@ -651,7 +663,6 @@
                     </div>
                     <div class="panel-update">Última actualización: hace 10 segundos</div>
                 </div>
-    
                 <div class="panel" data-description="ID más alto registrado en el sistema">
                     <div class="panel-title">Solicitudes Ingresadas</div>
                     <div class="panel-content">
@@ -660,41 +671,85 @@
                     </div>
                 </div>
             </div>
-
-            <div id="tooltip" class="tooltip">
-                <h3 id="tooltip-title"></h3>
-                <p><span id="tooltip-value"></span> <span id="tooltip-description"></span></p>
+    
+            <div class="arrow-container">
+                <button id="mostrar-nuevos-paneles" style="font-size: 2em; cursor: pointer;">&raquo;</button>
             </div>
     
-            <!-- Contenedor de gráficos -->
+            <div class="panels-container" id="paneles-nuevo" style="display: none;">
+                <div class="panel" data-description="Número total de productos disponibles">
+                    <div class="panel-title">  Desarrollo Web </div>
+                    <div class="panel-content">
+                        <i class="fas fa-code panel-icon"></i>
+                        <div class="panel-value" id="soporteweb12">Cargando...</div>
+                    </div>
+                    <div class="panel-update">Solicitudes de Desarrollo</div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">Soporte WEB</div>
+                    <div class="panel-content">
+                        <i class="fas fa-life-ring panel-icon"></i>
+                        <div class="panel-value" id="soporteweb123">Cargando...</div>
+                        <div class="panel-update">Soporte Entregado</div>
+                    </div>
+                    <div class="panel-description"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">Promedio de Solicitudes</div>
+                    <div class="panel-content">
+                        <i class="fas fa-chart-line panel-icon"></i>
+                        <div class="panel-value" id="promedios_de_solicitudes">Cargando...</div>
+                    </div>
+                    <div class="panel-update">Solicitudes por Semana</div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">Tiempo de Respuesta</div>
+                    <div class="panel-content">
+                        <i class="fas fa-clock panel-icon"></i>
+                        <div class="panel-value" id="TR_formateado">Cargando...</div>
+                    </div>
+                    <div class="panel-update">Promedio</div>
+                </div>
+                
+            </div>
+    
             <div class="graficos-container">
                 <div class="grafico-container">
                     <div class="grafico-titulo">Total de Trabajos Realizados</div>
                     <canvas id="miGrafico"></canvas>
                     <div class="loading-bar" id="loading-bar-1"></div>
                 </div>
-    
                 <div class="grafico-container">
                     <div class="grafico-titulo">Cantidad de Trabajos x Dirección</div>
                     <canvas id="miGraficoDirecciones"></canvas>
                     <div class="loading-bar" id="loading-bar-2"></div>
                 </div>
-    
                 <div class="grafico-container">
                     <div class="grafico-titulo">Visitas por Dirección</div>
                     <canvas id="miGraficoDepartamentos"></canvas>
                     <div class="loading-bar" id="loading-bar-3"></div>
                 </div>
             </div>
+    
+            <div class="graficos-container" id="graficos-nuevos" style="display: none;">
+                <div class="grafico-container">
+                    <div class="grafico-titulo">Solicitudes por Semana</div>
+                    <canvas id="miGraficoSemanal"></canvas>
+                    <div class="loading-bar" id="loading-bar-4"></div>
+                </div>
+                <div style="flex-grow: 1; display: flex; align-items: center;">
+                    <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_OlmW8pu.png" alt="Imagen Adicional" style="max-width: 150%; max-height: 770px; margin-left: 300px;">
+                </div>
+            </div>
+    
+            <div class="tooltip" id="tooltip">
+                <div class="tooltip-title" id="tooltip-title"></div>
+                <div class="tooltip-value" id="tooltip-value"></div>
+                <div class="tooltip-description" id="tooltip-description"></div>
+            </div>
         </div>
     
-    <!-- Tooltip personalizado -->
-    <div class="tooltip" id="tooltip">
-        <div class="tooltip-title" id="tooltip-title"></div>
-        <div class="tooltip-value" id="tooltip-value"></div>
-        <div class="tooltip-description" id="tooltip-description"></div>
-    </div>
-
+    
     <script>
         // Configuración global de Chart.js para tema oscuro
         Chart.defaults.color = '#f3f4f6';
@@ -916,7 +971,7 @@
             layout: {
                 padding: {
                     left: 20,
-                    right: 50,
+                    right: 40,
                     top: 10,
                     bottom: 10
                 }
@@ -1054,7 +1109,7 @@
             layout: {
                 padding: {
                     left: 20,
-                    right: 50,
+                    right: 40,
                     top: 10,
                     bottom: 10
                 }
@@ -1067,75 +1122,174 @@
         
 
 let datosAnteriores = null; // Almacenamos los datos anteriores aquí
+    let chartSemanal = null; // Variable para almacenar la instancia del gráfico semanal
 
-function actualizarEstadisticas() {
-    console.log("Actualizando estadísticas...");
+    function actualizarEstadisticas() {
+        console.log("Actualizando estadísticas...");
 
-    // Mostrar barras de carga
-    document.getElementById('loading-bar-1').classList.add('loading-active');
-    document.getElementById('loading-bar-2').classList.add('loading-active');
-    document.getElementById('loading-bar-3').classList.add('loading-active');
+        // Mostrar barras de carga
+        document.getElementById('loading-bar-1').classList.add('loading-active');
+        document.getElementById('loading-bar-2').classList.add('loading-active');
+        document.getElementById('loading-bar-3').classList.add('loading-active');
+        document.getElementById('loading-bar-4').classList.add('loading-active');
 
-    const queryString = new URLSearchParams(numerosFijos).toString();
-    fetch(`/datos_estadisticas/?${queryString}`)
-        .then(response => {
-            console.log("Respuesta recibida:", response);
-            return response.json();
-        })
-        .then(data => {
-            console.log("Datos recibidos:", data);
+        const numerosFijos = {
+            archivos: 251,
+            planos_impresos: 295,
+            planos_digitales: 6391,
+            plataformas: 228,
+            productos: 18,
+            total: 0,
+            visitas: 7740,
+            mapa2: 0
+        };
+        const queryString = new URLSearchParams(numerosFijos).toString();
+        fetch(`/datos_estadisticas/?${queryString}`)
+            .then(response => {
+                console.log("Respuesta recibida:", response);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Datos recibidos:", data);
 
-            // Comparar los datos
-            if (!sonDatosIguales(datosAnteriores, data)) {
-                // Los datos son diferentes, actualizar todo
-                datosAnteriores = data; // Actualizar los datos anteriores
+                // Comparar los datos
+                if (!sonDatosIguales(datosAnteriores, data)) {
+                    // Los datos son diferentes, actualizar todo
+                    datosAnteriores = data; // Actualizar los datos anteriores
 
-                // cada vez que se añada un visor de datos debe añadirse aqui
-                animateCounter('archivos', data.archivos);
-                animateCounter('planos_impresos', data.planos_impresos);
-                animateCounter('planos_digitales', data.planos_digitales);
-                animateCounter('plataformas', data.plataformas);
-                animateCounter('productos', data.productos);
-                animateCounter('id_mas_alto', data.id_mas_alto);
-                animateCounter('total', data.total);
-                animateCounter('visitas_departamentosig', data.visitas_departamentosig);
-                animateCounter('mapa2', data.mapa2); 
-                generarGrafico(data.datos_grafico);
-                generarGraficoDirecciones(data.datos_grafico_direcciones);
-                generarGraficoDepartamentos(data.datos_grafico_departamentos);
-            } else {
-                console.log("Datos sin cambios, no se actualiza.");
-            }
+                    // Actualizar contadores con animación (si las funciones existen)
+                    if (typeof animateCounter === 'function') {
+                        animateCounter('archivos', data.archivos);
+                        animateCounter('planos_impresos', data.planos_impresos);
+                        animateCounter('planos_digitales', data.planos_digitales);
+                        animateCounter('plataformas', data.plataformas);
+                        animateCounter('productos', data.productos);
+                        animateCounter('id_mas_alto', data.id_mas_alto);
+                        animateCounter('total', data.total);
+                        animateCounter('visitas_departamentosig', data.visitas_departamentosig);
+                        animateCounter('mapa2', data.mapa2); // Asegúrate de tener esta línea
+                        animateCounter('soporteweb12', data.soporteweb12);
+                        animateCounter('soporteweb123', data.soporteweb123);
+                        animateCounter('promedios_de_solicitudes', data.promedios_de_solicitudes);
+                        animateCounter('TR_formateado', data.TR_formateado);
+                        
+                        
 
-            // Ocultar barras de carga después de la actualización (o no actualización)
-            setTimeout(() => {
-                document.getElementById('loading-bar-1').classList.remove('loading-active');
-                document.getElementById('loading-bar-2').classList.remove('loading-active');
-                document.getElementById('loading-bar-3').classList.remove('loading-active');
-            }, 500);
-        })
-        .catch(error => {
-            console.error("Error al obtener datos:", error);
+                    }
 
-            // Datos de ejemplo para visualización en caso de error
-            const datosEjemplo = [
-                { label: 'Categoría 1', cantidad: 25 },
-                { label: 'Categoría 2', cantidad: 40 },
-                { label: 'Categoría 3', cantidad: 15 },
-                { label: 'Categoría 4', cantidad: 30 }
-            ];
+                    // Actualizar gráficos (si las funciones existen)
+                    if (typeof generarGrafico === 'function') {
+                        generarGrafico(data.datos_grafico, 'miGrafico');
+                    }
+                    if (typeof generarGraficoDirecciones === 'function') {
+                        generarGraficoDirecciones(data.datos_grafico_direcciones, 'miGraficoDirecciones');
+                    }
+                    if (typeof generarGraficoDepartamentos === 'function') {
+                        generarGraficoDepartamentos(data.datos_grafico_departamentos, 'miGraficoDepartamentos');
+                    }
+                    generarGraficoSemanal(data.datos_para_grafico_semanal);
 
-            generarGrafico(datosEjemplo);
-            generarGraficoDirecciones(datosEjemplo);
-            generarGraficoDepartamentos(datosEjemplo);
+                } else {
+                    console.log("Datos sin cambios, no se actualiza.");
+                }
 
-            // Ocultar barras de carga después de la actualización
-            setTimeout(() => {
-                document.getElementById('loading-bar-1').classList.remove('loading-active');
-                document.getElementById('loading-bar-2').classList.remove('loading-active');
-                document.getElementById('loading-bar-3').classList.remove('loading-active');
-            }, 500);
-        });
+                // Ocultar barras de carga después de la actualización (o no actualización)
+                setTimeout(() => {
+                    document.getElementById('loading-bar-1').classList.remove('loading-active');
+                    document.getElementById('loading-bar-2').classList.remove('loading-active');
+                    document.getElementById('loading-bar-3').classList.remove('loading-active');
+                    document.getElementById('loading-bar-4').classList.remove('loading-active');
+                }, 500);
+            })
+            .catch(error => {
+                console.error("Error al obtener datos:", error);
+
+                // Datos de ejemplo para visualización en caso de error
+                const datosEjemplo = [
+                    { label: 'Semana 1', data: 10 },
+                    { label: 'Semana 2', data: 15 },
+                    { label: 'Semana 3', data: 8 },
+                    { label: 'Semana 4', data: 22 }
+                ];
+
+                // Generar gráficos de ejemplo en caso de error
+                if (typeof generarGrafico === 'function') {
+                    generarGrafico([
+                        { label: 'Categoría 1', cantidad: 25 },
+                        { label: 'Categoría 2', cantidad: 40 },
+                        { label: 'Categoría 3', cantidad: 15 },
+                        { label: 'Categoría 4', cantidad: 30 }
+                    ], 'miGrafico');
+                    generarGraficoDirecciones([
+                        { label: 'Dir 1', cantidad: 30 },
+                        { label: 'Dir 2', cantidad: 20 },
+                        { label: 'Dir 3', cantidad: 50 }
+                    ], 'miGraficoDirecciones');
+                    generarGraficoDepartamentos([
+                        { label: 'Dep 1', cantidad: 15 },
+                        { label: 'Dep 2', cantidad: 35 },
+                        { label: 'Dep 3', cantidad: 25 }
+                    ], 'miGraficoDepartamentos');
+                }
+                generarGraficoSemanal({
+                    labels: datosEjemplo.map(d => d.label),
+                    data: datosEjemplo.map(d => d.data)
+                });
+
+                // Ocultar barras de carga después del error
+                setTimeout(() => {
+                    document.getElementById('loading-bar-1').classList.remove('loading-active');
+                    document.getElementById('loading-bar-2').classList.remove('loading-active');
+                    document.getElementById('loading-bar-3').classList.remove('loading-active');
+                    document.getElementById('loading-bar-4').classList.remove('loading-active');
+                }, 500);
+            });
+    }
+
+    function generarGraficoSemanal(data) {
+    const ctx = document.getElementById('miGraficoSemanal').getContext('2d');
+
+    if (chartSemanal) {
+        chartSemanal.destroy(); // Destruir el gráfico anterior si existe
+    }
+
+    chartSemanal = new Chart(ctx, {
+        type: 'line', // Changed to 'line' for a line chart
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Solicitudes',
+                data: data.data,
+                backgroundColor: 'rgba(255, 0, 0, 0.7)', // Red color for the points
+                borderColor: 'rgba(255, 0, 0, 1)',     // Red color for the line
+                borderWidth: 2,
+                pointRadius: 5,                  // Make the points visible
+                pointBackgroundColor: 'rgba(255, 0, 0, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                fill: false                    // Do not fill area under the line
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Número de Solicitudes'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Semana'
+                    }
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+        }
+    });
 }
 function sonDatosIguales(datos1, datos2) {
     if (datos1 === null || datos2 === null) {
@@ -1293,7 +1447,7 @@ function sonDatosIguales(datos1, datos2) {
             layout: {
                 padding: {
                     left: 20,
-                    right: 50,
+                    right: 40,
                     top: 10,
                     bottom: 10
                 }
@@ -1344,7 +1498,6 @@ function sonDatosIguales(datos1, datos2) {
             });
         });
         
-        // Añadido: Agregar efecto de animación a los valores de los paneles
         document.querySelectorAll('.panel-value').forEach(value => {
             value.addEventListener('mouseenter', () => {
                 value.style.animation = 'glow 1.5s infinite';
@@ -1355,7 +1508,7 @@ function sonDatosIguales(datos1, datos2) {
             });
         });
         
-        // Añadido: Agregar efecto de animación al encabezado
+       
         const header = document.querySelector('.header');
         header.addEventListener('mouseenter', () => {
             header.style.boxShadow = '0 4px 20px rgba(0, 183, 199, 0.3)';
@@ -1376,6 +1529,10 @@ function sonDatosIguales(datos1, datos2) {
     const toggleDescriptionVisitas = document.getElementById('toggle-description-visitas');
     const toggleUpdateArchivos = document.getElementById('toggle-update-archivos');
     const toggleDescriptionArchivos = document.getElementById('toggle-description-archivos');
+    const soporteweb12 = document.getElementById('soporteweb12-content');
+    const soporteweb12ValueElement = document.getElementById('soporteweb12'); // ID actualizada
+    const soporteweb123 = document.getElementById('soporteweb12-content');
+    const soporteweb123ValueElement = document.getElementById('soporteweb12'); // ID actualizada
 
     let currentView = 'visitas'; // Vista inicial
 
@@ -1430,6 +1587,34 @@ function sonDatosIguales(datos1, datos2) {
         }
     }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const panelesOriginal = document.getElementById('paneles-original');
+    const panelesNuevo = document.getElementById('paneles-nuevo');
+    const botonMostrarNuevosPaneles = document.getElementById('mostrar-nuevos-paneles');
+    const graficosOriginales = document.querySelector('.graficos-container:not(#graficos-nuevos)');
+    const graficosNuevos = document.getElementById('graficos-nuevos');
+    const flechaDerecha = '&raquo;';
+    const flechaIzquierda = '&laquo;';
+
+    botonMostrarNuevosPaneles.addEventListener('click', function() {
+        if (panelesOriginal.style.display !== 'none') {
+            panelesOriginal.style.display = 'none';
+            panelesNuevo.style.display = 'grid';
+            graficosOriginales.style.display = 'none';
+            graficosNuevos.style.display = 'grid';
+            botonMostrarNuevosPaneles.innerHTML = flechaIzquierda; // Usando innerHTML para la flecha izquierda
+        } else {
+            panelesOriginal.style.display = 'grid';
+            panelesNuevo.style.display = 'none';
+            graficosOriginales.style.display = 'grid';
+            graficosNuevos.style.display = 'none';
+            botonMostrarNuevosPaneles.innerHTML = flechaDerecha; // Usando innerHTML para la flecha derecha
+        }
+    });
+});
     </script>
+
+    
 </body>
 </html>
