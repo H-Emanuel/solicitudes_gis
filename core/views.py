@@ -208,54 +208,60 @@ locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 def datos_estadisticas(request):
     numeros_fijos_direcciones = {
-        "Alcaldia":15,
-        "Dirección de Desarrollo Comunitario":270,
-        "Dirección de Obras Municipales":11,
-        "Dirección de Tránsito y Transporte público":9,
-        "Dirección de Administración y Finanzas":38,
-        "Dirección desarrollo Económico y Cooperación Internacional":41,
-        "Dirección de Desarrollo Cultural":11,
-        "Dirección de Seguridad Ciudadana":82,
-        "Dirección de Vivienda, Barrio y Territorio":2,
-        "Dirección de Medioambiente":29,
-        "Dirección de Género, Mujeres y Diversidades":36,
-        "Dirección de Asesoría Jurídica":7,
-        "SECPLA":6515,
-        "Dirección de Operaciones":31,
-        "Gabinete":1,
-        "Administración Municipal":35,
-        "Otros":0
+        "Alcaldia": 15,
+        "Dirección de Desarrollo Comunitario": 270,
+        "Dirección de Obras Municipales": 11,
+        "Dirección de Tránsito y Transporte público": 9,
+        "Dirección de Administración y Finanzas": 38,
+        "Dirección desarrollo Económico y Cooperación Internacional": 41,
+        "Dirección de Desarrollo Cultural": 11,
+        "Dirección de Seguridad Ciudadana": 82,
+        "Dirección de Vivienda, Barrio y Territorio": 2,
+        "Dirección de Medioambiente": 29,
+        "Dirección de Género, Mujeres y Diversidades": 36,
+        "Dirección de Operaciones": 31,
+        "Dirección de Asesoría Jurídica": 7,
+        "SECPLA": 6515,
+        "Gabinete": 1,
+        "Administración Municipal": 35,
+        "Otros": 0
     }
 
     numeros_fijos_departamento = {
-        "Alcaldia":1735,
-        "Dirección de Desarrollo Comunitario":353,
-        "Dirección de Obras Municipales":282,
-        "Dirección de Tránsito y Transporte público":55,
-        "Dirección de Administración y Finanzas":198,
-        "Dirección desarrollo Económico y Cooperación Internacional":104,
-        "Dirección de Desarrollo Cultural":10,
-        "Dirección de Seguridad Ciudadana":1115,
-        "Dirección de Vivienda, Barrio y Territorio":147,
-        "Dirección de Medioambiente":154,
-        "Dirección de Género, Mujeres y Diversidades":33,
-        "Dirección de Asesoría Jurídica":104,
-        "SECPLA":2218,
-        "Dirección de Operaciones":100,
-        "Gabinete":1,
-        "Administración Municipal":35,
-        "Otros":0
+        "Alcaldia": 1735,
+        "Dirección de Desarrollo Comunitario": 353,
+        "Dirección de Obras Municipales": 282,
+        "Dirección de Tránsito y Transporte público": 55,
+        "Dirección de Administración y Finanzas": 198,
+        "Dirección desarrollo Económico y Cooperación Internacional": 104,
+        "Dirección de Desarrollo Cultural": 10,
+        "Dirección de Seguridad Ciudadana": 1115,
+        "Dirección de Vivienda, Barrio y Territorio": 147,
+        "Dirección de Medioambiente": 154,
+        "Dirección de Género, Mujeres y Diversidades": 33,
+        "Dirección de Asesoría Jurídica": 104,
+        "SECPLA": 2218,
+        "Gabinete": 1,
+        "Administración Municipal": 35,
+        "Otros": 0
     }
-    
+
     numeros_fijos = {
         'archivos': 251,
         'planos_impresos': 295,
         'planos_digitales': 6391,
-        'plataformas':228,
+        'plataformas': 228,
         'productos': 18,
         'total': 0,
         'visitas': 7740,
-        'mapa2':0
+        'mapa2': 0,
+        'soporteweb1':0,
+        'soporteweb123':0,
+        'promediosoli':0,
+        'prome':0
+
+
+        
     }
 
     with connection.cursor() as cursor:
@@ -266,7 +272,7 @@ def datos_estadisticas(request):
 
             cursor.execute("SELECT COALESCE(SUM(fpi.cantidad), 0) FROM formulario_protocolosolicitudinsumo fpi JOIN formulario_protocolosolicitud ps ON fpi.protocolosolicitud_id = ps.id WHERE fpi.insumo_id = 1 AND ps.estado = 'EJECUTADO'")
             planos_impresos = cursor.fetchone()[0] + numeros_fijos['planos_impresos']
-            
+
             cursor.execute("SELECT COALESCE(SUM(fpi.cantidad), 0) FROM formulario_protocolosolicitudinsumo fpi JOIN formulario_protocolosolicitud ps ON fpi.protocolosolicitud_id = ps.id WHERE fpi.insumo_id = 2 AND ps.estado = 'EJECUTADO'")
             planos_digitales = cursor.fetchone()[0] + numeros_fijos['planos_digitales']
 
@@ -276,20 +282,38 @@ def datos_estadisticas(request):
             cursor.execute("SELECT COALESCE(SUM(fpi.cantidad), 0) FROM formulario_protocolosolicitudinsumo fpi JOIN formulario_protocolosolicitud ps ON fpi.protocolosolicitud_id = ps.id WHERE fpi.insumo_id IN (12, 13) AND ps.estado = 'EJECUTADO'")
             productos = cursor.fetchone()[0] + numeros_fijos['productos']
 
-            cursor.execute("SELECT COUNT(*) FROM public.core_useractivity WHERE page = 'experience.arcgis.com'")
+            cursor.execute("SELECT COALESCE(COUNT(*), 0) FROM public.core_useractivity WHERE page = 'experience.arcgis.com'")
             mapa2 = cursor.fetchone()[0] + numeros_fijos['mapa2']
 
             total = archivos + planos_impresos + planos_digitales + plataformas + productos + numeros_fijos['total']
 
-            cursor.execute("SELECT MAX(orden_trabajo::INTEGER)FROM public.formulario_protocolosolicitud;")
+            cursor.execute("SELECT COALESCE(MAX(orden_trabajo::INTEGER), 0) FROM public.formulario_protocolosolicitud;")
             id_mas_alto = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COALESCE(SUM(fpi.cantidad), 0) FROM formulario_protocolosolicitudinsumo fpi JOIN formulario_protocolosolicitud ps ON fpi.protocolosolicitud_id = ps.id WHERE fpi.insumo_id = 14 AND ps.estado = 'EJECUTADO'")
+            soporteweb12 = cursor.fetchone()[0] + numeros_fijos['soporteweb1']
+
+            cursor.execute("SELECT COALESCE(SUM(fpi.cantidad), 0) FROM formulario_protocolosolicitudinsumo fpi JOIN formulario_protocolosolicitud ps ON fpi.protocolosolicitud_id = ps.id WHERE fpi.insumo_id = 15 AND ps.estado = 'EJECUTADO'")
+            soporteweb123 = cursor.fetchone()[0] + numeros_fijos['soporteweb123']
+
+            cursor.execute("SELECT ROUND(AVG(cantidad), 2) AS promedio_solicitudes_por_semana FROM ( SELECT DATE_TRUNC('week', fecha)::DATE AS inicio_semana,COUNT(*) AS cantidad FROM formulario_protocolosolicitud GROUP BY inicio_semana) AS solicitudes_por_semana;")
+            promedios_de_solicitudes  = cursor.fetchone()[0] + numeros_fijos['promediosoli']
+
+            cursor.execute('''
+SELECT AVG(horas_demora) AS promedio_horas_total
+FROM (
+    SELECT (EXTRACT(EPOCH FROM "fecha_T" - "fecha_L") / (60 * 60)) AS horas_demora
+    FROM formulario_protocolosolicitud
+    WHERE "fecha_T" IS NOT NULL AND "fecha_L" IS NOT NULL
+) AS subconsulta_horas;
+''')
+            TR  = cursor.fetchone()[0] + numeros_fijos['prome']
 
 
             # Datos para el gráfico de direcciones
             cursor.execute("""
-                SELECT direccion, COUNT(*) 
+                SELECT direccion, COUNT(*)
                 FROM formulario_protocolosolicitud
-                WHERE formulario_protocolosolicitud.estado = 'EJECUTADO'
                 GROUP BY direccion
             """)
             resultados_direcciones = cursor.fetchall()
@@ -302,13 +326,13 @@ def datos_estadisticas(request):
                     'cantidad': cantidad + numero_fijo
                 })
 
-            cursor.execute("SELECT COUNT(*) FROM core_visita")
+            cursor.execute("SELECT COALESCE(COUNT(*), 0) FROM core_visita")
             visitas_departamentosig = cursor.fetchone()[0] + numeros_fijos['visitas']
 
             # Datos para el gráfico general
             datos_grafico = [
                 {'label': 'Plataformas', 'cantidad': plataformas},
-                {'label': 'Planos Impreso y Digitales', 'cantidad': planos_digitales+ planos_impresos},
+                {'label': 'Planos Impreso y Digitales', 'cantidad': planos_digitales + planos_impresos},
                 {'label': 'Archivos', 'cantidad': archivos},
                 {'label': 'Productos', 'cantidad': productos},
             ]
@@ -319,6 +343,7 @@ def datos_estadisticas(request):
                 FROM core_departamento
                 GROUP BY nombre
             """)
+
             resultados_departamentos = cursor.fetchall()
 
             datos_grafico_departamentos = []
@@ -328,7 +353,36 @@ def datos_estadisticas(request):
                     'label': nombre,
                     'cantidad': cantidad + numero_fijo
                 })
-            
+
+            # Datos para el gráfico semanal (NUEVO CÓDIGO)
+            cursor.execute("""
+                SELECT
+                    DATE_TRUNC('week', fecha)::DATE AS inicio_semana,
+                    COUNT(*) AS cantidad
+                FROM
+                    formulario_protocolosolicitud
+                GROUP BY
+                    inicio_semana
+                ORDER BY
+                    inicio_semana
+            """)
+            resultados_semanales = cursor.fetchall()
+            print("Resultados Semanales:", resultados_semanales)  # IMPRESIÓN DE DEPURACIÓN
+
+            labels_semanales = []
+            data_semanales = []
+            for row in resultados_semanales:
+                print("Tipo de row[0]:", type(row[0]))  # IMPRESIÓN DE DEPURACIÓN
+                print("Valor de row[0]:", row[0])    # IMPRESIÓN DE DEPURACIÓN
+                labels_semanales.append(row[0].strftime('%d/%m/%Y'))
+                data_semanales.append(row[1])
+
+            datos_para_grafico_semanal = {
+                'labels': labels_semanales,
+                'data': data_semanales
+            }
+            import math
+            promedios_de_solicitudes_redondeado = math.ceil(promedios_de_solicitudes)
             # Formatear los números
             archivos_formateado = locale.format_string("%d", archivos, grouping=True)
             planos_impresos_formateado = locale.format_string("%d", planos_impresos, grouping=True)
@@ -338,7 +392,11 @@ def datos_estadisticas(request):
             total_formateado = locale.format_string("%d", total, grouping=True)
             id_mas_alto_formateado = locale.format_string("%d", id_mas_alto, grouping=True)
             visitas_departamentosig_formateado = locale.format_string("%d", visitas_departamentosig, grouping=True)
-            mapa2_formateado =locale.format_string("%d", mapa2, grouping=True)
+            mapa2_formateado = locale.format_string("%d", mapa2, grouping=True)
+            soporteweb12_formateado= locale.format_string("%d", soporteweb12, grouping=True)
+            soporteweb123_formateado= locale.format_string("%d", soporteweb123, grouping=True)
+            promedios_de_solicitudes_formateado = locale.format_string("%d", promedios_de_solicitudes_redondeado, grouping=True)
+            TR_formateado = locale.format_string("%.1f", TR, grouping=True)
 
             return JsonResponse({
                 'archivos': archivos_formateado,  # Usar el valor formateado
@@ -350,9 +408,16 @@ def datos_estadisticas(request):
                 'total': total_formateado,  # Usar el valor formateado
                 'datos_grafico': datos_grafico,
                 'datos_grafico_direcciones': datos_grafico_direcciones,
-                'visitas_departamentosig': visitas_departamentosig_formateado, # Usar el valor formateado
+                'visitas_departamentosig': visitas_departamentosig_formateado,  # Usar el valor formateado
                 'datos_grafico_departamentos': datos_grafico_departamentos,
-                'mapa2': mapa2_formateado
+                'mapa2': mapa2_formateado,
+                'datos_para_grafico_semanal': datos_para_grafico_semanal,
+                'soporteweb12': soporteweb12_formateado,
+                'soporteweb123': soporteweb123_formateado,
+                'promedios_de_solicitudes': promedios_de_solicitudes_formateado,
+                'TR_formateado': TR_formateado,
+
+
             })
         except Exception as e:
             print(f"Error en datos_estadisticas: {e}")
