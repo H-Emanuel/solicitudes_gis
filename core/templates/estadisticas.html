@@ -567,6 +567,47 @@
     color: #ddd;
     outline: none;
 }
+
+#grafico-semanal-container {
+    position: relative; /* Establece el contexto para el posicionamiento absoluto */
+    /* Otros estilos que ya tengas para el contenedor del gráfico semanal */
+    padding-top: 30px; /* Ajusta según sea necesario */
+    padding-left: 100px; /* Ajusta según sea necesario */
+    /* ... otros estilos específicos para este gráfico ... */
+}
+
+#grafico-semanal-container .grafico-titulo {
+    /* Tus estilos actuales para el título del gráfico semanal */
+    text-align: center;
+}
+
+#grafico-semanal-container .filtro-container {
+    position: absolute;
+    top: 5px; /* Ajusta la posición */
+    left: 10px; /* Ajusta la posición */
+    z-index: 15; /* Asegura que esté por encima del gráfico */
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+}
+
+#grafico-semanal-container .filtro-container label {
+    margin-right: 5px;
+    color: white;
+}
+
+#grafico-semanal-container #anio-filtro {
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 3px;
+    padding: 3px;
+}
+
+
  </style>
 
 <body>
@@ -577,7 +618,7 @@
             <h1 class="header-text" style="font-size: 2em;">Cuadro Reportes Solicitudes SIG</h1>
         </div>
         <div class="header-actions" style="display: flex; align-items: center;">
-            <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_FX3dvNU.png" alt="Logo SIG" class="header-logo" style="width: 200px; height: auto;">
+            <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_FX3dvNU.png" alt="Logo SIG" class="header-logo" style="width: 250px; height: auto;">
             <a href="menu" class="header-icon" title="Ir al sistema SIG">
                 <i class="fas fa-external-link-alt"></i>
             </a>
@@ -681,7 +722,7 @@
                     <div class="panel-title">  Desarrollo Web </div>
                     <div class="panel-content">
                         <i class="fas fa-code panel-icon"></i>
-                        <div class="panel-value" id="soporteweb123">Cargando...</div>
+                        <div class="panel-value" id="soporteweb12">Cargando...</div>
                     </div>
                     <div class="panel-update">Solicitudes de Desarrollo</div>
                 </div>
@@ -689,7 +730,7 @@
                     <div class="panel-title">Soporte WEB</div>
                     <div class="panel-content">
                         <i class="fas fa-life-ring panel-icon"></i>
-                        <div class="panel-value" id="soporteweb12">Cargando...</div>
+                        <div class="panel-value" id="soporteweb123">Cargando...</div>
                         <div class="panel-update">Soporte Entregado</div>
                     </div>
                     <div class="panel-description"></div>
@@ -707,7 +748,6 @@
                     <div class="panel-content">
                         <i class="fas fa-clock panel-icon"></i>
                         <div class="panel-value" id="TR_formateado">Cargando...</div>
-                        <div class="panel-description">HORAS</div>
                     </div>
                     <div class="panel-update">Promedio</div>
                 </div>
@@ -733,13 +773,21 @@
             </div>
     
             <div class="graficos-container" id="graficos-nuevos" style="display: none;">
-                <div class="grafico-container">
+                
+                
+                <div id="grafico-semanal-container" class="grafico-container">
+                    <div class="filtro-container">
+                        <label for="anio-filtro">Filtrar por año:</label>
+                        <select id="anio-filtro">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
                     <div class="grafico-titulo">Solicitudes por Semana</div>
                     <canvas id="miGraficoSemanal"></canvas>
                     <div class="loading-bar" id="loading-bar-4"></div>
                 </div>
                 <div style="flex-grow: 1; display: flex; align-items: center;">
-                    <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_OlmW8pu.png" alt="Imagen Adicional" style="max-width: 150%; max-height: 770px; margin-left: 250px;">
+                    <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_OlmW8pu.png" alt="Imagen Adicional" style="max-width: 150%; max-height: 770px; margin-left: 200px;">
                 </div>
             </div>
     
@@ -752,6 +800,7 @@
     
     
     <script>
+        
         // Configuración global de Chart.js para tema oscuro
         Chart.defaults.color = '#f3f4f6';
         Chart.defaults.borderColor = '#374151';
@@ -1247,51 +1296,113 @@ let datosAnteriores = null; // Almacenamos los datos anteriores aquí
             });
     }
 
+     // Declaración global de chartSemanal
+    let datosGraficoSemanalOriginal; // Guardaremos todos los datos aquí
+
     function generarGraficoSemanal(data) {
-    const ctx = document.getElementById('miGraficoSemanal').getContext('2d');
+        const ctx = document.getElementById('miGraficoSemanal').getContext('2d');
 
-    if (chartSemanal) {
-        chartSemanal.destroy(); // Destruir el gráfico anterior si existe
-    }
+        if (chartSemanal) {
+            chartSemanal.destroy();
+        }
 
-    chartSemanal = new Chart(ctx, {
-        type: 'line', // Changed to 'line' for a line chart
-        data: {
-            labels: data.labels,
-            datasets: [{
-                label: 'Solicitudes',
-                data: data.data,
-                backgroundColor: 'rgba(255, 0, 0, 0.7)', // Red color for the points
-                borderColor: 'rgba(255, 0, 0, 1)',     // Red color for the line
-                borderWidth: 2,
-                pointRadius: 5,                  // Make the points visible
-                pointBackgroundColor: 'rgba(255, 0, 0, 1)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                fill: false                    // Do not fill area under the line
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Número de Solicitudes'
+        chartSemanal = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Solicitudes',
+                    data: data.data,
+                    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+                    borderColor: 'rgba(255, 0, 0, 1)',
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'rgba(255, 0, 0, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de Solicitudes'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Semana'
+                        }
                     }
                 },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Semana'
-                    }
-                }
-            },
-            responsive: true,
-            maintainAspectRatio: false,
-        }
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+    }
+
+    async function cargarDatosIniciales() {
+    try {
+        const response = await fetch('/datos_estadisticas/'); // Ajusta la URL si es diferente
+        const data = await response.json();
+        datosGraficoSemanalOriginal = data.datos_para_grafico_semanal;
+        generarOpcionesAnio(datosGraficoSemanalOriginal.labels);
+        filtrarYGraficarPorAnio('todos'); // Mostrar todos los datos al cargar
+    } catch (error) {
+        console.error("Error al cargar los datos:", error);
+    }
+}
+
+
+    function generarOpcionesAnio(labels) {
+    const selectAnio = document.getElementById('anio-filtro');
+    const años = new Set();
+    labels.forEach(label => {
+        const año = label.split('/')[2]; // Extraer el año del formato dd/mm/aaaa
+        años.add(año);
+    });
+
+    años.forEach(año => {
+        const option = document.createElement('option');
+        option.value = año;
+        option.textContent = año;
+        selectAnio.appendChild(option);
     });
 }
+
+    function filtrarDatosPorAnio(anio) {
+    if (anio === 'todos') {
+        return datosGraficoSemanalOriginal;
+    } else {
+        const labelsFiltrados = [];
+        const dataFiltrada = [];
+        datosGraficoSemanalOriginal.labels.forEach((label, index) => {
+            if (label.endsWith('/' + anio)) {
+                labelsFiltrados.push(label);
+                dataFiltrada.push(datosGraficoSemanalOriginal.data[index]);
+            }
+        });
+        return { labels: labelsFiltrados, data: dataFiltrada };
+    }
+}
+
+    function filtrarYGraficarPorAnio(anioSeleccionado) {
+        const datosFiltrados = filtrarDatosPorAnio(anioSeleccionado);
+        generarGraficoSemanal(datosFiltrados);
+    }
+
+    // Evento para detectar cambios en el selector de año
+    document.getElementById('anio-filtro').addEventListener('change', function() {
+        filtrarYGraficarPorAnio(this.value);
+    });
+
+    // Cargar los datos iniciales al cargar la página
+    cargarDatosIniciales();
+
 function sonDatosIguales(datos1, datos2) {
     if (datos1 === null || datos2 === null) {
         return datos1 === datos2; // Si ambos son null, son iguales
