@@ -1299,51 +1299,109 @@ let datosAnteriores = null; // Almacenamos los datos anteriores aquí
      // Declaración global de chartSemanal
     let datosGraficoSemanalOriginal; // Guardaremos todos los datos aquí
 
-    function generarGraficoSemanal(data) {
-        const ctx = document.getElementById('miGraficoSemanal').getContext('2d');
+   function generarGraficoSemanal(data) {
+    const ctx = document.getElementById('miGraficoSemanal');
+    
+    if (!ctx) {
+        console.error('No se encontró el elemento canvas');
+        return;
+    }
 
-        if (chartSemanal) {
-            chartSemanal.destroy();
-        }
+    if (window.chartSemanal) {
+        window.chartSemanal.destroy();
+    }
 
-        chartSemanal = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Solicitudes',
-                    data: data.data,
-                    backgroundColor: 'rgba(255, 0, 0, 0.7)',
-                    borderColor: 'rgba(255, 0, 0, 1)',
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    pointBackgroundColor: 'rgba(255, 0, 0, 1)',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    fill: false
-                }]
+    // Configuración mejorada para muchos puntos
+    const pointInteractionStyles = {
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        pointHitRadius: 100,  // Incrementado significativamente
+        pointBackgroundColor: '#ff0000',
+        pointHoverBackgroundColor: '#0000ff',
+        pointBorderWidth: 2,
+        pointBorderColor: '#ffffff'
+    };
+
+    window.chartSemanal = new Chart(ctx.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Solicitudes',
+                data: data.data,
+                borderColor: 'rgba(255, 0, 0, 1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1,
+                ...pointInteractionStyles
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    enabled: true,
+                    mode: 'index',  // Cambiado a 'index' para mayor precisión
+                    intersect: false,
+                    position: 'nearest',
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: ${context.parsed.y}`,
+                        title: (context) => context[0].label
+                    }
+                }
             },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Número de Solicitudes'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Semana'
-                        }
+            interaction: {
+                mode: 'index',  // Modo index es mejor para muchos puntos
+                intersect: false,
+                axis: 'xy'  // Detección en ambos ejes
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Número de Solicitudes'
                     }
                 },
-                responsive: true,
-                maintainAspectRatio: false,
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Semana'
+                    },
+                    grid: {
+                        display: false  // Mejorar legibilidad con muchos puntos
+                    }
+                }
+            },
+            onClick: (e, elements) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const label = data.labels[index];
+                    const value = data.data[index];
+                    
+                    // Animación mejorada
+                    const originalColors = window.chartSemanal.data.datasets[0].pointBackgroundColor;
+                    window.chartSemanal.data.datasets[0].pointBackgroundColor = 
+                        window.chartSemanal.data.datasets[0].data.map((_, i) => 
+                            i === index ? '#00ff00' : originalColors[i]);
+                    
+                    window.chartSemanal.update();
+                    
+                    console.log(`Dato seleccionado: ${label} - ${value} solicitudes`);
+                    
+                    setTimeout(() => {
+                        window.chartSemanal.data.datasets[0].pointBackgroundColor = originalColors;
+                        window.chartSemanal.update();
+                    }, 1000);
+                }
             }
-        });
-    }
+        }
+    });
+}
 
     async function cargarDatosIniciales() {
     try {
