@@ -19,6 +19,15 @@ import io
 import base64
 visitas_departamentosig = 0  # Contador global de visitas
 
+def secpla(request):
+    return render(request, "core/secpla.html")
+
+def secpla2(request):
+    return render(request, "core/secpla2.html")
+
+def secpla3(request):
+    return render(request, "core/secpla3.html")
+
 def inicio(request):
     return render(request,'core/iniciar.html')
 
