@@ -19,4 +19,5 @@ urlpatterns = [
     path('secpla2/',views.secpla2,name="secpla2"),
     path('secpla3/',views.secpla3,name="secpla3"),
     path('secpla4/',views.secpla4,name="secpla4"),
+    path('secpla5/',views.secpla5,name="secpla5"),
 ]
