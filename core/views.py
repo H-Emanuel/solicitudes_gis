@@ -35,6 +35,9 @@ def inicio(request):
 def secpla4(request):
     return render(request, "core/secpla4.html")
 
+def secpla5(request):
+    return render(request, "core/secpla5.html")
+
 
 def menu(request):
     def get_client_ip(request):
