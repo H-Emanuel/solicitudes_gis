@@ -31,6 +31,11 @@ def secpla3(request):
 def inicio(request):
     return render(request,'core/iniciar.html')
 
+
+def secpla4(request):
+    return render(request, "core/secpla4.html")
+
+
 def menu(request):
     def get_client_ip(request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
