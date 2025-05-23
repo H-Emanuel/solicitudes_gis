@@ -114,7 +114,7 @@ def crear_protocolo(request):
 
             try:
                 # Obtén los datos necesarios para el correo
-                correo_destino1 = 'nrebolledo@munivalpo.cl' 
+                correo_destino1 = 'deisy.pereira@munivalpo.cl' 
                 asunto = 'Nueva ficha generada'
 
                 # Construye el mensaje de correo
