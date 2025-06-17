@@ -1,0 +1,201 @@
+{% extends 'head/base.html' %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Archivos</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600&display=swap" rel="stylesheet">
+    <style>
+    
+        .container {
+            max-width: 50%;
+            margin: 48px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(60, 90, 130, 0.12);
+            padding: 40px 32px;
+        }
+        h1 {
+            color: #2d3a4b;
+            margin-bottom: 28px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .upload-link {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 28px;
+            background: linear-gradient(90deg, #4f8cff 0%, #38e8ff 100%);
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(79,140,255,0.12);
+            transition: background 0.2s, box-shadow 0.2s;
+            font-size: 1.05em;
+        }
+        .upload-link svg {
+            margin-right: 8px;
+        }
+        .upload-link:hover {
+            background: linear-gradient(90deg, #38e8ff 0%, #4f8cff 100%);
+            box-shadow: 0 4px 16px rgba(56,232,255,0.15);
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #f7fafd;
+            margin-bottom: 14px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(79,140,255,0.04);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        li:hover {
+            box-shadow: 0 4px 16px rgba(79,140,255,0.10);
+            transform: translateY(-2px) scale(1.01);
+        }
+        .file-info {
+            display: flex;
+            align-items: center;
+        }
+        .file-icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .file-name {
+            font-weight: 500;
+            color: #2d3a4b;
+            font-size: 1.07em;
+        }
+        .actions a {
+            margin-left: 16px;
+            text-decoration: none;
+            color: #4f8cff;
+            font-size: 1em;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+        .actions a svg {
+            margin-right: 5px;
+        }
+        .actions a:hover {
+            color: #38e8ff;
+            text-decoration: underline;
+        }
+        .empty {
+            text-align: center;
+            color: #aaa;
+            padding: 28px 0;
+            font-size: 1.1em;
+        }
+    </style>
+
+<div class="container">
+    <h1>Lista de Archivos</h1>
+    <ul>
+        {% for archivo in archivos %}
+            <li>
+                <span class="file-info">
+                    <span class="file-icon">
+                        <svg width="28" height="28" fill="none" stroke="#4f8cff" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="4" y="4" width="16" height="16" rx="3"/>
+                            <path d="M8 4v16"/>
+                        </svg>
+                    </span>
+                    <span class="file-name">{{ archivo.nombre }} 
+                        <small>(.{{ archivo.extension }})</small><br>
+                        <small>Subido por: {{ archivo.usuario.username }} el {{ archivo.fecha_subida|date:"d/m/Y H:i" }}</small>
+                    </span>
+                </span>
+
+                <span class="actions">
+                    <a href="{{ archivo.archivo.url }}" target="_blank" title="Ver archivo">
+                        <svg width="18" height="18" fill="none" stroke="#4f8cff" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v4l3 3"/>
+                        </svg>
+                        Ver
+                    </a>
+                    <a href="{{ archivo.archivo.url }}" download title="Descargar archivo">
+                        <svg width="18" height="18" fill="none" stroke="#4f8cff" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 5v14"/>
+                            <path d="M5 12l7 7 7-7"/>
+                        </svg>
+                        Descargar
+                    </a>
+                    <a href="#" class="copiar-enlace" data-url="{{ archivo.url_absoluto }}" title="Copiar enlace">
+                        <svg width="18" height="18" fill="none" stroke="#4f8cff" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                            <rect x="2" y="2" width="13" height="13" rx="2"/>
+                        </svg>
+                        Copiar link
+                    </a>
+                    {% if archivo.usuario == request.user or request.user.is_staff %}
+                    <a href="{% url 'eliminar_archivo' archivo.id %}" title="Eliminar archivo">
+                        <svg width="18" height="18" fill="none" stroke="#ff4f4f" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="5" y="7" width="14" height="12" rx="2"/>
+                            <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                        Eliminar
+                    </a>
+                    {% endif %}
+                </span>
+            </li>
+        {% empty %}
+            <li class="empty">No hay archivos.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.copiar-enlace').forEach(function (enlace) {
+        enlace.addEventListener('click', function (e) {
+            e.preventDefault();  // Evita que se recargue la página
+
+            const link = this.getAttribute('data-url');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(link)
+                    .then(() => {
+                        alert('🔗 Enlace copiado al portapapeles:\n' + link);
+                    })
+                    .catch(err => {
+                        console.error('Error al copiar', err);
+                        alert('Error al copiar el enlace.');
+                    });
+            } else {
+                // Fallback para navegadores antiguos
+                const textarea = document.createElement('textarea');
+                textarea.value = link;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('🔗 Enlace copiado al portapapeles:\n' + link);
+                } catch (err) {
+                    alert('Error al copiar el enlace.');
+                }
+                document.body.removeChild(textarea);
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

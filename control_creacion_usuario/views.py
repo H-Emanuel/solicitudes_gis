@@ -121,7 +121,7 @@ def Historial_Visitas(request):
 def solicitude_llegadas(request, dia_p=None):
     minutos = 0
     hora = 0
-    usuarios = User.objects.all()
+    usuarios = User.objects.exclude(acceso_pagina__acceso=True)
 
     # Filtrar las solicitudes según el usuario
     if request.user.is_superuser:
@@ -1039,7 +1039,7 @@ def solicitudes_json(request):
 
 
     # Obtener lista de usuarios
-    usuarios = list(User.objects.values('id', 'username','first_name','last_name'))
+    usuarios = list(User.objects.values('id', 'username','first_name','last_name').exclude(acceso_pagina__acceso=True))
 
     # Lista con información procesada de solicitudes
     solicitudes_data = []
@@ -1253,7 +1253,7 @@ def usuarios_disponibles(request):
         profesional_id = protocolo.profesional.id if protocolo.profesional else None
 
         # Obtener todos los usuarios, excluyendo el profesional principal
-        usuarios = User.objects.exclude(id=profesional_id,) .values('id', 'first_name', 'last_name')
+        usuarios = User.objects.exclude(id=profesional_id,) .values('id', 'first_name', 'last_name').exclude(acceso_pagina__acceso=True)
 
         # Obtener los apoyos ya registrados para este protocolo
         apoyo_qs = Apoyo_Protocolo.objects.filter(protocolo=protocolo)

@@ -1,0 +1,869 @@
+{% load hashid %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Formularios</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #fcfcfc 0%, #faf8f9 50%, #fcfbfb 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        /* ===================================
+           CONTENEDOR PRINCIPAL CON LOGO
+           ================================= */
+
+        .main-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            max-width: 150px;
+            max-height: 150px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #34495e;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        /* ===================================
+           BOTÓN PARA ABRIR MODAL
+           ================================= */
+
+        .btn-open-modal {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-open-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+        }
+
+        /* ===================================
+           ESTILOS PARA MENSAJES
+           ================================= */
+
+        .messages {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .messages li {
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .messages li.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .messages li.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* ===================================
+           ESTILOS DEL MODAL
+           ================================= */
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Fondo blanco semitransparente */
+            background: rgba(255,255,255,0.5);
+            /* backdrop-filter: blur(5px); */ /* Puedes activar esto si quieres un leve desenfoque */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #fcfcfc 0%, #faf8f9 50%, #fcfbfb 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            transform: scale(0.7) translateY(-50px);
+            transition: all 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            text-align: center;
+        }
+
+        .modal-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* ===================================
+           FORMULARIO DEL MODAL
+           ================================= */
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-size: 1.4rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 15px;
+            border: 2px solid #c9c9c9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #fff;
+            font-family: inherit;
+            height: 48px; /* Alto igual para ambos */
+            min-height: 48px;
+            max-height: 48px;
+            resize: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            /* resize: vertical; */
+            min-height: 60px; /* Reducido desde 120px */
+        }
+
+        .btn-crear-modal {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 1rem;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-crear-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+        }
+
+        .btn-crear-modal:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ===================================
+           ESTILOS DE LA TABLA
+           ================================= */
+
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background-color: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .styled-table thead tr {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 15px 20px;
+            text-align: left;
+        }
+
+        .styled-table th {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            border: 2px solid #ddd;
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f8f9fa;
+        }
+
+        .styled-table tbody tr:hover {
+            background-color: #e3f2fd;
+            transform: scale(1.01);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .styled-table tbody tr:last-of-type {
+            border-bottom: none;
+        }
+
+        .styled-table td {
+            font-size: 0.95rem;
+            color: #495057;
+        }
+
+        /* ===================================
+           BOTONES DE LA TABLA
+           ================================= */
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin: 2px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .btn-primary {
+            background: #3091d1;
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        /* Acciones de la tabla */
+        .styled-table td:last-child {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        /* ===================================
+           RESPONSIVE DESIGN
+           ================================= */
+
+        @media (max-width: 1200px) {
+            .main-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 1.5rem;
+            }
+
+            .logo-container {
+                align-self: center;
+            }
+
+            .container {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem 0;
+            }
+
+            .main-wrapper {
+                padding: 0 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .logo {
+                max-width: 80px;
+                max-height: 80px;
+            }
+
+            .logo-container {
+                padding: 1rem;
+            }
+
+            .modal {
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+            }
+
+            .styled-table {
+                font-size: 0.85rem;
+            }
+
+            .styled-table th,
+            .styled-table td {
+                padding: 10px 8px;
+            }
+
+            .styled-table td:last-child {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .styled-table .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ===================================
+           ANIMACIONES
+           ================================= */
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .styled-table {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .logo-container {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* ===================================
+           UTILIDADES
+           ================================= */
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-1 {
+            margin-bottom: 1rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 2rem;
+        }
+
+        .p-2 {
+            padding: 2rem;
+        }
+
+        .font-italic {
+            font-style: italic;
+        }
+
+        .text-muted {
+            color: #6c757d;
+        }
+
+        /* Animación para el icono del botón cerrar sesión */
+        .btn-logout {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(220,53,69,0.15);
+            transition: background 0.3s;
+        }
+        
+        .btn-logout i {
+            transition: transform 0.3s cubic-bezier(.4,1.5,.5,1);
+        }
+        .btn-logout:hover i {
+            transform: translateY(-3px) scale(1.25);
+        }
+    </style>
+</head>
+<body>
+    <!-- Contenedor principal -->
+    <div class="main-wrapper">
+        <!-- Contenedor del formulario -->
+        <div class="container">
+            <!-- Logo plano en la esquina superior izquierda y título centrado -->
+            <div style="position: relative; margin-bottom: 2.5rem;">
+                <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_OsIDMgi.png"
+                     alt="Logo Municipalidad de Valparaíso"
+                     class="logo"
+                     style="position: absolute; left: 5px; top: 5px;" />
+                <div style="display: flex; justify-content: center; align-items: center; position: relative;">
+                    <h1 style="margin-bottom: 0; flex:1;">Administrar Formularios</h1>
+                    <form action="{% url 'logout' %}" method="post" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin-right: 10px;">
+                        {% csrf_token %}
+                        <button type="submit" title="Cerrar sesión" class="btn-logout">
+                            <i class="fa-solid fa-sign-out-alt"></i> Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <!-- Botón para abrir el modal y buscador -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <button class="btn-open-modal" onclick="openModal()">
+                    <i class="fa-solid fa-plus"></i>
+                    Crear Nuevo Formulario
+                </button>
+                <!-- Buscador -->
+                <div style="display: flex; align-items: center;">
+                    <form id="searchForm" style="display: flex; align-items: stretch; gap: 0; background: #f5f5f5; border-radius: 8px; border: 1.5px solid #ccc; height: 44px;">
+                        <select id="searchField" style="padding: 0 8px; border: none; border-radius: 8px 0 0 8px; font-size: 1rem; background: #ddd; height: 100%; display: flex; align-items: center; justify-content: center; width: 137px; min-width: 137px; max-width: 180px;">
+                            <option value="nombre">Nombre</option>
+                            <option value="descripcion">Descripción</option>
+                            <option value="departamento">Departamento</option>
+                        </select>
+                        <input type="text" id="searchInput" placeholder="Buscar..." style="padding: 10px; border: none; border-radius: 0 8px 8px 0; font-size: 1rem; min-width: 140px; background: transparent; height: 100%">
+                    </form>
+                    <button type="button" id="clearBtn" style="padding: 10px 12px; border: none; background: #e0e0e0; color: #333; border-radius: 8px; margin-left: 8px; font-size: 1rem; cursor: pointer; height: 40px; display: flex; align-items: center; justify-content: center; width: 40px;">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- Mensajes de Django -->
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li class="{{ message.tags }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <!-- Lista de formularios existentes -->
+            
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Fecha de Creación</th>
+                        <th>Departamento</th>
+                        <th style="text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="formulariosTableBody">
+                    {% for formulario in formularios %}
+                    <tr>
+                        <td>{{ formulario.nombre }}</td>
+                        <td>{{ formulario.descripcion }}</td>
+                        <td>{{ formulario.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td>{{ formulario.departamento }}</td>
+                        <td>
+                            <!-- Botón Link -->
+                            <a href="{% url 'guardar_punto' formulario.id|hashid %}" class="btn btn-secondary">
+                                <i class="fa-solid fa-eye"></i>Ver
+                            </a>
+                            <a href="{% url 'ver_guardado' formulario.id|hashid %}" class="btn btn-primary">
+                                <i class="fa-solid fa-database"></i>Ver Guardados
+                            </a>
+                            <a href="{% url 'agregar_pregunta' formulario.id|hashid %}" class="btn btn-secondary">
+                                <i class="fa-solid fa-pen"></i>Editar
+                            </a>
+                            <button class="btn btn-danger delete-btn" data-id="{{ formulario.id }}">
+                                <i class="fa-solid fa-trash"></i>Eliminar
+                            </button>
+                            <button class="btn btn-primary btn-link-copy" 
+                                    data-link="{% url 'guardar_punto' formulario.id|hashid %}"
+                                    title="Copiar link al portapapeles">
+                                <i class="fa fa-link"></i> Link
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %} 
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 2rem; color: #6c757d; font-style: italic;">
+                            <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                            No hay formularios disponibles.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para crear formulario -->
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Crear Formularios</h2>
+            </div>
+            
+            <div class="modal-content">
+                <form id="createFormForm" method="post" class="modal-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="id_nombre">Nombre:</label>
+                        {{ form.nombre }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_descripcion">Descripción:</label>
+                        {{ form.descripcion }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_departamento">Departamento:</label>
+                        {{ form.departamento }}
+                    </div>
+                    <button type="submit" class="btn-crear-modal" id="submitBtn">
+                        <i class="fa-solid fa-plus"></i>
+                        CREAR
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funciones del modal
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            // Limpiar el formulario
+            document.getElementById('createFormForm').reset();
+        }
+
+        function closeModalOnOverlay(event) {
+            if (event.target === event.currentTarget) {
+                closeModal();
+            }
+        }
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Mantener exactamente la misma funcionalidad JavaScript original
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const formularioId = this.getAttribute('data-id');
+                if (confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
+                    fetch(`/survey/eliminar_formulario/${formularioId}/`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert('Error al eliminar el formulario.');
+                        }
+                    });
+                }
+            });
+        });
+
+        document.getElementById('createFormForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const nombreValue = document.getElementById('id_nombre').value.trim();
+            
+            if (!nombreValue) {
+                alert('El nombre del formulario es obligatorio.');
+                return;
+            }
+
+            // Deshabilitar botón durante el envío
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> CREANDO...';
+            
+            fetch('{% url "administrar_formularios" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirigir a la URL proporcionada por el servidor
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.error || 'Error al crear el formulario');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al crear el formulario.');
+            })
+            .finally(() => {
+                // Rehabilitar botón
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-plus"></i> CREAR';
+            });
+        });
+
+        // Buscador de formularios en tiempo real
+        const searchInput = document.getElementById('searchInput');
+        const searchField = document.getElementById('searchField');
+        const clearBtn = document.getElementById('clearBtn');
+
+        searchInput.addEventListener('input', filterTable);
+        searchField.addEventListener('change', filterTable);
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterTable();
+            searchInput.focus();
+        });
+
+        function filterTable() {
+            const input = searchInput.value.toLowerCase();
+            const field = searchField.value;
+            const tbody = document.getElementById('formulariosTableBody');
+            const rows = tbody.getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                // Saltar fila de "No hay formularios disponibles"
+                if (rows[i].children.length < 4) continue;
+                const nombreCell = rows[i].children[0];
+                const descripcionCell = rows[i].children[1];
+                const departamentoCell = rows[i].children[3];
+                let text = '';
+                if (field === 'nombre') {
+                    text = nombreCell ? nombreCell.textContent.toLowerCase() : '';
+                } else if (field === 'descripcion') {
+                    text = descripcionCell ? descripcionCell.textContent.toLowerCase() : '';
+                } else if (field === 'departamento') {
+                    text = departamentoCell ? departamentoCell.textContent.toLowerCase() : '';
+                }
+                if (input === '' || text.includes(input)) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+
+        // Copiar link al portapapeles
+        function showCopyNotification(btn) {
+            const notif = document.createElement('span');
+            notif.textContent = '¡Link copiado!';
+            notif.style.position = 'absolute';
+            notif.style.background = '#28a745';
+            notif.style.color = '#fff';
+            notif.style.padding = '4px 12px';
+            notif.style.borderRadius = '8px';
+            notif.style.fontSize = '0.95rem';
+            notif.style.top = '-35px';
+            notif.style.right = '0';
+            notif.style.zIndex = '9999';
+            notif.style.boxShadow = '0 2px 8px rgba(40,167,69,0.15)';
+            notif.style.transition = 'opacity 0.3s';
+            btn.parentElement.style.position = 'relative';
+            btn.parentElement.appendChild(notif);
+            setTimeout(() => {
+                notif.style.opacity = '0';
+                setTimeout(() => notif.remove(), 300);
+            }, 1200);
+        }
+
+        document.querySelectorAll('.btn-link-copy').forEach(btn => {
+            btn.addEventListener('click', function() {
+                let link = this.getAttribute('data-link');
+                // Si el link es relativo, anteponer el dominio
+                if (!link.startsWith('http')) {
+                    link = window.location.origin + link;
+                }
+                navigator.clipboard.writeText(link).then(() => {
+                    showCopyNotification(this);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

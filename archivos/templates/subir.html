@@ -1,0 +1,92 @@
+{% extends 'head/base.html' %}
+{% block content %}
+<!DOCTYPE html>
+    <meta charset="UTF-8">
+    <title>Subir Archivo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+
+        .container {
+            max-width: 420px;
+            margin: 60px auto;
+            background: #fff;
+            padding: 38px 30px 32px 30px;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(25, 118, 210, 0.10), 0 1.5px 6px rgba(0,0,0,0.04);
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #1976d2;
+            margin-bottom: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        button[type="submit"] {
+            background: linear-gradient(90deg, #1976d2 60%, #42a5f5 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 0;
+            border-radius: 7px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10);
+        }
+        button[type="submit"]:hover {
+            background: linear-gradient(90deg, #1565c0 60%, #1976d2 100%);
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.13);
+        }
+
+        input[type="file"] {
+            border: 2px dashed #90caf9;
+            padding: 14px 10px;
+            border-radius: 7px;
+            background: #f5faff;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        input[type="file"]:focus {
+            border-color: #1976d2;
+            outline: none;
+        }
+        /* Mejorar los labels y los campos */
+        form p {
+            margin: 0 0 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        form label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+            font-size: 15px;
+        }
+        /* Mensajes de error Django */
+        .errorlist {
+            color: #d32f2f;
+            background: #fff3f3;
+            border-radius: 5px;
+            padding: 6px 10px;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            list-style: none;
+        }
+    </style>
+
+<div class="container">
+        <h1>Subir Archivo</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Subir</button>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestión de Archivos</title>
+</head>
+<body style="margin:0; font-family: Arial, sans-serif; background: #f7f9fa;"></body>
+    <nav style="background: #2d3e50; padding: 1rem 2rem; display: flex; align-items: center; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="flex:1;">
+            <span style="font-weight: bold; font-size: 1.2rem;">Gestión de Archivos</span>
+        </div>
+        <div>
+        {% if user.is_authenticated %}
+            <span style="margin-right: 1.5rem;">Bienvenido, <strong>{{ user.username }}</strong></span>
+            <a href="{% url 'lista_archivos' %}" style="color: #fff; text-decoration: none; margin-right: 1rem; padding: 6px 14px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#1abc9c'" onmouseout="this.style.background='none'">Archivos</a>
+            <a href="{% url 'subir_archivo' %}" style="color: #fff; text-decoration: none; margin-right: 1rem; padding: 6px 14px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#3498db'" onmouseout="this.style.background='none'">Subir Archivo</a>
+            <a href="{% url 'logout' %}" style="color: #fff; text-decoration: none; padding: 6px 14px; border-radius: 4px; background: #e74c3c; transition: background 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">Cerrar sesión</a>
+        {% else %}
+            <a href="{% url 'login' %}" style="color: #fff; text-decoration: none; padding: 6px 14px; border-radius: 4px; background: #1abc9c; transition: background 0.2s;" onmouseover="this.style.background='#16a085'" onmouseout="this.style.background='#1abc9c'">Iniciar sesión</a>
+        {% endif %}
+        </div>
+    </nav>
+    <hr style="margin:0; border: none; border-top: 1px solid #e1e4e8;">
+    <div style="padding: 2rem;">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

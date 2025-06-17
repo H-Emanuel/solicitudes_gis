@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="{% static 'css/agregar_pregunta.css' %}">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid var(--border);
+            padding: 40px 32px 32px 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--primary);
+        }
+        .login-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .login-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .login-btn:hover {
+            background: var(--primary-hover);
+        }
+        .login-error {
+            color: #e53e3e;
+            background: #fff0f0;
+            border: 1px solid #ffc6c6;
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .login-form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .login-form-group label {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .login-form-group input[type="text"],
+        .login-form-group input[type="password"] {
+            width: 90%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: var(--text);
+            background-color: white;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .login-form-group input[type="text"]:focus,
+        .login-form-group input[type="password"]:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        }
+    </style>
+</head>
+<body>
+        <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+            <img src="https://departamentosig.munivalpo.cl/media/assets/imagen_sig/None/adjunto_OsIDMgi.png" alt="Logo Municipalidad de Valparaíso" style="max-width: 180px; max-height: 180px; border-radius: 16px; margin-top: 30px; background: #e8e8e8; padding: 8px;" />
+        </div>
+        <div class="login-container">
+            <div class="login-title">Iniciar Sesión</div>
+            {% if error %}
+                <div class="login-error">{{ error }}</div>
+            {% endif %}
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <div class="login-form-group">
+                    {{ form.nombre.label_tag }}
+                    {{ form.nombre }}
+                </div>
+                <div class="login-form-group">
+                    {{ form.password.label_tag }}
+                    {{ form.password }}
+                </div>
+                <button type="submit" class="login-btn">Entrar</button>
+            </form>
+        </div>
+    </body>
+</html>

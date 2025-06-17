@@ -1,0 +1,351 @@
+{% load static %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/questions_fragment.css' %}">
+
+<div class="questions-container">
+    <div class="questions-list">
+        {# ¡IMPORTANTE! Siempre renderizar las preguntas ordenadas por 'orden' #}
+        {% for pregunta in preguntas|dictsort:"orden" %}
+            <div class="question-item" data-pregunta-id="{{ pregunta.id }}" data-tipo="{{ pregunta.tipo }}" data-mostrar-como-radio="{{ pregunta.mostrar_como_radio }}" data-permitir-multiple="{{ pregunta.permitir_multiple }}" data-obligatorio="{{ pregunta.obligatorio|yesno:'true,false' }}" {% if pregunta.tipo == 'fecha' %}data-fecha-tipo="{{ pregunta.fecha_tipo }}"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-pregunta-dependiente-id="{{ pregunta.pregunta_dependiente_id }}"{% endif %} style="transition: all 0.3s cubic-bezier(.4,2,.6,1);">
+                <div class="question-order-controls">
+                    <button type="button" class="move-up-btn" title="Subir"><i class="fa-solid fa-arrow-up"></i></button>
+                    <span class="question-order-num">{{ pregunta.orden }}</span>
+                    <button type="button" class="move-down-btn" title="Bajar"><i class="fa-solid fa-arrow-down"></i></button>
+                </div>
+                <div class="question-text">
+                    {{ pregunta.texto }}
+                    {% if pregunta.obligatorio %}
+                        <span class="obligatorio-icon" title="Obligatorio"><span class="obligatorio-circle">!</span></span>
+                    {% endif %}
+                </div>
+                {% if pregunta.descripcion %}
+                    <div class="question-description">{{ pregunta.descripcion }}</div>
+                {% endif %}
+                {% if pregunta.pregunta_dependiente_id %}
+                <div class="dependencia-aviso" style="display:none;color:#e63946;font-weight:bold;font-size:0.98em;margin-bottom:8px;">
+                    <span style="font-size:0.93em;font-weight:normal;">Debe contestar primero:
+                        <span class="nombre-pregunta-base" style="font-style:italic;color:#555;">
+                            {% for p in preguntas %}{% if p.id == pregunta.pregunta_dependiente_id %}{{ p.texto|truncatechars:60 }}{% endif %}{% endfor %}
+                        </span>
+                    </span>
+                </div>
+                {% endif %}
+                <div class="question-input">
+                    {% if pregunta.tipo == 'opcion_multiple' %}
+                        {% if pregunta.permitir_multiple %}
+                            <div class="opciones-container">
+                                <div class="opciones-list" id="opciones_{{ pregunta.id }}">
+                                    {% for opcion in pregunta.opciones.all %}
+                                        <div class="opcion-item">
+                                            <input type="checkbox" name="respuesta_{{ pregunta.id }}" value="{{ opcion.texto }}" id="opcion_{{ opcion.id }}" class="checkbox-input{% if pregunta.obligatorio %} obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                                            <label for="opcion_{{ opcion.id }}" class="checkbox-label">
+                                                <span class="checkbox-custom"></span>
+                                                <span class="checkbox-text">{{ opcion.texto }}</span>
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% else %}
+                            {% if pregunta.mostrar_como_radio %}
+                                <div class="radio-group">
+                                    {% for opcion in pregunta.opciones.all %}
+                                        <label class="radio-label">
+                                            <input type="radio" name="respuesta_{{ pregunta.id }}" value="{{ opcion.texto }}" class="{% if pregunta.obligatorio %}obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                                            <span class="radio-custom"></span>
+                                            <span class="radio-text">{{ opcion.texto }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <select name="respuesta_{{ pregunta.id }}" class="custom-select{% if pregunta.obligatorio %} obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                                    <option value="" disabled selected>Seleccione una opción</option>
+                                    {% for opcion in pregunta.opciones.all %}
+                                        <option value="{{ opcion.texto }}">{{ opcion.texto }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        {% endif %}
+                    {% elif pregunta.tipo == 'verdadero_falso' %}
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="respuesta_{{ pregunta.id }}" value="verdadero" class="{% if pregunta.obligatorio %}obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                                <span class="radio-custom"></span>
+                                <span class="radio-text">Verdadero</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="respuesta_{{ pregunta.id }}" value="falso" class="{% if pregunta.obligatorio %}obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                                <span class="radio-custom"></span>
+                                <span class="radio-text">Falso</span>
+                            </label>
+                        </div>
+                    {% elif pregunta.tipo == 'valoracion' %}
+                        <div class="rating-container">
+                            {% for i in pregunta.rango %}
+                                <label class="rating-label">
+                                    <input type="radio" name="respuesta_{{ pregunta.id }}" value="{{ i }}" class="{% if pregunta.obligatorio %}obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                                    <span class="rating-box">{{ i }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    {% elif pregunta.tipo == 'foto' %}
+                        <div class="file-input-container enhanced-file-input" data-pregunta-id="{{ pregunta.id }}">
+                            <div class="file-input-row">
+                                <input type="file" name="respuesta_{{ pregunta.id }}" accept="image/*" id="file_{{ pregunta.id }}" class="file-input{% if pregunta.obligatorio %} obligatorio-pregunta{% endif %}" capture="environment" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                                <label for="file_{{ pregunta.id }}" class="file-label drop-area custom-file-btn">
+                                    <i class="fas fa-upload"></i>
+                                    <span class="file-label-text">Arrastra o selecciona una imagen</span>
+                                    <span class="file-drop-overlay">Suelta aquí</span>
+                                </label>
+                            </div>
+                            <div class="file-preview" style="display:none">
+                                <img class="file-thumb" src="" alt="preview">
+                                <span class="file-info"></span>
+                                <span class="file-size"></span>
+                                <div class="file-menu">
+                                    <button type="button" class="file-menu-btn"><i class="fas fa-ellipsis-v"></i></button>
+                                    <div class="file-menu-dropdown">
+                                        <button type="button" class="file-rename">Renombrar</button>
+                                        <button type="button" class="file-delete">Eliminar</button>
+                                        <button type="button" class="file-download">Descargar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif pregunta.tipo == 'mapa' %}
+                        <div class="mapa-pregunta-container" style="margin-bottom: 16px;">
+                            <div id="mapa_{{ pregunta.id }}" class="mapa-pregunta-mapa" style="width:97%;height:300px;margin-bottom:10px; border-radius: 12px;" data-mapa-tipo="{{ pregunta.mapa_tipo|default:'punto' }}"></div>
+                            <div class="mapa-coords-row" style="display:flex;gap:16px;align-items:center;">
+                                <div class="coords-labels" style="display:flex;gap:12px;align-items:center;">
+                                    <span><strong>Latitud:</strong> <span id="lat_{{ pregunta.id }}" class="mapa-lat-span">-</span></span>
+                                    <span><strong>Longitud:</strong> <span id="lng_{{ pregunta.id }}" class="mapa-lng-span">-</span></span>
+                                </div>
+                                <button type="button"
+                                        class="btn"
+                                        id="geolocate_{{ pregunta.id }}"
+                                        style="height:42px; min-width: 170px; color:#000; background:#fff; border:2px solid #000; font-size:16px; display:flex; align-items:center; gap:8px; justify-content:center; border-radius: 8px;"
+                                        disabled>
+                                    <i class="fa-solid fa-location-crosshairs"></i>
+                                    Usar mi ubicación
+                                </button>
+                            </div>
+                            <!-- Inputs ocultos para enviar coordenadas al backend -->
+                            <input type="hidden" name="respuesta_{{ pregunta.id }}_lat" id="input_lat_{{ pregunta.id }}"{% if pregunta.obligatorio %} class="obligatorio-pregunta" data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                            <input type="hidden" name="respuesta_{{ pregunta.id }}_lng" id="input_lng_{{ pregunta.id }}"{% if pregunta.obligatorio %} class="obligatorio-pregunta" data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                        </div>
+                    {% elif pregunta.tipo == 'fecha' %}
+                        {% if pregunta.fecha_tipo == 'usuario' %}
+                            <input type="date" name="respuesta_{{ pregunta.id }}" class="text-input{% if pregunta.obligatorio %} obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                        {% else %}
+                            <input type="text" value="(se registrará la fecha de envío)" class="text-input" readonly>
+                            <input type="hidden" name="respuesta_{{ pregunta.id }}" id="fecha_envio_{{ pregunta.id }}"{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var input = document.getElementById('fecha_envio_{{ pregunta.id }}');
+                                if (input) {
+                                    var hoy = new Date();
+                                    var yyyy = hoy.getFullYear();
+                                    var mm = String(hoy.getMonth() + 1).padStart(2, '0');
+                                    var dd = String(hoy.getDate()).padStart(2, '0');
+                                    input.value = yyyy + '-' + mm + '-' + dd;
+                                }
+                            });
+                            </script>
+                        {% endif %}
+                    {% else %}
+                        <input type="text" name="respuesta_{{ pregunta.id }}" placeholder="{{ pregunta.placeholder|default:'Escribe tu respuesta' }}" class="text-input{% if pregunta.obligatorio %} obligatorio-pregunta{% endif %}" {% if pregunta.obligatorio %}data-obligatorio="true"{% endif %}{% if pregunta.pregunta_dependiente_id %} data-dependiente="true"{% endif %}>
+                    {% endif %}
+                </div>
+                {% if mostrar_boton_eliminar %}
+                    <div class="question-actions">
+                        <button type="button" class="delete-question-btn" data-id="{{ pregunta.id }}" title="Eliminar">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+function cambiarTipoSeleccion(preguntaId, tipo) {
+    const opcionesContainer = document.getElementById(`opciones_${preguntaId}`);
+    const btnRadio = document.getElementById(`btn_radio_${preguntaId}`);
+    const btnVarios = document.getElementById(`btn_varios_${preguntaId}`);
+    
+    if (tipo === 'radio') {
+        opcionesContainer.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            input.type = 'radio';
+            input.required = true;
+            input.name = `respuesta_${preguntaId}`;
+        });
+        btnRadio.classList.add('active');
+        btnVarios.classList.remove('active');
+    } else {
+        opcionesContainer.querySelectorAll('input[type="radio"]').forEach(input => {
+            input.type = 'checkbox';
+            input.required = false;
+            input.name = `respuesta_${preguntaId}`;
+        });
+        btnRadio.classList.remove('active');
+        btnVarios.classList.add('active');
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.enhanced-file-input').forEach(function(container) {
+        const input = container.querySelector('.file-input');
+        const label = container.querySelector('.file-label');
+        const overlay = container.querySelector('.file-drop-overlay');
+        const preview = container.querySelector('.file-preview');
+        const thumb = container.querySelector('.file-thumb');
+        const info = container.querySelector('.file-info');
+        const size = container.querySelector('.file-size');
+        const menuBtn = container.querySelector('.file-menu-btn');
+        const menu = container.querySelector('.file-menu');
+        const menuDropdown = container.querySelector('.file-menu-dropdown');
+        let currentFile = null;
+
+        // Drag & drop
+        label.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            label.classList.add('dragover');
+            overlay.style.opacity = '1';
+        });
+        label.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            label.classList.remove('dragover');
+            overlay.style.opacity = '0';
+        });
+        label.addEventListener('drop', function(e) {
+            e.preventDefault();
+            label.classList.remove('dragover');
+            overlay.style.opacity = '0';
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                input.files = e.dataTransfer.files;
+                input.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // File input change
+        function handleFileChange(file) {
+            if (!file) {
+                preview.style.display = 'none';
+                currentFile = null;
+                container.querySelector('.file-input-row').style.display = '';
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                alert('Solo se permiten archivos de imagen.');
+                input.value = '';
+                preview.style.display = 'none';
+                currentFile = null;
+                container.querySelector('.file-input-row').style.display = '';
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('El archivo supera el límite de 10 MB.');
+                input.value = '';
+                preview.style.display = 'none';
+                currentFile = null;
+                container.querySelector('.file-input-row').style.display = '';
+                return;
+            }
+            // --- Cambios aquí ---
+            info.innerHTML = '';
+            size.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            const fileName = file.name;
+            const lastDot = fileName.lastIndexOf('.');
+            let base = fileName;
+            let ext = '';
+            if (lastDot !== -1) {
+                base = fileName.substring(0, lastDot);
+                ext = fileName.substring(lastDot);
+            }
+            const baseSpan = document.createElement('span');
+            baseSpan.className = 'file-base';
+            baseSpan.textContent = base;
+            const extSpan = document.createElement('span');
+            extSpan.className = 'file-ext';
+            extSpan.textContent = ext;
+            info.appendChild(baseSpan);
+            info.appendChild(extSpan);
+            // --- Fin cambios ---
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                thumb.src = e.target.result;
+                preview.style.display = 'flex';
+                container.querySelector('.file-input-row').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+            preview.style.display = 'flex';
+            container.querySelector('.file-input-row').style.display = 'none';
+            currentFile = file;
+        }
+        input.addEventListener('change', function() {
+            handleFileChange(input.files[0]);
+        });
+        // Menú de 3 puntos
+        if (menuBtn && menu) {
+            menuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menu.classList.toggle('open');
+            });
+            document.addEventListener('click', function() {
+                menu.classList.remove('open');
+            });
+            menuDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+        // Renombrar
+        const renameBtn = container.querySelector('.file-rename');
+        if (renameBtn) {
+            renameBtn.addEventListener('click', function() {
+                if (!currentFile) return;
+                const ext = currentFile.name.split('.').pop();
+                const baseName = currentFile.name.replace(/\.[^/.]+$/, "");
+                const newBase = prompt('Nuevo nombre de archivo:', baseName);
+                if (newBase && newBase !== baseName) {
+                    info.textContent = newBase + '.' + ext;
+                }
+                menu.classList.remove('open');
+            });
+        }
+        // Eliminar
+        const deleteBtn = container.querySelector('.file-delete');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que deseas eliminar la imagen?')) {
+                    input.value = '';
+                    preview.style.display = 'none';
+                    currentFile = null;
+                    container.querySelector('.file-input-row').style.display = '';
+                }
+                menu.classList.remove('open');
+            });
+        }
+        // Descargar
+        const downloadBtn = container.querySelector('.file-download');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                if (!currentFile) return;
+                const url = URL.createObjectURL(currentFile);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = info.textContent || currentFile.name;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                menu.classList.remove('open');
+            });
+        }
+    });
+});
+</script>
