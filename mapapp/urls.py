@@ -8,6 +8,8 @@ from hashids import Hashids
 hashids = Hashids(salt='cambia_esto_por_un_salt_secreto', min_length=8)
 
 urlpatterns = [
+    path('', views.administrar_formularios, name='survey'),
+
     path('', views.administrar_formularios, name='administrar_formularios'),
     path('ver_guardado/<str:formulario_hashid>/', views.ver_guardado, name='ver_guardado'),
     path('guardar_punto/<str:formulario_hashid>/', views.guardar_punto, name='guardar_punto'), 

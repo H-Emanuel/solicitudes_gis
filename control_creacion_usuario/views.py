@@ -63,22 +63,27 @@ OPCIONES = {
 
 @csrf_exempt
 def login(request):
+    next_url = request.GET.get('next') or request.POST.get('next') or 'control'
     if request.user.is_authenticated:
-        return redirect('control')
+        # Si hay un parámetro 'next', redirige allí; si no, a 'control'
+        next_url = request.GET.get('next', 'control')
+        return redirect(next_url)
 
     if request.method == 'POST':
-        email = request.POST.get('email')
-        email = email.lower()
+        email = request.POST.get('email', '').lower()
         password = request.POST.get('password')
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
             auth_login(request, user)
-            return redirect('solicitude_llegadas')
+            next_url = request.GET.get('next') or request.POST.get('next') or 'control'
+
+            return redirect(next_url)
         else:
             messages.error(request, 'Usuario o contraseña incorrectos')
 
-    return render(request, 'Login.html')
+    # Pasa el parámetro 'next' al template para mantenerlo en el formulario
+    return render(request, 'Login.html', {'next': request.GET.get('next', '')})
 
 def download_excel(request):
     # Crear un nuevo libro de trabajo de Excel y agregar datos
@@ -399,7 +404,7 @@ def cambiar_contraseña(request):
 
 def logout(request):
     auth_logout(request)
-    return redirect('control')
+    return redirect('core_login')
 
 def Gestion_imagen(request):
     if request.method == 'POST':

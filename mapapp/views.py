@@ -699,7 +699,7 @@ def editar_pregunta(request, pregunta_id):
             return JsonResponse({'error': 'Pregunta no encontrada'}, status=404)
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-
+@login_required(login_url='/login/')
 def administrar_formularios(request):
     if request.method == 'POST':
         form = FormularioForm(request.POST)
