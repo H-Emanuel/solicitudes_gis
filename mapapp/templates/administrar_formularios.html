@@ -568,7 +568,7 @@
                      style="position: absolute; left: 5px; top: 5px;" />
                 <div style="display: flex; justify-content: center; align-items: center; position: relative;">
                     <h1 style="margin-bottom: 0; flex:1;">Administrar Formularios</h1>
-                    <form action="{% url 'logout' %}" method="post" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin-right: 10px;">
+                    <form action="{% url 'core_logout' %}" method="post" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin-right: 10px;">
                         {% csrf_token %}
                         <button type="submit" title="Cerrar sesión" class="btn-logout">
                             <i class="fa-solid fa-sign-out-alt"></i> Cerrar sesión

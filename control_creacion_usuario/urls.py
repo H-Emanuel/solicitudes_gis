@@ -17,7 +17,7 @@ urlpatterns = [
 
 
     path('cambiar_contraseña/', views.cambiar_contraseña, name="cambiar_contraseña"),
-    path('logout/', views.logout, name="logout"),
+    path('logout/', views.logout, name="core_logout"),
     path('login/', views.login, name="core_login"),
 
     path('correos/', views.Envio_de_correo, name="Envio_de_correo"),
