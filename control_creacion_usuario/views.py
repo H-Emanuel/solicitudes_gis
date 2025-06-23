@@ -38,6 +38,7 @@ from asgiref.sync import async_to_sync
 from .pdf_generator import *
 from tareas.models import *
 from django.db import transaction
+from archivos.models import acceso_pagina
 
 
 ESTADO = [
@@ -65,8 +66,9 @@ OPCIONES = {
 def login(request):
     next_url = request.GET.get('next') or request.POST.get('next') or 'control'
     if request.user.is_authenticated:
-        # Si hay un parámetro 'next', redirige allí; si no, a 'control'
-        next_url = request.GET.get('next', 'control')
+        # Si el usuario tiene acceso_pagina.acceso=True, redirigir a otra página
+        if acceso_pagina.objects.filter(usuario=request.user, acceso=True).exists():
+            return redirect('pagina_sin_acceso')  # Cambia 'pagina_sin_acceso' por el nombre de tu URL
         return redirect(next_url)
 
     if request.method == 'POST':
@@ -75,9 +77,11 @@ def login(request):
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
+            # Si el usuario tiene acceso_pagina.acceso=True, redirigir a otra página
+            if acceso_pagina.objects.filter(usuario=user, acceso=True).exists():
+                return redirect('inicio')  # Cambia 'pagina_sin_acceso' por el nombre de tu URL
             auth_login(request, user)
             next_url = request.GET.get('next') or request.POST.get('next') or 'control'
-
             return redirect(next_url)
         else:
             messages.error(request, 'Usuario o contraseña incorrectos')
