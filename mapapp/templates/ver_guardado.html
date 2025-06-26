@@ -379,11 +379,11 @@
 
         // Descarga de Excel
         document.getElementById('descargar-excel').onclick = function() {
-            descargarArchivo('/nube/descargar_excel/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.xlsx');
+            descargarArchivo('/survey/descargar_excel/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.xlsx');
         };
         // Descarga de KMZ
         document.getElementById('descargar-kmz').onclick = function() {
-            descargarArchivo('/nube/descargar_kmz/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.kmz');
+            descargarArchivo('/survey/descargar_kmz/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.kmz');
         };
         </script>
 
@@ -549,7 +549,7 @@
                 var row = document.querySelector('tr[data-id="' + pointId + '"]');
                 
                 if (confirm('¿Estás seguro de que quieres eliminar este punto? Esta acción no se puede deshacer.')) {
-                    fetch('/nube/eliminar_punto/' + pointId + '/', {
+                    fetch('/survey/eliminar_punto/' + pointId + '/', {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': '{{ csrf_token }}',
@@ -648,7 +648,7 @@
         saveLocationBtn.onclick = function() {
             if (!editMarker || !currentEditId) return;
             let newLatLng = editMarker.getLatLng();
-            fetch(`/nube/actualizar_punto/${currentEditId}/`, {
+            fetch(`/survey/actualizar_punto/${currentEditId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
