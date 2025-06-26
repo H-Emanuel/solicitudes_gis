@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Puntos Guardados</title>
+    {% load static %}
+    {% load hashid %}
+    {% load custom_filters %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/ver_guardado_header.css' %}">
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            transition: height 0.3s, width 0.3s;
+        }
+        .map-container {
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .map-title {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .table-responsive {
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .btn-group {
+            margin-top: 20px;
+        }
+        .btn-group.align-header {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 0;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .btn-delete,
+        .btn-edit-location {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0 16px;
+            font-size: 1rem;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-weight: 600;
+            transition: none; /* Sin efecto de transición en el botón */
+        }
+        .btn-delete:hover,
+        .btn-edit-location:hover {
+            /* Sin efecto de hover en el botón */
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            filter: none;
+            z-index: auto;
+        }
+        .btn-delete:active,
+        .btn-edit-location:active {
+            transform: none;
+        }
+        .btn-delete {
+            color: #fff;
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-delete:hover {
+            color: #fff;
+            background-color: #c82333;
+            border-color: #bd2130;
+            box-shadow: 0 6px 18px rgba(40, 167, 69, 0.18);
+            z-index: 2;
+            filter: brightness(1.08);
+        }
+
+        .btn-edit-location {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+        }
+        .btn-edit-location:hover {
+            box-shadow: 0 6px 18px rgba(40, 167, 69, 0.18);
+            z-index: 2;
+            filter: brightness(1.08);
+        }
+        .btn-edit-location:active {
+            transform: scale(0.98);
+        }
+        .btn-edit-location i, .btn-delete i {
+            transition: transform 0.22s cubic-bezier(.4,1.5,.5,1), filter 0.22s cubic-bezier(.4,1.5,.5,1);
+        }
+        .btn-edit-location:hover i, .btn-delete:hover i {
+            transform: translateY(-2px) scale(1.18);
+            filter: brightness(1.15);
+        }
+        .image-link {
+            color: #007bff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .image-link:hover {
+            color: #0056b3;
+        }
+        /* Estilos para el modal de imágenes */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 2001 !important;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+        }
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* Estilos para la fila seleccionada */
+        tbody tr {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        tbody tr.selected {
+            border: 2px solid #87CEEB;
+            box-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+            background-color: rgba(135, 206, 235, 0.1);
+        }
+        tbody tr:hover {
+            background-color: rgba(135, 206, 235, 0.05);
+        }
+        .custom-container {
+            padding-left: 24px;
+            padding-right: 24px;
+        }
+        @media (max-width: 768px) {
+            #map {
+                height: 250px;
+            }
+            .map-container,
+            .table-responsive {
+                max-width: 100%;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            .btn-group.align-header {
+                max-width: 100%;
+            }
+            .custom-container {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+        }
+        @media (max-width: 576px) {
+            #map {
+                height: 180px;
+            }
+            .container {
+                padding-left: 2px;
+                padding-right: 2px;
+            }
+            .map-container,
+            .table-responsive {
+                padding-left: 0;
+                padding-right: 0;
+            }
+            .btn-group.align-header {
+                padding-left: 0;
+                padding-right: 0;
+            }
+            .custom-container {
+                padding-left: 2px;
+                padding-right: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER SUPERIOR PERSONALIZADO -->
+    <header class="main-form-header" style="background-color: #acc352;">
+        <div class="header-left">
+            <span class="form-nombre" id="form-nombre">{{ formulario.nombre }}</span>
+            <!-- Botón de editar nombre/desc omitido en esta vista -->
+        </div>
+        <div class="header-right">
+            <button class="menu-toggle-btn" id="menu-toggle-btn" title="Menú">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="header-menu-dropdown" id="header-menu-dropdown">
+                <button type="button" class="menu-item" id="btn-ir-formularios" style="font-family: 'Inter', sans-serif;justify-content: normal;font-weight: normal; background:none;border:none;width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding: 14px 28px 14px 23px;font-size:1rem;cursor:pointer;">
+                    <i class="fa-solid fa-eye"></i> Formularios
+                </button>
+                <form id="logout-form" action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="menu-item btn-submit" style="font-family: 'Inter', sans-serif;width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding: 14px 28px 14px 23px;font-size:1rem;cursor:pointer;">
+                        <i class="fa-solid fa-sign-out-alt"></i> Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+    <!-- FIN HEADER SUPERIOR -->
+
+    <div class="container-fluid mt-4 custom-container">
+        
+        <!-- Mapa para mostrar todos los puntos -->
+        <div class="map-container">
+            <h3 class="map-title">Mapa de Puntos</h3>
+            <div id="map"></div>
+        </div>
+        
+        <!-- Tabla con los datos -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Latitud</th>
+                        <th>Longitud</th>
+                        {% for pregunta in preguntas %}
+                            {% if pregunta.tipo != 'mapa' %}
+                                <th>{{ pregunta.texto }}</th>
+                            {% endif %}
+                        {% endfor %}
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for punto_data in puntos_con_respuestas %}
+                        <tr data-id="{{ punto_data.punto.id }}" data-lat="{{ punto_data.punto.latitud }}" data-lng="{{ punto_data.punto.longitud }}">
+                            <td>{{ punto_data.punto.id }}</td>
+                            <td>{{ punto_data.punto.latitud }}</td>
+                            <td>{{ punto_data.punto.longitud }}</td>
+                            {% for pregunta in preguntas %}
+                                {% if pregunta.tipo != 'mapa' %}
+                                    {% with respuesta=punto_data.respuestas|dict_get:pregunta.id %}
+                                        <td>
+                                            {% if respuesta %}
+                                                {% if respuesta.tipo == 'foto' %}
+                                                    <a href="#" class="image-link" data-img="{{ respuesta.url }}">
+                                                        <i class="fas fa-image"></i> Ver imagen
+                                                    </a>
+                                                {% else %}
+                                                    {{ respuesta.valor }}
+                                                {% endif %}
+                                            {% else %}
+                                                Sin respuesta
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                            <td style="display: flex; gap: 8px; align-items: center; justify-content: center;">
+                                <button class="btn btn-delete delete-point" data-id="{{ punto_data.punto.id }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <button class="btn btn-primary btn-edit-location" data-id="{{ punto_data.punto.id }}" data-lat="{{ punto_data.punto.latitud }}" data-lng="{{ punto_data.punto.longitud }}" title="Editar ubicación" style="margin-left:0;">
+                                    <i class="fa-solid fa-up-down-left-right"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="{{ 6|add:preguntas|length }}">No hay puntos guardados.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="btn-group align-header">
+            <button id="btn-guardar-datos" class="btn btn-success ml-2" type="button" style="flex: none;">
+                <i class="fas fa-download"></i> Descargar datos
+            </button>
+        </div>
+
+        <!-- Modal de descarga -->
+        <div id="modal-descarga" class="image-modal" style="display:none; background-color:rgba(0,0,0,0.7);">
+            <div style="background:white; max-width:400px; margin:100px auto; border-radius:10px; padding:30px 20px; text-align:center; position:relative;">
+                <span class="close" id="close-modal-descarga" style="position:absolute; top:10px; right:20px; color:#333; font-size:32px; cursor:pointer;">&times;</span>
+                <h4 style="margin-bottom:20px;">Descargar datos</h4>
+                <button id="descargar-excel" class="btn btn-outline-primary" style="margin-bottom:15px; width:90%;">Descargar como Excel</button><br>
+                <button id="descargar-kmz" class="btn btn-outline-success" style="width:90%;">Descargar como KMZ</button>
+            </div>
+        </div>
+
+        <!-- Modal para editar ubicación de un punto -->
+        <div id="editLocationModal" class="image-modal" style="display:none; background-color:rgba(0,0,0,0.7);">
+            <div style="background:white; max-width:500px; margin:60px auto; border-radius:10px; padding:30px 20px; text-align:center; position:relative;">
+                <span class="close" id="close-edit-location-modal" style="position:absolute; top:10px; right:20px; color:#333; font-size:32px; cursor:pointer;">&times;</span>
+                <h4 style="margin-bottom:20px;">Editar ubicación del punto</h4>
+                <div id="edit-location-map" style="height:300px; width:100%; margin-bottom:20px; border-radius:6px;"></div>
+                <div style="margin-bottom:10px;">
+                    <label>Latitud: <span id="edit-lat"></span></label><br>
+                    <label>Longitud: <span id="edit-lng"></span></label>
+                </div>
+                <button id="save-location-btn" class="btn btn-success">Guardar ubicación</button>
+            </div>
+        </div>
+
+        <script>
+        // Función reutilizable para descargar archivos
+        function descargarArchivo(url, nombreArchivo) {
+            fetch(url, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error al descargar el archivo');
+                return response.blob();
+            })
+            .then(blob => {
+                const urlBlob = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = urlBlob;
+                a.download = nombreArchivo;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(urlBlob);
+            })
+            .catch(err => {
+                alert('No se pudo descargar el archivo: ' + err.message);
+            });
+        }
+
+        document.getElementById('btn-guardar-datos').onclick = function() {
+            document.getElementById('modal-descarga').style.display = 'block';
+        };
+        document.getElementById('close-modal-descarga').onclick = function() {
+            document.getElementById('modal-descarga').style.display = 'none';
+        };
+        window.onclick = function(event) {
+            var modal = document.getElementById('modal-descarga');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        // Descarga de Excel
+        document.getElementById('descargar-excel').onclick = function() {
+            descargarArchivo('/descargar_excel/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.xlsx');
+        };
+        // Descarga de KMZ
+        document.getElementById('descargar-kmz').onclick = function() {
+            descargarArchivo('/descargar_kmz/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.kmz');
+        };
+        </script>
+
+    </div>
+
+    <!-- Modal para mostrar imágenes -->
+    <div id="imageModal" class="image-modal" style="display:none; z-index:2001 !important; background-color:rgba(0,0,0,0.9);">
+        <span class="close" style="z-index:2002;">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Inicializar el mapa
+        var map = L.map('map');
+        
+        // Añadir capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Cargar puntos desde el contexto de Django
+        var puntosData = [];
+        var markers = {}; // Objeto para almacenar los marcadores por ID
+        var selectedMarker = null; // Marcador seleccionado actualmente
+        var selectedRow = null; // Fila seleccionada actualmente
+    
+        try {
+            var puntosJson = '{{ puntos_mapa|escapejs }}';
+            puntosData = JSON.parse(puntosJson);
+            console.log("Puntos cargados:", puntosData);
+        } catch (e) {
+            console.error("Error al cargar los puntos:", e);
+        }
+
+        var bounds = [];
+        
+        // Añadir marcadores y geometrías para cada punto
+        if (puntosData && puntosData.length > 0) {
+            puntosData.forEach(function(punto) {
+                if (punto.tipo === 'punto' && punto.latitud && punto.longitud) {
+                    var latlng = [punto.latitud, punto.longitud];
+                    bounds.push(latlng);
+                    var defaultIcon = L.icon({
+                        iconUrl: '/static/marker-icon-2x-blue.png',
+                        shadowUrl: '/static/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    });
+                    var selectedIcon = L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [35, 51],
+                        iconAnchor: [17, 51],
+                        popupAnchor: [1, -34],
+                        shadowSize: [51, 51]
+                    });
+                    var marker = L.marker(latlng, {icon: defaultIcon}).addTo(map);
+                    marker.bindPopup(
+                        "<strong>ID: " + punto.id + "</strong><br>" +
+                        "<strong>Coordenadas:</strong> " + punto.latitud.toFixed(6) + ", " + punto.longitud.toFixed(6)
+                    );
+                    markers[punto.id] = {
+                        marker: marker,
+                        defaultIcon: defaultIcon,
+                        selectedIcon: selectedIcon,
+                        layer: null
+                    };
+                } else if ((punto.tipo === 'linea' || punto.tipo === 'poligono') && Array.isArray(punto.geometria) && punto.geometria.length > 1) {
+                    var coords = punto.geometria.map(function(ll) { return [ll[0], ll[1]]; });
+                    bounds = bounds.concat(coords);
+                    var layer;
+                    if (punto.tipo === 'linea') {
+                        layer = L.polyline(coords, {color: '#2563eb', weight: 5}).addTo(map);
+                    } else {
+                        layer = L.polygon(coords, {color: '#38b000', fillOpacity: 0.3}).addTo(map);
+                    }
+                    // Añadir un marcador invisible para selección y popup
+                    var marker = L.marker(coords[0], {opacity:0}).addTo(map);
+                    marker.bindPopup(
+                        "<strong>ID: " + punto.id + "</strong><br>" +
+                        "<strong>Tipo:</strong> " + punto.tipo.charAt(0).toUpperCase() + punto.tipo.slice(1) + "<br>" +
+                        "<strong>Coordenadas iniciales:</strong> " + coords[0][0].toFixed(6) + ", " + coords[0][1].toFixed(6)
+                    );
+                    markers[punto.id] = {
+                        marker: marker,
+                        defaultIcon: null,
+                        selectedIcon: null,
+                        layer: layer
+                    };
+                    // Hacer seleccionable la geometría
+                    layer.on('click', function() {
+                        highlightMarker(punto.id);
+                    });
+                }
+            });
+            // Ajustar el mapa para mostrar todos los marcadores y geometrías
+            if (bounds.length > 0) {
+                map.fitBounds(bounds);
+            } else {
+                map.setView([-33.0472, -71.6127], 13);
+            }
+        } else {
+            map.setView([-33.0472, -71.6127], 13);
+        }
+
+        // Modificar highlightMarker para centrar y mostrar popup en geometría
+        function highlightMarker(pointId) {
+            // Si hay un marcador seleccionado previamente, volver a su estado normal
+            if (selectedMarker && selectedMarker.marker && selectedMarker.defaultIcon) {
+                selectedMarker.marker.setIcon(selectedMarker.defaultIcon);
+            }
+            if (selectedRow) {
+                selectedRow.classList.remove('selected');
+            }
+            var markerObj = markers[pointId];
+            if (markerObj) {
+                if (markerObj.defaultIcon && markerObj.selectedIcon) {
+                    markerObj.marker.setIcon(markerObj.selectedIcon);
+                }
+                // Centrar el mapa en la geometría
+                if (markerObj.layer) {
+                    var latlngs = markerObj.layer.getLatLngs();
+                    var center;
+                    if (Array.isArray(latlngs[0])) {
+                        // Polígono
+                        center = latlngs[0][0];
+                    } else {
+                        // Línea
+                        center = latlngs[0];
+                    }
+                    map.setView(center, 16);
+                    markerObj.marker.openPopup();
+                } else {
+                    // Punto
+                    map.setView(markerObj.marker.getLatLng(), 16);
+                    markerObj.marker.openPopup();
+                }
+                selectedMarker = markerObj;
+            }
+            var row = document.querySelector('tr[data-id="' + pointId + '"]');
+            if (row) {
+                row.classList.add('selected');
+                selectedRow = row;
+            }
+        }
+
+        // Agregar evento de clic a las filas de la tabla
+        document.querySelectorAll('tbody tr').forEach(function(row) {
+            row.addEventListener('click', function() {
+                var pointId = this.getAttribute('data-id');
+                highlightMarker(pointId);
+            });
+        });
+
+        // Manejar eliminación de puntos
+        document.querySelectorAll('.delete-point').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation(); // Evitar que el clic se propague a la fila
+                var pointId = this.getAttribute('data-id');
+                var row = document.querySelector('tr[data-id="' + pointId + '"]');
+                
+                if (confirm('¿Estás seguro de que quieres eliminar este punto? Esta acción no se puede deshacer.')) {
+                    fetch('/eliminar_punto/' + pointId + '/', {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Error al eliminar el punto');
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            if (markers[pointId]) {
+                                // Eliminar marcador
+                                map.removeLayer(markers[pointId].marker);
+                                // Eliminar layer de línea/polígono si existe
+                                if (markers[pointId].layer) {
+                                    map.removeLayer(markers[pointId].layer);
+                                }
+                                delete markers[pointId];
+                            }
+                            row.remove();
+                            if (document.querySelectorAll('tbody tr').length === 0) {
+                                document.querySelector('tbody').innerHTML = 
+                                    '<tr><td colspan="{{ 6|add:preguntas|length }}">No hay puntos guardados.</td></tr>';
+                            }
+                        } else {
+                            alert('Error al eliminar el punto: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al eliminar el punto.');
+                    });
+                }
+            });
+        });
+
+        // --- MODAL DE EDICIÓN DE UBICACIÓN ---
+        let editLocationModal = document.getElementById('editLocationModal');
+        let closeEditLocationModal = document.getElementById('close-edit-location-modal');
+        let editLocationMap = null;
+        let editMarker = null;
+        let currentEditId = null;
+        let saveLocationBtn = document.getElementById('save-location-btn');
+        let editLatSpan = document.getElementById('edit-lat');
+        let editLngSpan = document.getElementById('edit-lng');
+
+        document.querySelectorAll('.btn-edit-location').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const pointId = this.getAttribute('data-id');
+                const lat = parseFloat(this.getAttribute('data-lat'));
+                const lng = parseFloat(this.getAttribute('data-lng'));
+                currentEditId = pointId;
+                editLatSpan.textContent = lat.toFixed(6);
+                editLngSpan.textContent = lng.toFixed(6);
+                editLocationModal.style.display = 'block';
+                setTimeout(function() {
+                    if (editLocationMap) {
+                        editLocationMap.remove();
+                    }
+                    editLocationMap = L.map('edit-location-map', {center: [lat, lng], zoom: 17, zoomControl: true});
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(editLocationMap);
+                    editMarker = L.marker([lat, lng]).addTo(editLocationMap);
+                    // Al hacer click en el mapa, mover el marcador a esa posición
+                    editLocationMap.on('click', function(ev) {
+                        const newLatLng = ev.latlng;
+                        editMarker.setLatLng(newLatLng);
+                        editLatSpan.textContent = newLatLng.lat.toFixed(6);
+                        editLngSpan.textContent = newLatLng.lng.toFixed(6);
+                    });
+                }, 100);
+            });
+        });
+        closeEditLocationModal.onclick = function() {
+            editLocationModal.style.display = 'none';
+            if (editLocationMap) {
+                editLocationMap.remove();
+                editLocationMap = null;
+            }
+        };
+        editLocationModal.addEventListener('click', function(e) {
+            if (e.target === editLocationModal) {
+                editLocationModal.style.display = 'none';
+                if (editLocationMap) {
+                    editLocationMap.remove();
+                    editLocationMap = null;
+                }
+            }
+        });
+        saveLocationBtn.onclick = function() {
+            if (!editMarker || !currentEditId) return;
+            let newLatLng = editMarker.getLatLng();
+            fetch(`/actualizar_punto/${currentEditId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({latitud: newLatLng.lat, longitud: newLatLng.lng})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar la fila de la tabla
+                    let row = document.querySelector('tr[data-id="' + currentEditId + '"]');
+                    if (row) {
+                        row.setAttribute('data-lat', newLatLng.lat);
+                        row.setAttribute('data-lng', newLatLng.lng);
+                        row.children[1].textContent = newLatLng.lat.toFixed(6);
+                        row.children[2].textContent = newLatLng.lng.toFixed(6);
+                    }
+                    // Actualizar el marcador en el mapa principal
+                    if (markers[currentEditId]) {
+                        let markerObj = markers[currentEditId];
+                        markerObj.marker.setLatLng([newLatLng.lat, newLatLng.lng]);
+                        markerObj.marker.setPopupContent(
+                            "<strong>ID: " + currentEditId + "</strong><br>" +
+                            "<strong>Coordenadas:</strong> " + newLatLng.lat.toFixed(6) + ", " + newLatLng.lng.toFixed(6)
+                        );
+                    }
+                    editLocationModal.style.display = 'none';
+                    if (editLocationMap) {
+                        editLocationMap.remove();
+                        editLocationMap = null;
+                    }
+                } else {
+                    alert('No se pudo actualizar la ubicación: ' + (data.message || 'Error desconocido.'));
+                }
+            })
+            .catch(err => {
+                alert('Error al actualizar la ubicación: ' + err.message);
+            });
+        };
+
+        // --- MODAL DE IMAGEN ---
+        document.querySelectorAll('.image-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Evita seleccionar la fila/punto
+                var imgUrl = this.getAttribute('data-img');
+                var modal = document.getElementById('imageModal');
+                var modalImg = document.getElementById('modalImage');
+                modalImg.src = imgUrl;
+                modal.style.display = 'block';
+            });
+        });
+        document.querySelector('#imageModal .close').onclick = function() {
+            document.getElementById('imageModal').style.display = 'none';
+            document.getElementById('modalImage').src = '';
+        };
+        document.getElementById('imageModal').onclick = function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+                document.getElementById('modalImage').src = '';
+            }
+        };
+    </script>
+
+    <script src="{% static 'js/header_menu.js' %}"></script>
+    <script>
+    // Rellenar el menú con opciones (como en agregar_pregunta)
+    document.addEventListener('DOMContentLoaded', function() {
+        var btnIrFormularios = document.getElementById('btn-ir-formularios');
+        if(btnIrFormularios) {
+            btnIrFormularios.innerHTML = '<i class="fa-solid fa-eye"></i> Formularios';
+            btnIrFormularios.addEventListener('click', function() {
+                window.location.href = "{% url 'administrar_formularios' %}";
+            });
+        }
+        var logoutForm = document.getElementById('logout-form');
+        if(logoutForm && logoutForm.childElementCount === 0) {
+            logoutForm.innerHTML = `{% csrf_token %}<button type="submit" class="menu-item btn-submit" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding: 14px 28px 14px 23px;font-size:1rem;cursor:pointer;"><i class='fa-solid fa-sign-out-alt'></i> Cerrar sesión</button>`;
+        }
+    });
+    </script>
+    {% load hashid %}
+</body>
+</html>

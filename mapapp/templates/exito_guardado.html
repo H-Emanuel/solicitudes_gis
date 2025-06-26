@@ -1,0 +1,141 @@
+{% load static %}
+{% load hashid %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respuesta enviada</title>
+    <style>
+        body {
+            background: {{ tema_color|default:'#b7dfc4' }};
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .success-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+            padding: 0;
+        }
+        .success-header {
+            border-radius: 8px 8px 0 0;
+            text-align: left;
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding: 0;
+            height: 48px;
+            min-height: 48px;
+            overflow: hidden;
+        }
+        .success-header-img, .success-header-color {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 8px 8px 0 0;
+            display: block;
+        }
+        /* Paleta de headers para backgrounds conocidos */
+        .success-header-color {
+            min-height: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: left;
+            border-radius: 8px 8px 0 0;
+            padding: 0 24px;
+            position: relative;
+            overflow: hidden;
+            background: #379c4a;
+            {% if tema_color == '#b7dfc4' %}background: #379c4a;{% endif %}
+            {% if tema_color == '#b8dbff' %}background: #2563eb;{% endif %}
+            {% if tema_color == '#b6f5e3' %}background: #10b981;{% endif %}
+            {% if tema_color == '#fff3b8' %}background: #eab308;{% endif %}
+            {% if tema_color == '#e3c6ff' %}background: #a21caf;{% endif %}
+            {% if tema_color == '#e3e3ea' %}background: #64748b;{% endif %}
+            {% if tema_color == '#f3f3f3' %}background: #2563eb;{% endif %}
+            {% if tema_color == '#2e5d4d' %}background: #10b981;{% endif %}
+            {% if tema_color == '#2d7be5' %}background: #2563eb;{% endif %}
+            {% if tema_color == '#b36a36' %}background: #ea580c;{% endif %}
+            {% if tema_color == '#a34d4d' %}background: #e63946;{% endif %}
+            {% if tema_color == '#7a5c52' %}background: #a16207;{% endif %}
+            {% if tema_color == '#6d6d6d' %}background: #222;{% endif %}
+        }
+        /* Quitar overlay y filtro */
+        .success-header-color::after {
+            display: none;
+        }
+        .success-content {
+            text-align: center;
+            padding: 40px 20px 30px 20px;
+        }
+        .success-title {
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: left;
+            position: relative;
+            z-index: 1;
+        }
+        .success-message {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 18px;
+            color: #379c4a;
+            {% if tema_color == '#b7dfc4' %}color: #379c4a;{% endif %}
+            {% if tema_color == '#b8dbff' %}color: #2563eb;{% endif %}
+            {% if tema_color == '#b6f5e3' %}color: #10b981;{% endif %}
+            {% if tema_color == '#fff3b8' %}color: #eab308;{% endif %}
+            {% if tema_color == '#e3c6ff' %}color: #a21caf;{% endif %}
+            {% if tema_color == '#e3e3ea' %}color: #64748b;{% endif %}
+            {% if tema_color == '#f3f3f3' %}color: #2563eb;{% endif %}
+            {% if tema_color == '#2e5d4d' %}color: #10b981;{% endif %}
+            {% if tema_color == '#2d7be5' %}color: #2563eb;{% endif %}
+            {% if tema_color == '#b36a36' %}color: #ea580c;{% endif %}
+            {% if tema_color == '#a34d4d' %}color: #e63946;{% endif %}
+            {% if tema_color == '#7a5c52' %}color: #a16207;{% endif %}
+            {% if tema_color == '#6d6d6d' %}color: #222;{% endif %}
+        }
+        .success-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #1a4d2e;
+            font-size: 1rem;
+        }
+        .success-footer a {
+            color: #1a4d2e;
+            text-decoration: underline;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-header">
+            <div class="success-header-color">
+                <span class="success-title">{{ titulo }}</span>
+            </div>
+        </div>
+        <div class="success-content">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="success-message">
+                Gracias.<br>
+                Su respuesta se ha enviado correctamente.
+            </div>
+            {% if formulario.permitir_volver_a_contestar %}
+            <div class="success-footer">
+                Pulse <a href="{% url 'guardar_punto' formulario.id|hashid %}">aquí</a> para enviar otra respuesta.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

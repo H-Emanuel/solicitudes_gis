@@ -38,6 +38,7 @@ from asgiref.sync import async_to_sync
 from .pdf_generator import *
 from tareas.models import *
 from django.db import transaction
+from archivos.models import acceso_pagina
 
 
 ESTADO = [
@@ -63,22 +64,30 @@ OPCIONES = {
 
 @csrf_exempt
 def login(request):
+    next_url = request.GET.get('next') or request.POST.get('next') or 'control'
     if request.user.is_authenticated:
-        return redirect('control')
+        # Si el usuario tiene acceso_pagina.acceso=True, redirigir a otra página
+        if acceso_pagina.objects.filter(usuario=request.user, acceso=True).exists():
+            return redirect('pagina_sin_acceso')  # Cambia 'pagina_sin_acceso' por el nombre de tu URL
+        return redirect(next_url)
 
     if request.method == 'POST':
-        email = request.POST.get('email')
-        email = email.lower()
+        email = request.POST.get('email', '').lower()
         password = request.POST.get('password')
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
+            # Si el usuario tiene acceso_pagina.acceso=True, redirigir a otra página
+            if acceso_pagina.objects.filter(usuario=user, acceso=True).exists():
+                return redirect('inicio')  # Cambia 'pagina_sin_acceso' por el nombre de tu URL
             auth_login(request, user)
-            return redirect('solicitude_llegadas')
+            next_url = request.GET.get('next') or request.POST.get('next') or 'control'
+            return redirect(next_url)
         else:
             messages.error(request, 'Usuario o contraseña incorrectos')
 
-    return render(request, 'Login.html')
+    # Pasa el parámetro 'next' al template para mantenerlo en el formulario
+    return render(request, 'Login.html', {'next': request.GET.get('next', '')})
 
 def download_excel(request):
     # Crear un nuevo libro de trabajo de Excel y agregar datos
@@ -121,7 +130,7 @@ def Historial_Visitas(request):
 def solicitude_llegadas(request, dia_p=None):
     minutos = 0
     hora = 0
-    usuarios = User.objects.all()
+    usuarios = User.objects.exclude(acceso_pagina__acceso=True)
 
     # Filtrar las solicitudes según el usuario
     if request.user.is_superuser:
@@ -399,7 +408,7 @@ def cambiar_contraseña(request):
 
 def logout(request):
     auth_logout(request)
-    return redirect('control')
+    return redirect('core_login')
 
 def Gestion_imagen(request):
     if request.method == 'POST':
@@ -1039,7 +1048,7 @@ def solicitudes_json(request):
 
 
     # Obtener lista de usuarios
-    usuarios = list(User.objects.values('id', 'username','first_name','last_name'))
+    usuarios = list(User.objects.values('id', 'username','first_name','last_name').exclude(acceso_pagina__acceso=True))
 
     # Lista con información procesada de solicitudes
     solicitudes_data = []
@@ -1253,7 +1262,7 @@ def usuarios_disponibles(request):
         profesional_id = protocolo.profesional.id if protocolo.profesional else None
 
         # Obtener todos los usuarios, excluyendo el profesional principal
-        usuarios = User.objects.exclude(id=profesional_id,) .values('id', 'first_name', 'last_name')
+        usuarios = User.objects.exclude(id=profesional_id,) .values('id', 'first_name', 'last_name').exclude(acceso_pagina__acceso=True)
 
         # Obtener los apoyos ya registrados para este protocolo
         apoyo_qs = Apoyo_Protocolo.objects.filter(protocolo=protocolo)

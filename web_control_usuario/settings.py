@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'tareas', 
     'rest_framework',
     'widget_tweaks',
+    'mapapp',
+    'archivos'
 
 ]
 

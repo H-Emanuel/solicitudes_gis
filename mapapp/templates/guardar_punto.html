@@ -1,0 +1,264 @@
+{% load static %}
+{% load hashid %}
+{% csrf_token %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario con Mapa y Geolocalización</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/guardar_punto.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+</head>
+<body style="background: {{ tema_color|default:'#e8e8e8' }};">
+    <div class="main-container" style="background: {{ tema_color|default:'#e8e8e8' }};">
+        <!-- Recuadro para la portada -->
+        <div class="cover-photo-container" style="height: 300px;">
+            {% if imagen_url %}
+                <img id="portada-imagen" src="{{ imagen_url }}" alt="Portada del formulario" style="height: 300px; object-fit: cover; width: 100%;">
+            {% else %}
+                <div class="no-image-message" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-image"></i>
+                    <p>No hay imagen de portada disponible</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-content">
+            <h1 style="padding: 0 20px;text-align:{{ estilos_header.titulo.align|default:'center' }}; color:{{ estilos_header.titulo.color|default:'#000' }}; font-family:{{ estilos_header.titulo.font|default:"'Inter',sans-serif" }}; font-weight:{% if estilos_header.titulo.bold %}bold{% else %}normal{% endif %}; font-style:{% if estilos_header.titulo.italic %}italic{% else %}normal{% endif %}; text-decoration:{% if estilos_header.titulo.underline %}underline{% else %}none{% endif %};">{{ formulario.titulo }}</h1>
+            {% if formulario.subtitulo %}
+                <p class="form-description" style="padding: 0 20px; text-align:{{ estilos_header.subtitulo.align|default:'center' }}; color:{{ estilos_header.subtitulo.color|default:'#000' }}; font-family:{{ estilos_header.subtitulo.font|default:"'Inter',sans-serif" }}; font-weight:{% if estilos_header.subtitulo.bold %}bold{% else %}normal{% endif %}; font-style:{% if estilos_header.subtitulo.italic %}italic{% else %}normal{% endif %}; text-decoration:{% if estilos_header.subtitulo.underline %}underline{% else %}none{% endif %};">{{ formulario.subtitulo }}</p>
+            {% endif %}
+            <!-- Recordar intalar django templates para los errores del editor -->
+
+            {% if mostrar_mensaje_ya_respondido %}
+                <div class="ya-respondido-aviso" style="margin:40px 0; padding:32px 24px; background:#ffe5e5; color:#b91c1c; border-radius:8px; text-align:center; font-size:1.2rem; font-weight:500;">
+                    <i class="fas fa-ban" style="font-size:2rem; margin-bottom:10px;"></i><br>
+                    Ya has respondido este formulario.
+                </div>
+            {% else %}
+                <form id="mapForm" method="post" action="{% url 'guardar_punto' formulario.id|hashid %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <!-- Campos ocultos para latitud y longitud globales (si no hay pregunta tipo mapa) -->
+                    <input type="hidden" id="lat" name="lat">
+                    <input type="hidden" id="lng" name="lng">
+
+                    {% if preguntas %}
+                        <div class="questions-section">
+                            {% include 'questions_fragment.html' with preguntas=preguntas mostrar_boton_eliminar=False %}
+                        </div>
+                    {% endif %}
+
+                    <div class="btn-container">
+                        <button type="submit">{{ formulario.texto_boton_enviar|default:'Enviar' }}</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div id="popup-mensaje" style="display:none;position:fixed;top:40px;left:50%;transform:translateX(-50%);z-index:9999;min-width:320px;max-width:90vw;padding:18px 32px;border-radius:8px;font-size:1.1rem;font-weight:600;text-align:center;box-shadow:0 2px 16px rgba(0,0,0,0.12);background:#38b000;color:#fff;transition:all .3s;opacity:0;">
+        <span id="popup-mensaje-texto"></span>
+    </div>
+    <script id="puntos-data" type="application/json">
+        {{ puntos_json|safe }}
+    </script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script>
+        // --- ELIMINADA TODA LA LÓGICA DEL MAPA POR DEFECTO ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const formContainer = document.querySelector('.form-container');
+
+            if (formContainer) {
+                const maxHeight = 732;
+                formContainer.style.maxHeight = `${maxHeight}px`;
+                formContainer.style.overflowY = 'auto';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileNameSpan = this.parentElement.querySelector('.file-name');
+                    if (fileNameSpan) {
+                        fileNameSpan.textContent = this.files[0] ? this.files[0].name : 'Ningún archivo seleccionado';
+                    }
+                });
+            });
+
+            // VALIDACIÓN DE PREGUNTAS OBLIGATORIAS ANTES DE ENVIAR FORMULARIO
+            const form = document.getElementById('mapForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    let primerFallo = null;
+                    // Validar preguntas obligatorias
+                    form.querySelectorAll('.obligatorio-pregunta[data-obligatorio="true"]').forEach(function(input) {
+                        let valido = true;
+                        if (input.type === 'checkbox') {
+                            const name = input.name;
+                            const checkboxes = form.querySelectorAll('input[type="checkbox"][name="'+name+'"]');
+                            valido = Array.from(checkboxes).some(cb => cb.checked);
+                        } else if (input.type === 'radio') {
+                            const name = input.name;
+                            const radios = form.querySelectorAll('input[type="radio"][name="'+name+'"]');
+                            valido = Array.from(radios).some(r => r.checked);
+                        } else if (input.tagName === 'SELECT') {
+                            valido = input.value !== '' && input.value !== null;
+                        } else if (input.type === 'file') {
+                            valido = input.files && input.files.length > 0;
+                        } else if (input.type === 'hidden' && input.classList.contains('obligatorio-pregunta')) {
+                            // Validación especial para mapa polígono/línea
+                            try {
+                                const val = input.value.trim();
+                                if (!val) {
+                                    valido = false;
+                                } else {
+                                    // Si es string JSON, debe ser un array de arrays (para polígono/línea)
+                                    const arr = JSON.parse(val);
+                                    valido = Array.isArray(arr) && arr.length > 1;
+                                }
+                            } catch (e) {
+                                valido = false;
+                            }
+                        } else {
+                            valido = input.value.trim() !== '';
+                        }
+                        if (!valido && !primerFallo) {
+                            primerFallo = input;
+                        }
+                        // Quitar alerta previa
+                        input.classList.remove('input-obligatorio-error');
+                    });
+                    if (primerFallo) {
+                        e.preventDefault(); // <-- Prevenir envío si hay error
+                        primerFallo.classList.add('input-obligatorio-error');
+                        let cont = primerFallo.closest('.question-item');
+                        if (cont) {
+                            cont.scrollIntoView({behavior:'smooth', block:'center'});
+                            let alerta = cont.querySelector('.alerta-obligatorio');
+                            if (!alerta) {
+                                alerta = document.createElement('div');
+                                alerta.className = 'alerta-obligatorio';
+                                alerta.textContent = 'Este campo es obligatorio';
+                                alerta.style.color = '#e63946';
+                                alerta.style.fontWeight = 'bold';
+                                alerta.style.marginTop = '8px';
+                                cont.querySelector('.question-input').appendChild(alerta);
+                            }
+                        }
+                        setTimeout(()=>{
+                            primerFallo.focus();
+                        }, 300);
+                        setTimeout(()=>{
+                            document.querySelectorAll('.alerta-obligatorio').forEach(a=>a.remove());
+                            document.querySelectorAll('.input-obligatorio-error').forEach(i=>i.classList.remove('input-obligatorio-error'));
+                        }, 3000);
+                        return false;
+                    }
+
+                    // --- CONFIRMACIÓN ANTES DE ENVIAR (SOLO SI PASA VALIDACIÓN) ---
+                    if (!window.confirm('¿Está seguro que desea guardar las respuestas del formulario?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Si pasa la validación y la confirmación, enviar por AJAX
+                    e.preventDefault(); // <-- SIEMPRE prevenir el envío por defecto
+                    const formData = new FormData(form);
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.redirect_url) {
+                                window.location.href = data.redirect_url;
+                            } else {
+                                mostrarPopup('¡Se han guardado las respuestas!', true);
+                                form.reset();
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 600);
+                            }
+                        } else {
+                            mostrarPopup(data.error || 'No se pudieron guardar las respuestas', false);
+                        }
+                    })
+                    .catch(()=>{
+                        mostrarPopup('Ocurrió un error al guardar', false);
+                    });
+                    return false;
+                });
+            }
+        });
+
+        // CSS para resaltar inputs con error
+        const style = document.createElement('style');
+        style.innerHTML = `.input-obligatorio-error { border-color: #e63946 !important; box-shadow: 0 0 0 2px #e63946 !important; }`;
+        document.head.appendChild(style);
+
+        function cambiarTipoSeleccion(preguntaId, tipo) {
+            const opcionesContainer = document.getElementById(`opciones_${preguntaId}`);
+            const btnRadio = document.getElementById(`btn_radio_${preguntaId}`);
+            const btnVarios = document.getElementById(`btn_varios_${preguntaId}`);
+            
+            if (tipo === 'radio') {
+                opcionesContainer.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                    input.type = 'radio';
+                    input.required = true;
+                });
+                btnRadio.classList.add('active');
+                btnVarios.classList.remove('active');
+            } else {
+                opcionesContainer.querySelectorAll('input[type="radio"]').forEach(input => {
+                    input.type = 'checkbox';
+                    input.required = false;
+                });
+                btnRadio.classList.remove('active');
+                btnVarios.classList.add('active');
+            }
+        }
+
+        // --- POPUP MENSAJE ---
+        function mostrarPopup(mensaje, exito=true) {
+            const popup = document.getElementById('popup-mensaje');
+            const texto = document.getElementById('popup-mensaje-texto');
+            popup.style.background = exito ? '#38b000' : '#e63946';
+            popup.style.color = '#fff';
+            texto.textContent = mensaje;
+            popup.style.display = 'block';
+            setTimeout(()=>{ popup.style.opacity = '1'; }, 10);
+            setTimeout(()=>{
+                popup.style.opacity = '0';
+                setTimeout(()=>{ popup.style.display = 'none'; }, 400);
+            }, 3000);
+        }
+    </script>
+    <script>
+    // --- Selección dinámica de script de mapas según tipo de pregunta mapa ---
+    (function() {
+        function hayMapaTipo(tipo) {
+            return Array.from(document.querySelectorAll('.mapa-pregunta-mapa')).some(function(div) {
+                return (div.dataset.mapaTipo || 'punto') === tipo;
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Usar solo el script estándar para cualquier tipo de pregunta mapa
+            if (document.querySelector('.mapa-pregunta-mapa')) {
+                var s = document.createElement('script');
+                s.src = '{% static 'js/inicializar_mapas_preguntas.js' %}';
+                document.body.appendChild(s);
+            }
+        });
+    })();
+    </script>
+    <script src="{% static 'js/dependencias_formulario.js' %}"></script>
+</body>
+</html>

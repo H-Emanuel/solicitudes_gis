@@ -82,6 +82,7 @@
             <li class="nav-link">
               <a class="nav-link" href="{% url 'control' %}">Estadísticas</a>
             </li>
+         
           </ul>
 
 
@@ -112,6 +113,9 @@
                   <li>
                     <a class="dropdown-item" href="{% url 'Gestion_pdf' %}">Gestion de PDF SIG</a>
                   </li>
+                  <li>
+                    <a class="dropdown-item" href="/survey/">Survey</a>
+                  </li>
   
                   <li>
                     <a class="dropdown-item" href="{% url 'cambiar_contraseña' %}">Cambiar Contraseña</a>
@@ -125,7 +129,7 @@
                     {% endif %}
           
                     <li>
-                      <a class="dropdown-item" href="{% url 'logout' %}">Cerrar Sesión</a>
+                      <a class="dropdown-item" href="{% url 'core_logout' %}">Cerrar Sesión</a>
                     </li>
             </li>
   
