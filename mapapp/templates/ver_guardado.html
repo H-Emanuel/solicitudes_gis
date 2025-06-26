@@ -230,7 +230,7 @@
                 <button type="button" class="menu-item" id="btn-ir-formularios" style="font-family: 'Inter', sans-serif;justify-content: normal;font-weight: normal; background:none;border:none;width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding: 14px 28px 14px 23px;font-size:1rem;cursor:pointer;">
                     <i class="fa-solid fa-eye"></i> Formularios
                 </button>
-                <form id="logout-form" action="{% url 'logout' %}" method="post" style="display:inline;">
+                <form id="logout-form" action="{% url 'core_logout' %}" method="post" style="display:inline;">
                     {% csrf_token %}
                     <button type="submit" class="menu-item btn-submit" style="font-family: 'Inter', sans-serif;width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding: 14px 28px 14px 23px;font-size:1rem;cursor:pointer;">
                         <i class="fa-solid fa-sign-out-alt"></i> Cerrar sesión
@@ -379,11 +379,11 @@
 
         // Descarga de Excel
         document.getElementById('descargar-excel').onclick = function() {
-            descargarArchivo('/descargar_excel/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.xlsx');
+            descargarArchivo('/nube/descargar_excel/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.xlsx');
         };
         // Descarga de KMZ
         document.getElementById('descargar-kmz').onclick = function() {
-            descargarArchivo('/descargar_kmz/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.kmz');
+            descargarArchivo('/nube/descargar_kmz/{{ formulario.id|hashid }}/', 'datos_formulario_{{ formulario.id|hashid }}.kmz');
         };
         </script>
 
@@ -549,7 +549,7 @@
                 var row = document.querySelector('tr[data-id="' + pointId + '"]');
                 
                 if (confirm('¿Estás seguro de que quieres eliminar este punto? Esta acción no se puede deshacer.')) {
-                    fetch('/eliminar_punto/' + pointId + '/', {
+                    fetch('/nube/eliminar_punto/' + pointId + '/', {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': '{{ csrf_token }}',
@@ -648,7 +648,7 @@
         saveLocationBtn.onclick = function() {
             if (!editMarker || !currentEditId) return;
             let newLatLng = editMarker.getLatLng();
-            fetch(`/actualizar_punto/${currentEditId}/`, {
+            fetch(`/nube/actualizar_punto/${currentEditId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
