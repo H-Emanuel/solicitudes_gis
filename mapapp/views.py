@@ -88,7 +88,7 @@ def guardar_punto(request, formulario_hashid):
     ip_usuario = get_client_ip(request)
     # Detectar si es admin Django o usuario registrado
     es_usuario_registrado = False
-    if request.user.is_authenticated and request.user.is_staff:
+    if request.user.is_authenticated:
         es_usuario_registrado = True
     elif request.session.get('usuario_id'):
         try:
