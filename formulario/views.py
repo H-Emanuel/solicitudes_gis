@@ -217,3 +217,4 @@ def descargar_pdf(request,id):
         nombre_archivo = nombre_ficha + ".pdf"
         
         return FileResponse(open(file_name, 'rb'), content_type='application/pdf', filename=nombre_archivo, as_attachment=True)
+
