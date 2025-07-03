@@ -16,9 +16,9 @@
 <body style="background: {{ tema_color|default:'#e8e8e8' }};">
     <div class="main-container" style="background: {{ tema_color|default:'#e8e8e8' }};">
         <!-- Recuadro para la portada -->
-        <div class="cover-photo-container" style="height: 300px;">
+        <div class="cover-photo-container">
             {% if imagen_url %}
-                <img id="portada-imagen" src="{{ imagen_url }}" alt="Portada del formulario" style="height: 300px; object-fit: cover; width: 100%;">
+                <img id="portada-imagen" src="{{ imagen_url }}" alt="Portada del formulario" style=" object-fit: cover; width: 100%;">
             {% else %}
                 <div class="no-image-message" style="height: 300px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-image"></i>
