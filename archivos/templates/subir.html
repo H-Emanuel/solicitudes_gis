@@ -82,11 +82,85 @@
     </style>
 
 <div class="container">
-        <h1>Subir Archivo</h1>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Subir</button>
-        </form>
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div>
+        <label>
+            <input type="radio" name="modo" value="archivos" checked> Subir archivos
+        </label>
+        <label>
+            <input type="radio" name="modo" value="carpeta"> Subir carpeta
+        </label>
     </div>
+
+    <div id="fileInputs">
+        <input type="file" id="fileOnlyInput" name="archivos" multiple>
+        <input type="file" id="folderInput" name="archivos" webkitdirectory multiple style="display: none;">
+    </div>
+
+    <button type="button" id="uploadBtn">Subir</button>
+</form>
+
+</div>
+<script>
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + '=')) {
+            return decodeURIComponent(c.slice(name.length + 1));
+        }
+    }
+    return null;
+}
+
+// Mostrar el input correspondiente
+document.querySelectorAll('input[name="modo"]').forEach(radio => {
+    radio.addEventListener('change', function () {
+        if (this.value === 'carpeta') {
+            document.getElementById('fileOnlyInput').style.display = 'none';
+            document.getElementById('folderInput').style.display = 'block';
+        } else {
+            document.getElementById('fileOnlyInput').style.display = 'block';
+            document.getElementById('folderInput').style.display = 'none';
+        }
+    });
+});
+
+document.getElementById('uploadBtn').addEventListener('click', function () {
+    const archivosInput = document.querySelector('#fileOnlyInput').style.display === 'none'
+        ? document.getElementById('folderInput')
+        : document.getElementById('fileOnlyInput');
+
+    const formData = new FormData();
+
+    for (const file of archivosInput.files) {
+        const relativePath = file.webkitRelativePath || file.name;
+        formData.append('archivos', file);
+        formData.append('rutas', relativePath);  // si no hay path, será solo el nombre
+    }
+
+    fetch("{% url 'subir_archivo' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert("❌ Error al procesar la respuesta.");
+        }
+    })
+    .catch(() => {
+        alert("❌ Error en el servidor");
+    });
+});
+</script>
+
+
 {% endblock %}
