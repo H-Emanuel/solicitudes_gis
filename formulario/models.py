@@ -52,9 +52,6 @@ DIRECCION = {
     ('Delegación territorial', 'Delegación territorial'),
 }
 
-class Insumo(models.Model):
-    nombre = models.CharField(max_length=255, unique=True)
-
 # Create your models here.
 def content_file_name_adjunto(instance, filename):
     ext = filename.split('.')[-1]
@@ -76,9 +73,6 @@ class ProtocoloSolicitud(models.Model):
 
     insumo = models.ManyToManyField(Insumo, through='ProtocoloSolicitudInsumo')
     anexo=models.CharField(max_length=100, blank=True, default='')
-
-
-
 
     cambios_posible = models.CharField(max_length=255, blank=True, default='')
     fecha = models.DateTimeField(auto_now_add=True)
