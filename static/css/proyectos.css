@@ -1,0 +1,481 @@
+body{
+    font-family: Arial, sans-serif;
+  }
+
+  h1 {
+    font-size: 2rem; /* Tamaño de fuente grande */
+    font-weight: 700; /* Negrita */
+    color: #3d3d3d; /* Color gris oscuro */
+    text-align: center; /* Centrar el texto */
+    margin-top: 2rem; /* Espaciado superior */
+    margin-bottom: 1rem; /* Espaciado inferior */
+    text-transform: uppercase; /* Transformar texto a mayúsculas */
+    letter-spacing: 0.1em; /* Espaciado entre letras */
+  
+  }
+
+/* Botón activo (fondo verde, texto blanco) */
+.page-item.active .page-link {
+  background-color: rgb(101, 141, 94) !important;
+  border-color: rgb(101, 141, 94) !important;
+  color: #ffffff !important; /* Texto blanco para el botón activo */
+}
+
+/* Números no seleccionados (texto verde) */
+.page-link {
+  color: rgb(101, 141, 94) !important;
+}
+
+/* Hover sobre los números no seleccionados */
+.page-link:hover {
+  color: #157347 !important;
+  background-color: #e9ecef;
+}
+
+/* Opcional: color más oscuro al hacer hover en el botón activo */
+.page-item.active .page-link:hover {
+  background-color: rgb(62, 85, 58) !important;
+  border-color: rgb(40, 54, 38) !important;
+  color: #ffffff !important; /* Mantener el texto blanco en hover */
+}
+/* Quitar borde y sombra azul en los botones de paginación (incluyendo Siguiente y Atrás) */
+.page-item .page-link:focus,
+.page-item.active .page-link:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+
+.crear-btn {
+  width: 170px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  background: rgb(101, 141, 94);/* Color verde para crear */
+  border: none;
+  border-radius: 5px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.crear-btn, .crear-btn span {
+  transition: 200ms;
+}
+
+.crear-btn .text {
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+  
+}
+
+.crear-btn .icon {
+  position: absolute;
+  border-left: 1px solid rgb(70, 99, 65); /* Color verde más oscuro */
+  transform: translateX(125px);
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crear-btn svg {
+  width: 15px;
+  fill: #eee;
+}
+
+.crear-btn:hover {
+  background:rgb(70, 99, 65);/* Color verde más oscuro al pasar el cursor */
+}
+
+.crear-btn:hover .text {
+  color: transparent;
+}
+
+.crear-btn:hover .icon {
+  width: 155px;
+  border-left: none;
+  transform: translateX(0);
+}
+
+.crear-btn:focus {
+  outline: none;
+}
+
+.crear-btn:active .icon svg {
+  transform: scale(0.8);
+}
+
+
+
+
+
+
+
+.eliminar-btn {
+  width: 170px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  background: #e62222;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.eliminar-btn, .eliminar-btn span {
+  transition: 200ms;
+}
+
+.eliminar-btn .text {
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+
+}
+
+.eliminar-btn .icon {
+  position: absolute;
+  border-left: 1px solid #c41b1b;
+  transform: translateX(125px);
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eliminar-btn svg {
+  width: 15px;
+  fill: #eee;
+}
+
+.eliminar-btn:hover {
+  background: #ff3636;
+}
+
+.eliminar-btn:hover .text {
+  color: transparent;
+}
+
+.eliminar-btn:hover .icon {
+  width: 155px;
+  border-left: none;
+  transform: translateX(0);
+}
+
+.eliminar-btn:focus {
+  outline: none;
+}
+
+.eliminar-btn:active .icon svg {
+  transform: scale(0.8);
+}
+
+
+
+
+
+
+/* Botón de editar */
+
+.editar-btn {
+  width: 170px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  background: rgb(255, 155, 24); 
+  border: none;
+  border-radius: 5px;
+  
+}
+
+.editar-btn, .editar-btn span {
+  transition: 200ms;
+}
+
+.editar-btn .text {
+  color: white; 
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.editar-btn .icon {
+  position: absolute;
+  border-left: 1px solid rgb(165, 93, 0); 
+  transform: translateX(125px);
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editar-btn svg {
+  width: 25px;
+  fill: #ffffff; /* Icono negro */
+}
+
+.editar-btn:hover {
+  background: rgb(165, 93, 0); /* Color amarillo más oscuro al pasar el cursor */
+}
+
+.editar-btn:hover .text {
+  color: transparent;
+}
+
+.editar-btn:hover .icon {
+  width: 155px;
+  border-left: none;
+  transform: translateX(0);
+}
+
+.editar-btn:focus {
+  outline: none;
+}
+
+.editar-btn:active .icon svg {
+  transform: scale(0.8);
+}
+
+
+
+
+/* Botón de cronologia */
+
+.btn-cron {
+  width: 170px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  background: #00a8f7; 
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  
+}
+
+.btn-cron, .btn-cron span {
+  transition: 200ms;
+}
+
+.btn-cron .text {
+  color: white; 
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.btn-cron .icon {
+  position: absolute;
+  border-left: 1px solid #00a8f7; 
+  transform: translateX(125px);
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-cron svg {
+  width: 25px;
+  fill: #ffffff; /* Icono negro */
+}
+
+.btn-cron:hover {
+  background: #0090d3;  /* Color amarillo más oscuro al pasar el cursor */
+}
+
+.btn-cron:hover .text {
+  color: transparent;
+}
+
+.btn-cron:hover .icon {
+  width: 165px;
+  border-left: none;
+  transform: translateX(0);
+}
+
+.btn-cron:focus {
+  outline: none;
+}
+
+.btn-cron:active .icon svg {
+  transform: scale(0.8);
+}
+
+
+
+
+
+/* Botón de Vigencias */
+.btn-vig {
+  width: 170px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  background: #d63480; 
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.btn-vig, .btn-vig span {
+  transition: 200ms;
+}
+
+.btn-vig .text {
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.btn-vig .icon {
+  position: absolute;
+  border-left: 1px solid #d63480; 
+  transform: translateX(125px);
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-vig svg {
+  width: 25px;
+  fill: #ffffff; 
+}
+
+.btn-vig:hover {
+  background: #a52862;  /* Verde oscuro */
+}
+
+.btn-vig:hover .text {
+  color: transparent;
+}
+
+.btn-vig:hover .icon {
+  width: 165px;
+  border-left: none;
+  transform: translateX(0);
+}
+
+.btn-vig:focus {
+  outline: none;
+}
+
+.btn-vig:active .icon svg {
+  transform: scale(0.8);
+}
+
+
+/* Botón de Estadísticas */
+.btn-est {
+  width: 170px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  background: #6f42c1; /* Morado */
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.btn-est, .btn-est span {
+  transition: 200ms;
+}
+
+.btn-est .text {
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.btn-est .icon {
+  position: absolute;
+  border-left: 1px solid #5a32a3; 
+  transform: translateX(125px);
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-est svg {
+  width: 25px;
+  fill: #ffffff; 
+}
+
+.btn-est:hover {
+  background: #5a32a3; /* Morado oscuro */
+}
+
+.btn-est:hover .text {
+  color: transparent;
+}
+
+.btn-est:hover .icon {
+  width: 165px;
+  border-left: none;
+  transform: translateX(0);
+}
+
+.btn-est:focus {
+  outline: none;
+}
+
+.btn-est:active .icon svg {
+  transform: scale(0.8);
+}
+
+@media (max-width: 768px) {
+  table.dataTable thead {
+    display: none;
+  }
+
+  table.dataTable tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #ddd;
+  }
+
+  table.dataTable tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #fff;
+  }
+
+  table.dataTable tbody td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #444;
+    flex: 0 0 40%;
+    text-align: left;
+  }
+
+  table.dataTable tbody td {
+    display: flex;
+    gap: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+
+

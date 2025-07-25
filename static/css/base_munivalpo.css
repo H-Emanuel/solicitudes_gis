@@ -1,0 +1,17 @@
+:root {
+    --negro: #16233E;
+    --celeste: #4BBFE0;
+    --celeste-black: #009fe3;
+    --rojo: #E73C45;
+    --amarillo: #F7EA53;
+    /* Oro */
+    /* Nueva variable para rojo */
+
+
+    /* =========================================
+       Variables de Tipografía
+    ========================================= */
+    --primary-font: 'Barlow Medium', 'Barlow', sans-serif;
+    --complementary-font: 'Barlow Medium', 'Barlow', sans-serif;
+    --complementary-font-2: 'Barlow Medium', 'Barlow', sans-serif;
+}
