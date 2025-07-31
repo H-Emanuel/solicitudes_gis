@@ -467,7 +467,15 @@ def solicitudes_json(request):
             "orden_trabajo",        # 1
             "nombre_solicitante",   # 2
             "fecha",                # 3
-            "departamento",         # 4
+            "departamento",
+            "",
+            "",
+            "",
+            "",
+            "fecha_D",          # 4
+            "fecha_T",          # 5
+
+                                                                  # 4
         ]
 
         if order_column_index >= len(columns):
