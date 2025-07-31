@@ -1196,6 +1196,9 @@ input[type="checkbox"]:checked + .radio-toggle-slider::before {
     margin: 0;
     font-size: 22px;
     line-height: 1.5;
+    white-space: pre-wrap !important; /* El !important forzará la aplicación */
+    word-break: break-word !important;
+    
 }
 
 /* Asegurar que los estilos dinámicos se apliquen correctamente en la vista previa */

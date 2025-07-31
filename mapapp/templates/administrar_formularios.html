@@ -546,7 +546,9 @@
             box-shadow: 0 4px 12px rgba(220,53,69,0.15);
             transition: background 0.3s;
         }
-        
+        .btn-logout:hover {
+            /* Sin cambio de color */
+        }
         .btn-logout i {
             transition: transform 0.3s cubic-bezier(.4,1.5,.5,1);
         }
@@ -568,7 +570,7 @@
                      style="position: absolute; left: 5px; top: 5px;" />
                 <div style="display: flex; justify-content: center; align-items: center; position: relative;">
                     <h1 style="margin-bottom: 0; flex:1;">Administrar Formularios</h1>
-                    <form action="{% url 'core_logout' %}" method="post" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin-right: 10px;">
+                    <form action="{% url 'logout' %}" method="post" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin-right: 10px;">
                         {% csrf_token %}
                         <button type="submit" title="Cerrar sesión" class="btn-logout">
                             <i class="fa-solid fa-sign-out-alt"></i> Cerrar sesión
@@ -636,7 +638,7 @@
                             <a href="{% url 'agregar_pregunta' formulario.id|hashid %}" class="btn btn-secondary">
                                 <i class="fa-solid fa-pen"></i>Editar
                             </a>
-                            <button class="btn btn-danger delete-btn" data-id="{{ formulario.id }}">
+                            <button class="btn btn-danger delete-btn" data-id="{{ formulario.id|hashid }}">
                                 <i class="fa-solid fa-trash"></i>Eliminar
                             </button>
                             <button class="btn btn-primary btn-link-copy" 
@@ -724,9 +726,9 @@
         // Mantener exactamente la misma funcionalidad JavaScript original
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', function () {
-                const formularioId = this.getAttribute('data-id');
+                const formularioHashid = this.getAttribute('data-id');
                 if (confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
-                    fetch(`/survey/eliminar_formulario/${formularioId}/`, {
+                    fetch(`/eliminar_formulario/${formularioHashid}/`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': '{{ csrf_token }}',

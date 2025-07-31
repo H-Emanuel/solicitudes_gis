@@ -38,6 +38,7 @@ class Formulario(models.Model):
     subtitulo_color = models.CharField(max_length=7, default='#000000')
     subtitulo_font = models.CharField(max_length=100, default="'Inter',sans-serif")
     subtitulo_align = models.CharField(max_length=10, default='center')
+    subtitulo_fontSize = models.CharField(max_length=10, default='16px')
 
     # Color de tema de fondo para el formulario
     tema_color = models.CharField(max_length=7, default='#e8e8e8')  # Hex color, por defecto igual al fondo actual

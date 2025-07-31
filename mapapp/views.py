@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core import serializers
-from .models import Punto, Pregunta, Respuesta, Opcion, Formulario, ImagenRespuesta, Departamento, FormularioRespondidoIP
+from .models import Punto, Pregunta, Respuesta, Opcion, Formulario, ImagenRespuesta, Usuario, Departamento, FormularioRespondidoIP
 import logging
 from django.contrib import messages
 from .forms import FormularioForm, FormularioAparienciaForm
@@ -67,9 +67,14 @@ def guardar_punto(request, formulario_hashid):
             'underline': formulario.subtitulo_underline,
             'color': formulario.subtitulo_color,
             'font': formulario.subtitulo_font,
-            'align': formulario.subtitulo_align
+            'align': formulario.subtitulo_align,
+            'fontSize': formulario.subtitulo_fontSize,
         }
     }
+
+    print(f"DEBUG: Valor de formulario.subtitulo desde la DB: {formulario.subtitulo}")
+    print(f"DEBUG: Valor de formulario.subtitulo_fontSize desde la DB: {formulario.subtitulo_fontSize}")
+    print(f"DEBUG: Valor de estilos_header['subtitulo']['fontSize'] enviado a la plantilla: {estilos_header['subtitulo']['fontSize']}")
 
     tema_color = formulario.tema_color or '#e8e8e8'
 
@@ -856,6 +861,7 @@ def guardar_cambios_formulario(request):
                 formulario.subtitulo_color = subtitulo_estilos.get('color', '#000000')
                 formulario.subtitulo_font = subtitulo_estilos.get('font', "'Inter',sans-serif")
                 formulario.subtitulo_align = subtitulo_estilos.get('align', 'center')
+                formulario.subtitulo_fontSize = subtitulo_estilos.get('fontSize', '16px') # <--- ¡AÑADE ESTA LÍNEA!
                 formulario.save()
             
             # Procesar eliminaciones
@@ -1099,7 +1105,8 @@ def obtener_datos_formulario(request, formulario_hashid):
             'underline': formulario.subtitulo_underline,
             'color': formulario.subtitulo_color,
             'font': formulario.subtitulo_font,
-            'align': formulario.subtitulo_align
+            'align': formulario.subtitulo_align,
+            'fontSize': formulario.subtitulo_fontSize # <--- ¡AÑADE ESTA LÍNEA!
         }
     }
     

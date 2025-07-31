@@ -1,6 +1,6 @@
 let estilosPreguntaPreview = {
     titulo: { bold: false, italic: false, underline: false, color: '#000000', font: "'Inter',sans-serif", align: 'center' },
-    subtitulo: { bold: false, italic: false, underline: false, color: '#000000', font: "'Inter',sans-serif", align: 'center' },
+    subtitulo: { bold: false, italic: false, underline: false, color: '#000000', font: "'Inter',sans-serif", align: 'center', fontSize: '16px' }, // <<-- ¡AÑADIDO AQUÍ!
     placeholder: { bold: false, italic: false, underline: false, color: '', font: '', align: 'left' }
 };
 
@@ -19,41 +19,67 @@ export function inicializarFormHeader() {
         .then(response => response.json())
         .then(data => {
             if (data.estilos_header) {
-                estilosPreguntaPreview = {
-                    titulo: data.estilos_header.titulo,
-                    subtitulo: data.estilos_header.subtitulo
+                // *** INICIO DE LA MODIFICACIÓN CLAVE ***
+                // Fusionar estilos del título
+                estilosPreguntaPreview.titulo = {
+                    ...estilosPreguntaPreview.titulo,
+                    ...(data.estilos_header.titulo || {})
                 };
+
+                // Fusionar estilos del subtítulo (aquí se asegura que fontSize persista)
+                estilosPreguntaPreview.subtitulo = {
+                    ...estilosPreguntaPreview.subtitulo,
+                    ...(data.estilos_header.subtitulo || {})
+                };
+                // *** FIN DE LA MODIFICACIÓN CLAVE ***
+
                 aplicarEstilosFormularioHeader();
+                // Opcional, pero bueno para asegurar que la toolbar se actualice al cargar:
+                actualizarToolbarVisual('titulo');
+                actualizarToolbarVisual('subtitulo');
+            } else {
+                // Si no hay estilos guardados, aplicar los estilos predeterminados
+                aplicarEstilosFormularioHeader();
+                actualizarToolbarVisual('titulo');
+                actualizarToolbarVisual('subtitulo');
             }
+        })
+        .catch(error => {
+            console.error("Error al cargar estilos del formulario:", error);
+            // En caso de error, aplicar los estilos predeterminados
+            aplicarEstilosFormularioHeader();
+            actualizarToolbarVisual('titulo');
+            actualizarToolbarVisual('subtitulo');
         });
 
     function aplicarEstilosFormularioHeader() {
-        const h1 = document.querySelector('.form-title-container h1');
-        const desc = document.querySelector('.form-title-container .form-description');
-        if (h1) {
-            Object.assign(h1.style, {
-                fontWeight: estilosPreguntaPreview.titulo.bold ? 'bold' : 'normal',
-                fontStyle: estilosPreguntaPreview.titulo.italic ? 'italic' : 'normal',
-                textDecoration: estilosPreguntaPreview.titulo.underline ? 'underline' : 'none',
-                color: estilosPreguntaPreview.titulo.color || '#000000',
-                fontFamily: estilosPreguntaPreview.titulo.font || "'Inter',sans-serif",
-                textAlign: estilosPreguntaPreview.titulo.align || 'center'
-            });
-        }
-        if (desc) {
-            Object.assign(desc.style, {
-                fontWeight: estilosPreguntaPreview.subtitulo.bold ? 'bold' : 'normal',
-                fontStyle: estilosPreguntaPreview.subtitulo.italic ? 'italic' : 'normal',
-                textDecoration: estilosPreguntaPreview.subtitulo.underline ? 'underline' : 'none',
-                color: estilosPreguntaPreview.subtitulo.color || '#000000',
-                fontFamily: estilosPreguntaPreview.subtitulo.font || "'Inter',sans-serif",
-                textAlign: estilosPreguntaPreview.subtitulo.align || 'center'
-            });
-        }
-        // --- NUEVO: Actualizar toolbars visualmente después de aplicar estilos ---
-        actualizarToolbarVisual('titulo');
-        actualizarToolbarVisual('subtitulo');
+    const h1 = document.querySelector('.form-title-container h1');
+    const desc = document.querySelector('.form-title-container .form-description');
+    if (h1) {
+        Object.assign(h1.style, {
+            fontWeight: estilosPreguntaPreview.titulo.bold ? 'bold' : 'normal',
+            fontStyle: estilosPreguntaPreview.titulo.italic ? 'italic' : 'normal',
+            textDecoration: estilosPreguntaPreview.titulo.underline ? 'underline' : 'none',
+            color: estilosPreguntaPreview.titulo.color || '#000000',
+            fontFamily: estilosPreguntaPreview.titulo.font || "'Inter',sans-serif",
+            textAlign: estilosPreguntaPreview.titulo.align || 'center'
+        });
     }
+    if (desc) {
+        Object.assign(desc.style, {
+            fontWeight: estilosPreguntaPreview.subtitulo.bold ? 'bold' : 'normal',
+            fontStyle: estilosPreguntaPreview.subtitulo.italic ? 'italic' : 'normal',
+            textDecoration: estilosPreguntaPreview.subtitulo.underline ? 'underline' : 'none',
+            color: estilosPreguntaPreview.subtitulo.color || '#000000',
+            fontFamily: estilosPreguntaPreview.subtitulo.font || "'Inter',sans-serif",
+            textAlign: estilosPreguntaPreview.subtitulo.align || 'center',
+            // NUEVO: Aplica el tamaño de fuente para el subtítulo
+            fontSize: estilosPreguntaPreview.subtitulo.fontSize || '16px' // Tamaño de fuente predeterminado
+        });
+    }
+    actualizarToolbarVisual('titulo');
+    actualizarToolbarVisual('subtitulo');
+}
 
     function actualizarFormularioHeaderDOM() {
         const h1 = document.querySelector('.form-title-container h1');
@@ -74,60 +100,75 @@ export function inicializarFormHeader() {
     }
 
     function actualizarToolbarVisual(campo) {
-        const toolbar = document.querySelector(`.toolbar-mini[data-target="${campo === 'titulo' ? 'titulo_formulario' : campo === 'subtitulo' ? 'subtitulo_formulario' : 'id_placeholder'}"]`);
-        if (!toolbar) return;
-        toolbar.querySelectorAll('.toolbar-btn[data-cmd="bold"]').forEach(btn => btn.classList.toggle('active', estilosPreguntaPreview[campo].bold));
-        toolbar.querySelectorAll('.toolbar-btn[data-cmd="italic"]').forEach(btn => btn.classList.toggle('active', estilosPreguntaPreview[campo].italic));
-        toolbar.querySelectorAll('.toolbar-btn[data-cmd="underline"]').forEach(btn => btn.classList.toggle('active', estilosPreguntaPreview[campo].underline));
-        ['left','center','right'].forEach(al=>{
-            toolbar.querySelectorAll(`.toolbar-btn[data-cmd="justify${al.charAt(0).toUpperCase()+al.slice(1)}"]`).forEach(btn => {
-                btn.classList.toggle('active', estilosPreguntaPreview[campo].align === al);
+    const toolbar = document.querySelector(`.toolbar-mini[data-target="${campo === 'titulo' ? 'titulo_formulario' : campo === 'subtitulo' ? 'subtitulo_formulario' : 'id_placeholder'}"]`);
+    if (!toolbar) return;
+    toolbar.querySelectorAll('.toolbar-btn[data-cmd="bold"]').forEach(btn => btn.classList.toggle('active', estilosPreguntaPreview[campo].bold));
+    toolbar.querySelectorAll('.toolbar-btn[data-cmd="italic"]').forEach(btn => btn.classList.toggle('active', estilosPreguntaPreview[campo].italic));
+    toolbar.querySelectorAll('.toolbar-btn[data-cmd="underline"]').forEach(btn => btn.classList.toggle('active', estilosPreguntaPreview[campo].underline));
+    ['left','center','right'].forEach(al=>{
+        toolbar.querySelectorAll(`.toolbar-btn[data-cmd="justify${al.charAt(0).toUpperCase()+al.slice(1)}"]`).forEach(btn => {
+            btn.classList.toggle('active', estilosPreguntaPreview[campo].align === al);
+        });
+    });
+    const colorInput = toolbar.querySelector('.toolbar-color');
+    if (colorInput) colorInput.value = estilosPreguntaPreview[campo].color || '#000000';
+    const fontSelect = toolbar.querySelector('.toolbar-font');
+    if (fontSelect) fontSelect.value = estilosPreguntaPreview[campo].font || "'Inter',sans-serif";
+
+    // NUEVO: Actualiza el select de tamaño de fuente
+    const fontSizeSelect = toolbar.querySelector('.toolbar-font-size');
+    if (fontSizeSelect) {
+        fontSizeSelect.value = estilosPreguntaPreview[campo].fontSize || '16px'; // Tamaño de fuente predeterminado
+    }
+}
+
+    function inicializarToolbarMinimalista() {
+    document.querySelectorAll('.toolbar-mini').forEach(toolbar => {
+        const targetId = toolbar.getAttribute('data-target');
+        let campo = 'titulo';
+        if (targetId === 'subtitulo_formulario') campo = 'subtitulo';
+        if (targetId === 'id_placeholder') campo = 'placeholder';
+        toolbar.querySelectorAll('.toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const cmd = btn.getAttribute('data-cmd');
+                if(cmd.startsWith('justify')) {
+                    estilosPreguntaPreview[campo].align = cmd.replace('justify','').toLowerCase();
+                } else {
+                    estilosPreguntaPreview[campo][cmd] = !estilosPreguntaPreview[campo][cmd];
+                }
+                actualizarFormularioHeaderDOM();
+                actualizarToolbarVisual(campo);
             });
         });
         const colorInput = toolbar.querySelector('.toolbar-color');
-        if (colorInput) colorInput.value = estilosPreguntaPreview[campo].color || '#000000';
-        const fontSelect = toolbar.querySelector('.toolbar-font');
-        if (fontSelect) fontSelect.value = estilosPreguntaPreview[campo].font || "'Inter',sans-serif";
-    }
-
-    function inicializarToolbarMinimalista() {
-        document.querySelectorAll('.toolbar-mini').forEach(toolbar => {
-            const targetId = toolbar.getAttribute('data-target');
-            let campo = 'titulo';
-            if (targetId === 'subtitulo_formulario') campo = 'subtitulo';
-            if (targetId === 'id_placeholder') campo = 'placeholder';
-            toolbar.querySelectorAll('.toolbar-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const cmd = btn.getAttribute('data-cmd');
-                    if(cmd.startsWith('justify')) {
-                        estilosPreguntaPreview[campo].align = cmd.replace('justify','').toLowerCase();
-                    } else {
-                        estilosPreguntaPreview[campo][cmd] = !estilosPreguntaPreview[campo][cmd];
-                    }
-                    actualizarFormularioHeaderDOM();
-                    actualizarToolbarVisual(campo);
-                });
+        if (colorInput) {
+            colorInput.addEventListener('input', function() {
+                estilosPreguntaPreview[campo].color = colorInput.value;
+                actualizarFormularioHeaderDOM();
+                actualizarToolbarVisual(campo);
             });
-            const colorInput = toolbar.querySelector('.toolbar-color');
-            if (colorInput) {
-                colorInput.addEventListener('input', function() {
-                    estilosPreguntaPreview[campo].color = colorInput.value;
-                    actualizarFormularioHeaderDOM();
-                    actualizarToolbarVisual(campo);
-                });
-            }
-            const fontSelect = toolbar.querySelector('.toolbar-font');
-            if (fontSelect) {
-                fontSelect.addEventListener('change', function() {
-                    estilosPreguntaPreview[campo].font = fontSelect.value;
-                    actualizarFormularioHeaderDOM();
-                    actualizarToolbarVisual(campo);
-                });
-            }
-            // --- Al inicializar, reflejar el estado actual de estilos ---
-            actualizarToolbarVisual(campo);
-        });
-    }
+        }
+        const fontSelect = toolbar.querySelector('.toolbar-font');
+        if (fontSelect) {
+            fontSelect.addEventListener('change', function() {
+                estilosPreguntaPreview[campo].font = fontSelect.value;
+                actualizarFormularioHeaderDOM();
+                actualizarToolbarVisual(campo);
+            });
+        }
+        // NUEVO: Event listener para el select de tamaño de fuente
+        const fontSizeSelect = toolbar.querySelector('.toolbar-font-size');
+        if (fontSizeSelect) {
+            fontSizeSelect.addEventListener('change', function() {
+                estilosPreguntaPreview[campo].fontSize = fontSizeSelect.value;
+                actualizarFormularioHeaderDOM();
+                actualizarToolbarVisual(campo);
+            });
+        }
+
+        actualizarToolbarVisual(campo);
+    });
+}
 
     // Edición al hacer click en el header
     const formTitleContainer = document.getElementById('form-title-container');

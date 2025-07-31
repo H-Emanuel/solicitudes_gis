@@ -8,7 +8,7 @@
             }
             // Obtener datos locales actuales
             const titulo = document.getElementById('titulo_formulario')?.value || document.querySelector('.form-title-container h1')?.textContent?.replace('Formulario: ','') || '';
-            const subtitulo = document.getElementById('subtitulo_formulario')?.value || document.querySelector('.form-title-container .form-description')?.textContent || '';
+            const subtitulo = document.getElementById('hidden_subtitulo_formulario')?.value || ''; // Obtener el HTML del input oculto
             // Obtener estilos actuales del header si la función está disponible
             let estilos;
             if (typeof window.getEstilosHeaderActual === 'function') {
