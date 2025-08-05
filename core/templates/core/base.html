@@ -202,7 +202,10 @@
         box-shadow: #4880c0 0px 3px 2px,#000 0px 3px 5px;
         }
 
-
+        .manual-icon-link:hover .manual-icon {
+                                transform: scale(1.3);
+                                color: #b0b0b0 !important;
+        }
     </style>
 </head>
 
@@ -237,9 +240,9 @@
                     <i class="fa-regular fa-handshake icon-color"></i>
                     <span class="d-block">Gestión SIG</span>
                 </a>
-                <a href="https://drive.google.com/file/d/1Rx3FDBdR3vndG1NsleuOQb_p1SM1Km6z/view?usp=drive_link" target="_blank" class="service-item text-decoration-none">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#manualProcedimiento" class="service-item text-decoration-none">
                     <i class="fa-regular fa-file icon-color"></i>
-                    <span class="d-block">Manual de Procedimientos Solicitudes SIG</span>
+                    <span class="d-block">Manuales de Procedimientos Sig</span>
                 </a>
                 <a href="https://geoportal-sistema-de-informacion-geografica-munivalpo.hub.arcgis.com/" target="_blank" class="service-item text-decoration-none">
                     <i class="fa-solid fa-earth-americas icon-color"></i>
@@ -305,6 +308,53 @@
             </div>
         </div>
     </div>
+
+        <!-- Time Management Modal -->
+    <div class="modal fade" id="manualProcedimiento" tabindex="-1" aria-labelledby="manualProcedimientoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="manualProcedimientoLabel">Manuales de Procedimientos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                <p>Aquí encontrarás diferentes manuales de procedimiento según el tipo de solicitud SIG que necesites realizar. Selecciona el documento correspondiente para conocer los pasos y requisitos de cada proceso.</p>
+
+                 <div class="container">
+                    <div class="row">
+                        <div class="col-6 col-sm-4">
+                            <p>Manual Solicitudes Sig</p>
+                        </div>
+
+                        <div class="col-6 col-sm-4">
+                            <a href="https://drive.google.com/file/d/1Rx3FDBdR3vndG1NsleuOQb_p1SM1Km6z/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="manual-icon-link">
+                                <i class="fa-solid fa-file-pdf manual-icon" style="color: white; font-size: 25px; width: 25px; transition: transform 0.3s, color 0.3s;"></i> 
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 col-sm-4">
+                            <p>Manual Metados Segun Normas ISO 19115-1</p>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                          <a href="http://intranet.munivalpo.cl/Contraloria/Manuales/SECPLA/Decreto%20N%c2%b04008%20-%20MANUAL%20PROCEDIMIENTOS%20CONFIGURACION%20DE%20METADATOS%20SEGUN%20NORMAS%20ISO%2019115-1%20e%20ISO%2019115-3.pdf" target="_blank" rel="noopener noreferrer" class="manual-icon-link">
+                                <i class="fa-solid fa-file-pdf manual-icon" style="color: white; font-size: 25px; width: 25px; transition: transform 0.3s, color 0.3s;"></i> 
+                            </a>
+                            <style>
+                            
+                            </style>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+               
+
+            </div>
+        </div>
+    </div>
+
+
 
     <!-- Department Selection Modal -->
     <div class="modal fade" id="seleccionarDepartamentoModal" tabindex="-1" aria-labelledby="seleccionarDepartamentoModalLabel" aria-hidden="true">
