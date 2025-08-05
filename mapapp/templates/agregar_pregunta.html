@@ -150,6 +150,13 @@
                         <span class="btn-text">Fecha</span>
                         <span class="btn-description">Permite elegir una fecha o registrar la fecha de envío</span>
                     </button>
+                    <!-- NUEVO: Texto -->
+
+                    <button class="question-type-btn" data-type="des">
+                        <i class="fa-solid fa-pen-clip"></i>
+                        <span class="btn-text">Descripción</span>
+                        <span class="btn-description">Puede Agregar texto </span>
+                    </button>
                 </div>
             </div>
 
@@ -207,6 +214,65 @@
             <textarea id="subtitulo_formulario" name="subtitulo" rows="3" placeholder="Subtítulo o aclaración del formulario">{% if formulario.subtitulo and formulario.subtitulo != 'none' %}{{ formulario.subtitulo }}{% else %}subtitulo{% endif %}</textarea>
         </div>
                 </div>
+
+                <div id="form-texto-edit-block" style="display:none;">
+                    <div class="form-group">
+                        <label for="texto_informativo">Texto principal:</label>
+                        <div class="toolbar-mini" data-target="texto_informativo">
+                            <button type="button" class="toolbar-btn" data-cmd="bold" title="Negrita"><i class="fa-solid fa-bold"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="italic" title="Cursiva"><i class="fa-solid fa-italic"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="underline" title="Subrayado"><i class="fa-solid fa-underline"></i></button>
+                            <input type="color" class="toolbar-color" title="Color de texto">
+                            <select class="toolbar-font" title="Tipo de letra">
+                                <option value="'Inter',sans-serif">Inter</option>
+                                <option value="Arial,sans-serif">Arial</option>
+                                <option value="Georgia,serif">Georgia</option>
+                                <option value="'Courier New',monospace">Courier</option>
+                            </select>
+                            <button type="button" class="toolbar-btn" data-cmd="justifyLeft" title="Izquierda"><i class="fa-solid fa-align-left"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="justifyCenter" title="Centro"><i class="fa-solid fa-align-center"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="justifyRight" title="Derecha"><i class="fa-solid fa-align-right"></i></button>
+                        </div>
+                        <input type="text" id="texto_informativo" placeholder="Texto informativo">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion_informativa">Descripción:</label>
+                        <div class="toolbar-mini" data-target="descripcion_informativa">
+                            <button type="button" class="toolbar-btn" data-cmd="bold" title="Negrita"><i class="fa-solid fa-bold"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="italic" title="Cursiva"><i class="fa-solid fa-italic"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="underline" title="Subrayado"><i class="fa-solid fa-underline"></i></button>
+                            <input type="color" class="toolbar-color" title="Color de texto">
+                            <select class="toolbar-font" title="Tipo de letra">
+                                <option value="'Inter',sans-serif">Inter</option>
+                                <option value="Arial,sans-serif">Arial</option>
+                                <option value="Georgia,serif">Georgia</option>
+                                <option value="'Courier New',monospace">Courier</option>
+                            </select>
+                            <select class="toolbar-font-size" title="Tamaño de fuente">
+                                <option value="8px">8px</option>
+                                <option value="12px">12px</option>
+                                <option value="14px">14px</option>
+                                <option value="16px">16px</option>
+                                <option value="18px">18px</option>
+                                <option value="20px">20px</option>
+                                <option value="24px">24px</option>
+                                <option value="28px">28px</option>
+                                <option value="32px">32px</option>
+                            </select>
+                            <button type="button" class="toolbar-btn" data-cmd="justifyLeft" title="Izquierda"><i class="fa-solid fa-align-left"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="justifyCenter" title="Centro"><i class="fa-solid fa-align-center"></i></button>
+                            <button type="button" class="toolbar-btn" data-cmd="justifyRight" title="Derecha"><i class="fa-solid fa-align-right"></i></button>
+                        </div>
+                        <textarea id="descripcion_informativa" rows="3" placeholder="Texto descriptivo opcional"></textarea>
+                    </div>
+
+                    <div style="margin-top: 10px; text-align: right;">
+                        <button class="btn-submit" id="guardar-texto-informativo">Guardar</button>
+                        <button class="btn-cancel" id="cancelar-edicion-texto">Cancelar</button>
+                    </div>
+                </div>
+
                 <div id="no-question-selected-msg" style="display:block;text-align:center;color:#888;padding:32px 0;font-size:1.1em;">No hay preguntas seleccionadas</div>
                 <form id="question-form" class="question-form hidden">
                     {% csrf_token %}

@@ -200,3 +200,35 @@ class FormularioRespondidoIP(models.Model):
 
     def __str__(self):
         return f"{self.formulario.titulo} - {self.ip}"
+    
+
+class FormularioTexto(models.Model):
+    formulario = models.ForeignKey(Formulario, on_delete=models.CASCADE, related_name='formularios_texto')
+    texto = models.TextField(blank=True, null=True, help_text="Texto del formulario")
+    descripcion = models.TextField(blank=True, null=True, help_text="Descripción del formulario")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+        # Estilos para el título del formulario
+    texto_bold = models.BooleanField(default=False)
+    texto_italic = models.BooleanField(default=False)
+    texto_underline = models.BooleanField(default=False)
+    texto_color = models.CharField(max_length=7, default='#000000')
+    texto_font = models.CharField(max_length=100, default="'Inter',sans-serif")
+    texto_align = models.CharField(max_length=10, default='center')
+    
+    # Estilos para el subtítulo del formulario
+    descripcion_bold = models.BooleanField(default=False)
+    descripcion_italic = models.BooleanField(default=False)
+    descripcion_underline = models.BooleanField(default=False)
+    descripcion_color = models.CharField(max_length=7, default='#000000')
+    descripcion_font = models.CharField(max_length=100, default="'Inter',sans-serif")
+    descripcion_align = models.CharField(max_length=10, default='center')
+    descripcion_fontSize = models.CharField(max_length=10, default='16px')
+
+    def __str__(self):
+        return f"Formulario Texto: {self.formulario.titulo} - {self.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')}"
+    class Meta:
+        ordering = ['-fecha_creacion']
+        verbose_name = "Formulario Texto"
+        verbose_name_plural = "Formularios Texto"
+        

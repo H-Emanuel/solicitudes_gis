@@ -24,9 +24,12 @@ window.preguntasEliminadas = window.preguntasEliminadas || [];
 const preguntasEliminadas = window.preguntasEliminadas;
 const preguntasEditadas = [];
 const preguntasAñadidas = [];
+const textosAñadidos  = [];
+
 // --- ARREGLO: asegurar que los arrays locales sean globales ---
 window.preguntasEditadas = preguntasEditadas;
 window.preguntasAñadidas = preguntasAñadidas;
+window.textosAñadidos  = textosAñadidos ;
 
     const questionTypeButtons = document.getElementById('question-type-buttons');
     const questionForm = document.getElementById('question-form');
@@ -110,6 +113,71 @@ window.preguntasAñadidas = preguntasAñadidas;
     }, 150);
     }
 
+    function crearBloqueTexto() {
+        const idTemporal = `texto-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+        const nuevoTexto = {
+            id: idTemporal,
+            texto: "Texto informativo",
+            descripcion: "Subtexto opcional",
+            texto_bold: false,
+            texto_italic: false,
+            texto_underline: false,
+            texto_color: "#000000",
+            texto_font: "'Inter',sans-serif",
+            texto_align: "center",
+            descripcion_bold: false,
+            descripcion_italic: false,
+            descripcion_underline: false,
+            descripcion_color: "#000000",
+            descripcion_font: "'Inter',sans-serif",
+            descripcion_align: "center",
+            descripcion_fontSize: "16px"
+        };
+
+        textosAñadidos.push(nuevoTexto);
+        renderPreguntasLocales(); // para que se renderice
+        mostrarFormularioEdicionTexto(nuevoTexto); // para abrir el editor inmediatamente
+    }
+
+
+    function renderBloqueTexto(bloque) {
+        const contenedor = document.getElementById('questions-preview');
+        if (!contenedor) return;
+
+        const div = document.createElement('div');
+        div.classList.add('bloque-texto');
+        div.setAttribute('data-texto-id', bloque.id);
+
+        div.innerHTML = `
+            <div style="
+                font-family: ${bloque.texto_font};
+                color: ${bloque.texto_color};
+                text-align: ${bloque.texto_align};
+                font-weight: ${bloque.texto_bold ? 'bold' : 'normal'};
+                font-style: ${bloque.texto_italic ? 'italic' : 'normal'};
+                text-decoration: ${bloque.texto_underline ? 'underline' : 'none'};
+            ">
+                ${bloque.texto}
+            </div>
+            <div style="
+                font-family: ${bloque.descripcion_font};
+                color: ${bloque.descripcion_color};
+                text-align: ${bloque.descripcion_align};
+                font-weight: ${bloque.descripcion_bold ? 'bold' : 'normal'};
+                font-style: ${bloque.descripcion_italic ? 'italic' : 'normal'};
+                text-decoration: ${bloque.descripcion_underline ? 'underline' : 'none'};
+                font-size: ${bloque.descripcion_fontSize};
+                margin-bottom: 20px;
+            ">
+                ${bloque.descripcion}
+            </div>
+        `;
+
+        contenedor.appendChild(div);
+    }
+
+
     // Función para obtener el nombre descriptivo del tipo de pregunta
     function getTipoNombre(tipo) {
         const tipos = {
@@ -161,19 +229,58 @@ window.preguntasAñadidas = preguntasAñadidas;
     }
 
     // Función para agregar eventos a los botones de edición y eliminación
-    function agregarEventosBotones() {
-        // Remover event listeners existentes
-        document.querySelectorAll('.delete-question-btn').forEach(button => {
-            button.replaceWith(button.cloneNode(true));
-        });
+function agregarEventosBotones() {
+    // Botones para preguntas
+    document.querySelectorAll('.delete-question-btn').forEach(button => {
+        button.replaceWith(button.cloneNode(true));
+    });
 
-        // Agregar nuevos event listeners
-        document.querySelectorAll('.delete-question-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const preguntaId = this.getAttribute('data-id');
-                eliminarPregunta(preguntaId);
+    document.querySelectorAll('.delete-question-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const preguntaId = this.getAttribute('data-id');
+            eliminarPregunta(preguntaId);
+        });
+    });
+
+    // NUEVO: botones para bloques de texto
+    document.querySelectorAll('.delete-texto-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const textoId = this.getAttribute('data-id');
+            const idx = textosAñadidos.findIndex(t => t.id === textoId);
+            if (idx !== -1) {
+                textosAñadidos.splice(idx, 1);
+                const el = document.querySelector(`.texto-item[data-texto-id='${textoId}']`);
+                if (el) el.remove();
+            }
+        });
+    });
+
+        document.querySelectorAll('.edit-texto-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const textoId = this.getAttribute('data-id');
+                const texto = textosAñadidos.find(t => t.id === textoId);
+                if (texto) {
+                    mostrarFormularioEdicionTexto(texto);
+                }
             });
         });
+    }
+
+    function mostrarFormularioEdicionTexto(bloque) {
+        document.getElementById('question-form')?.classList.add('hidden');
+        const headerBlock = document.getElementById('form-header-edit-block');
+        if (headerBlock) {
+            headerBlock.style.display = 'none';
+        }
+
+
+        const editor = document.getElementById('form-texto-edit-block');
+        if (editor) editor.style.display = '';
+
+        document.getElementById('texto_informativo').value = bloque.texto || '';
+        document.getElementById('descripcion_informativa').value = bloque.descripcion || '';
+
+        window.bloqueTextoEnEdicion = bloque;
     }
 
     // Función para editar una pregunta
@@ -803,10 +910,14 @@ window.preguntasAñadidas = preguntasAñadidas;
 
     // Eventos para los botones de tipo de pregunta
     // CORRECTO:
-    document.querySelectorAll('.question-type-btn').forEach(function(button) {
-        button.addEventListener('click', function() {
-            const type = button.getAttribute('data-type');
-            crearNuevaPregunta(type);
+    document.querySelectorAll('.question-type-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const tipo = this.getAttribute('data-type');
+            if (tipo === 'des') {
+                crearBloqueTexto(); // usa la función que ya creamos
+            } else {
+                crearNuevaPregunta(tipo);
+            }
         });
     });
 
@@ -1337,6 +1448,28 @@ window.preguntasAñadidas = preguntasAñadidas;
                 }
             }
         }
+
+                // Agregar bloques de texto informativo
+                // Agregar bloques de texto informativo
+        if (Array.isArray(textosAñadidos)) {
+            textosAñadidos.forEach(bloque => {
+                if (!document.querySelector(`.texto-item[data-texto-id="${bloque.id}"]`)) {
+                    const bloqueDOM = crearBloqueTextoPreviewDOM(bloque);
+                    const container = document.querySelector('.questions-list') || document.getElementById('questions-preview');
+                    const botonEnviar = document.querySelector('.form-footer-boton-enviar');
+                    if (container) {
+                        if (botonEnviar && botonEnviar.parentNode === container) {
+                            container.insertBefore(bloqueDOM, botonEnviar);
+                        } else {
+                            container.appendChild(bloqueDOM);
+                        }
+                    }
+                }
+            });
+        }
+
+
+
         // Si NO hay pregunta en edición, recargar el fragmento y aplicar cambios locales
         actualizarVistaPrevia().then(() => {
             // Ocultar preguntas eliminadas
@@ -1784,6 +1917,38 @@ function crearPreguntaPreviewDOM(pregunta, esNueva) {
     if (pregunta.tipo === 'fecha') {
         div.setAttribute('data-fecha-tipo', pregunta.fecha_tipo || 'envio');
     }
+
+function crearBloqueTextoPreviewDOM(bloque) {
+    const div = document.createElement('div');
+    div.className = 'texto-item';
+    div.setAttribute('data-texto-id', bloque.id);
+
+    div.innerHTML = `
+        <div class="texto-informativo" style="
+            font-family: ${bloque.texto_font};
+            color: ${bloque.texto_color};
+            text-align: ${bloque.texto_align};
+            font-weight: ${bloque.texto_bold ? 'bold' : 'normal'};
+            font-style: ${bloque.texto_italic ? 'italic' : 'normal'};
+            text-decoration: ${bloque.texto_underline ? 'underline' : 'none'};
+        ">${bloque.texto}</div>
+
+        <div class="texto-descripcion" style="
+            font-family: ${bloque.descripcion_font};
+            color: ${bloque.descripcion_color};
+            text-align: ${bloque.descripcion_align};
+            font-weight: ${bloque.descripcion_bold ? 'bold' : 'normal'};
+            font-style: ${bloque.descripcion_italic ? 'italic' : 'normal'};
+            text-decoration: ${bloque.descripcion_underline ? 'underline' : 'none'};
+            font-size: ${bloque.descripcion_fontSize};
+            margin-bottom: 20px;
+        ">${bloque.descripcion}</div>
+    `;
+
+    return div;
+}
+
+
 
     // Indicador visual obligatorio a la derecha con flex
     const obligatorioIcon = pregunta.obligatorio ? `<span class="obligatorio-icon" title="Obligatorio"><span class="obligatorio-circle">!</span></span>` : '';
