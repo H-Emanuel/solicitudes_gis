@@ -40,8 +40,4 @@ urlpatterns = [
     path("agregar_apoyo/", ajax.agregar_apoyo, name="agregar_apoyo"),
     path("apoyo_trabajo/", ajax.apoyo_trabajo, name="apoyo_trabajo"),
 
-    path("guardar_nota/", ajax.guardar_nota, name="guardar_nota"),
-    path("obtener_nota/", ajax.obtener_nota, name="obtener_nota"), 
-
-
 ]

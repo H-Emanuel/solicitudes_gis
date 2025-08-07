@@ -1,5 +1,6 @@
-$(document).ready(function () {
+// archivo: tablaSolicitudes.js
 
+$(document).ready(function () {
     setTimeout(function () {
         $('.dataTables_filter input').attr('placeholder', 'Buscar');
     }, 500);
@@ -7,131 +8,131 @@ $(document).ready(function () {
     let table = $('#tabla_registro').DataTable({
         processing: true,
         serverSide: true,
-         language: {
+        language: {
             url: "/static/js/es-MX.json"
         },
         ajax: {
             url: '/solicitudes_json/',
-            type: 'POST',  // ← CAMBIAR AQUÍ
-            headers: { 'X-CSRFToken': csrf_token },  // ← Agrega esto si usas Django
-            dataSrc: function(json) {
-            console.log(json);  // Verifica estructura
-            return json.data;
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrf_token },
+            dataSrc: function (json) {
+                console.log(json);
+                return json.data;
             }
         },
         columns: [
-            { data: 'id' }, // Id de la solicitud
-            { data: 'orden_trabajo' }, // ✅ corregido aquí
+            { data: 'id' },
+            { data: 'orden_trabajo' },
             { data: 'nombre_solicitante' },
             { data: 'fecha' },
             { data: 'departamento' },
+            { data: null, orderable: false, searchable: false, render: renderBotonesAccion },
             {
-                data: null,
-                orderable: false,
-                searchable: false,
+                data: 'estado',
                 render: function (data, type, row) {
-                    // Color de ícono si puede enviar correo
-                    const puedeEnviarCorreo = row.estado !== "RECHAZADO";
-                    const colorCorreo = puedeEnviarCorreo ? '#2f86eb' : 'grey';
-                    const disabledClass = puedeEnviarCorreo ? '' : 'disabled';
-                    const pointerEvents = puedeEnviarCorreo ? '' : 'pointer-events: none; cursor: not-allowed;';
-
-                    return `
-                    <a href="#" class="email-link ${disabledClass}" 
-                        style="text-decoration: none; ${pointerEvents}" 
-                        data-bs-toggle="modal" 
-                        data-bs-target="#dynamicEmailModal"
-                        data-id="${row.id}" 
-                        data-correo="${row.profesional_correo}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones" style="fill: ${colorCorreo}; width:20px;">
-                        <path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/>
-                        </svg>
-                    </a>
-
-                    <a href="#" class="preview-link" 
-                        style="text-decoration: none;" 
-                        data-item='${JSON.stringify(row)}'>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="acciones" style="width:20px;">
-                        <path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128z"/>
-                        </svg>
-                    </a>
-
-                    <a href="/solicitud/descargar_pdf/${row.id}" download style="text-decoration: none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones" style="width:20px;">
-                        <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32v242.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
-                        </svg>
-                    </a>
-                    `;
+                    return renderSelectEstado(row);
                 }
-                },
-                {
-                    data: 'estado',
-                    render: function (data, type, row) {
-                        let select = `<select class="estado-select" data-solicitud-id="${row.id}">`;
-                        row.estados.forEach(function (estado) {
-                            const selected = data === estado[0] ? 'selected' : '';
-                            select += `<option value="${estado[0]}" ${selected}>${estado[1]}</option>`;
-                        });
-                        select += `</select>`;
-                        return select;
-                    }
-                },
+            },
             { data: 'departamento' },
             { data: 'departamento' },
             { data: 'fecha_D' },
             { data: 'fecha_T' },
             { data: 'departamento' },
-
-
-
         ]
-        });
+    });
 
+    $('#tabla_registro').on('change', '.estado-select', manejarCambioEstado);
+    $('#tabla_registro').on('click', '.email-link', manejarClickEmail);
+    $('#tabla_registro').on('click', '.preview-link', manejarClickVistaPrevia);
 });
 
+function renderBotonesAccion(row) {
+    const puedeEnviarCorreo = row.estado !== "RECHAZADO";
+    const colorCorreo = puedeEnviarCorreo ? '#2f86eb' : 'grey';
+    const disabledClass = puedeEnviarCorreo ? '' : 'disabled';
+    const pointerEvents = puedeEnviarCorreo ? '' : 'pointer-events: none; cursor: not-allowed;';
 
-                        // <th>Id de la solicitud</th>
-                        // <th>Orden Trabajo</th>
-                        // <th>Solicitante</th>
-                        // <th>Fecha de llegada</th>
-                        // <th>Departamento</th>
-                        // <th>Acciones</th>
-                        // <th>Estado</th>
-                        // <th>Carga de trabajo</th>
-                        // <th>profesional SIG</th>
-                        // <th>Fecha Designio</th>
-                        // <th>Fecha Enviado</th>
-                        // <th>Dias Hábiles</th>
+    return `
+        <a href="#" class="email-link ${disabledClass}" style="text-decoration: none; ${pointerEvents}" 
+            data-bs-toggle="modal" data-bs-target="#dynamicEmailModal"
+            data-id="${row.id}" data-correo="${row.profesional_correo}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones" style="fill: ${colorCorreo}; width:20px;">
+                <path d="M48 64C21.5 64 0 85.5 0 112..." />
+            </svg>
+        </a>
+        <a href="#" class="preview-link" style="text-decoration: none;" data-item='${JSON.stringify(row)}'>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="acciones" style="width:20px;">
+                <path d="M0 64C0 28.7 28.7 0 64 0L224..." />
+            </svg>
+        </a>
+        <a href="/solicitud/descargar_pdf/${row.id}" download style="text-decoration: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="acciones" style="width:20px;">
+                <path d="M288 32c0-17.7-14.3-32-32-32..." />
+            </svg>
+        </a>
+    `;
+}
 
+function renderSelectEstado(row) {
+    let select = `<select class="estado-select" data-solicitud-id="${row.id}">`;
+    row.estados.forEach(function (estado) {
+        const selected = row.estado === estado[0] ? 'selected' : '';
+        select += `<option value="${estado[0]}" ${selected}>${estado[1]}</option>`;
+    });
+    select += `</select>`;
+    return select;
+}
 
-$('#tabla_registro').on('click', '.email-link', function () {
-    var btn = $(this);
-    var correo_destinatario = btn.data('correo');
-    var solicitudId = btn.data('id');
+function manejarCambioEstado() {
+    const solicitudId = $(this).data('solicitud-id');
+    const nuevoEstado = $(this).val();
 
-    // Limpiar la lista anterior y agregar el nuevo destinatario
+    $.ajax({
+        url: "/actualizar_estado_solicitud/",
+        type: "POST",
+        data: {
+            solicitud_id: solicitudId,
+            estado: nuevoEstado,
+            csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+        },
+        success: function (response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Estado actualizado correctamente",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                $('#tabla_registro').DataTable().ajax.reload(null, false);
+            } else {
+                alert(response.message);
+            }
+        },
+        error: function (xhr, status, error) {
+            alert("Error al actualizar el estado:", error);
+        }
+    });
+}
+
+function manejarClickEmail() {
+    const correo_destinatario = $(this).data('correo');
+    const solicitudId = $(this).data('id');
     $('#destinatarioList').html(`<li class="list-group-item" style="color:gray;">${correo_destinatario}</li>`);
+    selectedFichaId = solicitudId;
+    console.log('Enviar correo a:', correo_destinatario, 'ID:', solicitudId);
+}
 
-    // Guardar el ID de la solicitud seleccionada
-    selectedFichaId = solicitudId
-    console.log('Enviar correo a:', correo, 'ID:', id);
-    // Lógica para abrir modal y pasar datos
-});
+function manejarClickVistaPrevia() {
+    const item = JSON.parse($(this).attr("data-item"));
 
-$('#tabla_registro').on('click', '.preview-link', function () {
+    const archivosHTML = (item.archivos_adjuntos_urls || []).length > 0
+        ? `<ul>` + item.archivos_adjuntos_urls.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('') + `</ul>`
+        : "<p>No hay archivos adjuntos.</p>";
 
-    var item = JSON.parse($(this).attr("data-item"));
-    
-    var archivosHTML = (item.archivos_adjuntos_urls && Array.isArray(item.archivos_adjuntos_urls) && item.archivos_adjuntos_urls.length > 0)
-    ? `<ul>` + item.archivos_adjuntos_urls.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('') + `</ul>`
-    : "<p>No hay archivos adjuntos.</p>";
-
-    // Generar lista de apoyos
-    var apoyosHTML = (item.apoyos && Array.isArray(item.apoyos) && item.apoyos.length > 0)
+    const apoyosHTML = (item.apoyos || []).length > 0
         ? `<ul>` + item.apoyos.map(apoyo => `<li>${apoyo.nombre} (${apoyo.correo})</li>`).join('') + `</ul>`
         : "<p>No hay apoyos asignados.</p>";
 
-    // Insertar los datos directamente en el modal
     $('#previewData').html(`
         <strong>ID:</strong> ${item.id} <br>
         <strong>Código:</strong> ${item.codigo} <br>
@@ -156,11 +157,9 @@ $('#tabla_registro').on('click', '.preview-link', function () {
         <strong>Número de Designios:</strong> ${item.numero_designios} <br>
         <strong>Días Restantes:</strong> ${item.dias_restantes} <br>
         <strong>Archivos Adjuntos:</strong> ${archivosHTML} <br>
-        <strong>Apoyos Asignados:</strong> ${apoyosHTML} <br> <!-- Aquí agregamos los apoyos -->
+        <strong>Apoyos Asignados:</strong> ${apoyosHTML} <br>
     `);
 
-    // Mostrar el modal
     $('#previewModal').modal('show');
-  console.log('Vista previa:', item);
-  // Abrir modal o mostrar contenido
-});
+    console.log('Vista previa:', item);
+}

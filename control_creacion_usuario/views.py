@@ -578,11 +578,19 @@ def solicitudes_json(request):
             })
 
         # 📤 Respuesta
+        
+        OPCIONES_ESTADO = [
+            ('PENDIENTE', 'Pendiente'),
+            ('EN_PROCESO', 'En Proceso'),
+            ('RECHAZADO', 'Rechazado'),
+            ('TERMINADO', 'Terminado'),
+        ]
         return JsonResponse({
             "draw": draw,
             "recordsTotal": total_records,
             "recordsFiltered": total_filtered,
             "data": data,
+            "estados": OPCIONES_ESTADO,  # 👈 agrega esto
             "id_user": request.user.id,
             "es_superuser": request.user.is_superuser,
         }, safe=False)

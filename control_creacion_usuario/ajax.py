@@ -105,47 +105,6 @@ def encotra_contraseña(usuario, tipo='munivalpo'):
     return None
 
 
-
-@csrf_exempt
-def obtener_nota(request):
-    protocolo_id = request.GET.get("protocolo_id")
-
-    if not protocolo_id:
-        return JsonResponse({"error": "Protocolo no encontrado"}, status=400)
-
-    try:
-        protocolo = ProtocoloSolicitud.objects.get(id=protocolo_id)
-        apoyos = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
-
-        # Obtener valores en formato 1-100 (convertir de 0.XX a XX)
-        porcentaje_total = (protocolo.valor_de_trabajo or 0) * 100
-        porcentaje_profesional = (protocolo.valor_de_trabajo_funcionario or 0) * 100
-        porcentaje_apoyo = sum(
-            apoyo.valor_de_trabajo if apoyo.valor_de_trabajo is not None else 0
-            for apoyo in apoyos
-        ) * 100
-
-        # Construir respuesta JSON
-        apoyo_data = [
-            {
-                "id": apoyo.profesional.id,
-                "first_name": apoyo.profesional.first_name,
-                "last_name": apoyo.profesional.last_name,
-                "ya_agregado": True
-            }
-            for apoyo in apoyos
-        ]
-
-        return JsonResponse({
-            "porcentaje_total": int(porcentaje_total),  # Convertir a entero
-            "porcentaje_profesional": int(porcentaje_profesional),  # Convertir a entero
-            "porcentaje_apoyo": int(porcentaje_apoyo),  # Convertir a entero
-            "apoyos": apoyo_data
-        })
-
-    except ProtocoloSolicitud.DoesNotExist:
-        return JsonResponse({"error": "Protocolo no encontrado"}, status=404)
-
 @csrf_exempt
 def detalle_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(ProtocoloSolicitud, id=solicitud_id)
@@ -161,57 +120,6 @@ def detalle_solicitud(request, solicitud_id):
     }
 
     return JsonResponse(data)
-
-@csrf_exempt  # Deshabilita CSRF solo para pruebas (en producción usa @csrf_protect y pasa el token en AJAX)
-def guardar_nota(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-
-            protocolo_id = data.get("protocolo_id")
-            porcentaje_total = float(data.get("porcentaje_total")) / 100  # Convertir 100% -> 1.0
-            porcentaje_profesional = float(data.get("porcentaje_profesional")) / 100  # Convertir 100% -> 1.0
-            porcentaje_apoyo = float(data.get("porcentaje_apoyo")) / 100  # Convertir 100% -> 1.0
-            apoyos_ids = data.get("apoyos", [])  # Lista de IDs de usuarios seleccionados como apoyo
-            print("Apoyos:", apoyos_ids)
-            # Buscar el protocolo
-            protocolo = ProtocoloSolicitud.objects.get(id=protocolo_id)
-
-            # Verificar que la distribución es válida
-            if porcentaje_profesional + porcentaje_apoyo > porcentaje_total:
-                return JsonResponse({"success": False, "error": "La distribución de trabajo no puede exceder el total asignado"}, status=400)
-
-            # Guardar el nuevo valor en ProtocoloSolicitud
-            protocolo.valor_de_trabajo = porcentaje_total
-            protocolo.valor_de_trabajo_funcionario = porcentaje_profesional
-            protocolo.puntaje = 1 * porcentaje_profesional
-            protocolo.save()
-
-
-            # Si hay apoyos, guardar los valores distribuidos
-            apoyos = Apoyo_Protocolo.objects.filter(protocolo=protocolo)
-            total_apoyos = apoyos.count()
-
-            if total_apoyos > 0 and porcentaje_apoyo > 0:
-                valor_por_apoyo = porcentaje_apoyo / total_apoyos
-
-                for apoyo in apoyos:
-                    apoyo.valor_de_trabajo = valor_por_apoyo
-                    apoyo.puntaje = valor_por_apoyo  # Multiplicado por 1
-                    apoyo.save()
-
-
-
-            return JsonResponse({"success": True, "message": "Datos guardados correctamente"})
-
-        except ProtocoloSolicitud.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Protocolo no encontrado"}, status=404)
-        except User.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Usuario de apoyo no encontrado"}, status=404)
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=400)
-    
-    return JsonResponse({"error": "Método no permitido"}, status=405)
 
 
 def solicitud_express(request):
@@ -303,7 +211,6 @@ def usuarios_disponibles(request):
     except ProtocoloSolicitud.DoesNotExist:
         return JsonResponse({"error": "Protocolo no encontrado"}, status=404)
 
-    
 @csrf_exempt
 def agregar_apoyo(request):
     if request.method == "POST":
@@ -343,7 +250,6 @@ def agregar_apoyo(request):
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
-
 def apoyo_trabajo(request):
     protocolo_id = request.GET.get("protocolo_id")
 
@@ -368,7 +274,6 @@ def apoyo_trabajo(request):
 
     except ProtocoloSolicitud.DoesNotExist:
         return JsonResponse({"error": "Protocolo no encontrado"}, status=404)
-
 
 def actualizar_limite_solicitud(request):
     if request.method == 'POST':
