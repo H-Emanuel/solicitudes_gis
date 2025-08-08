@@ -128,7 +128,7 @@ window.preguntasAñadidas = preguntasAñadidas;
     // Función para actualizar la vista previa
     function actualizarVistaPrevia() {
         const formularioId = window.FORMULARIO_ID;
-        return fetch(`/actualizar_preguntas/?formulario_id=${formularioId}`)
+        return fetch(`/survey/actualizar_preguntas/?formulario_id=${formularioId}`)
             .then(response => response.text())
             .then(html => {
                 questionsPreview.innerHTML = html;
@@ -203,7 +203,7 @@ window.preguntasAñadidas = preguntasAñadidas;
         if (pregunta) {
             // Refuerzo: si es tipo mapa y no tiene mapa_tipo, buscar en el backend
             if (pregunta.tipo === 'mapa' && (typeof pregunta.mapa_tipo === 'undefined' || !pregunta.mapa_tipo)) {
-                fetch(`/obtener_pregunta/${preguntaId}/`)
+                fetch(`/survey/obtener_pregunta/${preguntaId}/`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.tipo === 'mapa' && data.mapa_tipo) {
@@ -219,7 +219,7 @@ window.preguntasAñadidas = preguntasAñadidas;
             return;
         }
         // Si no está en los arrays locales, cargar del backend
-        fetch(`/obtener_pregunta/${preguntaId}/`)
+        fetch(`/survey/obtener_pregunta/${preguntaId}/`)
             .then(response => response.json())
             .then(data => {
                 // DEBUG: log para ver qué recibe el frontend
@@ -241,8 +241,8 @@ window.preguntasAñadidas = preguntasAñadidas;
                 preguntaIdInput.value = preguntaId;
                 tipoInput.value = data.tipo;
                 document.getElementById('id_texto').value = data.texto;
-                document.getElementById('id_descripcion').value = data.descripcion || '';
-                document.getElementById('id_placeholder').value = data.placeholder || '';
+                document.getElementById('id_descripcion').value = pregunta.descripcion || '';
+                document.getElementById('id_placeholder').value = pregunta.placeholder || '';
                 if (data.tipo === 'opcion_multiple') {
                     const opcionesContainer = document.getElementById('opciones-container');
                     opcionesContainer.innerHTML = '';
@@ -350,22 +350,30 @@ window.preguntasAñadidas = preguntasAñadidas;
         document.getElementById('id_mostrar_como_radio').checked = !!pregunta.mostrar_como_radio;
         document.getElementById('id_permitir_multiple').checked = !!pregunta.permitir_multiple;
         document.getElementById('id_obligatorio').checked = !!pregunta.obligatorio;
-        // Sincronizar el select de dependiente
+        // Sincronizar el select de dependiente SOLO al editar (no al crear)
         const selectDependiente = document.getElementById('id_pregunta_dependiente');
-        if (selectDependiente) {
-            // Ocultar la opción de la propia pregunta
-            [...selectDependiente.options].forEach(opt => {
-                opt.hidden = (opt.value && opt.value === String(pregunta.id));
+        if (selectDependiente && !String(pregunta.id).startsWith('tmp-') && pregunta.id !== 'boton-enviar') {
+            // Guardar valor actual
+            const valorSeleccionado = pregunta.pregunta_dependiente ? String(pregunta.pregunta_dependiente) : '';
+            // Limpiar opciones
+            selectDependiente.innerHTML = '';
+            // Opción por defecto
+            const optNinguna = document.createElement('option');
+            optNinguna.value = '';
+            optNinguna.textContent = 'Ninguna';
+            selectDependiente.appendChild(optNinguna);
+            // Solo preguntas ya renderizadas en el DOM, excluyendo la actual, eliminadas y el botón enviar
+            document.querySelectorAll('.question-item[data-pregunta-id]').forEach(item => {
+                const id = item.getAttribute('data-pregunta-id');
+                const texto = item.querySelector('.question-text')?.textContent?.trim() || id;
+                if (id && id !== String(pregunta.id) && id !== 'boton-enviar' && !window.preguntasEliminadas.includes(id)) {
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = texto.length > 50 ? texto.slice(0, 50) + '…' : texto;
+                    if (id === valorSeleccionado) opt.selected = true;
+                    selectDependiente.appendChild(opt);
+                }
             });
-            // Asegura que el valor sea string y exista en las opciones
-            const val = pregunta.pregunta_dependiente ? String(pregunta.pregunta_dependiente) : '';
-            
-            selectDependiente.value = val;
-            // Si el valor no está en las opciones, selecciona 'Ninguna'
-            if (![...selectDependiente.options].some(opt => opt.value === val)) {
-                selectDependiente.value = '';
-            }
-
         }
         toggleFields();
         agregarListenersEdicionPregunta();
@@ -1049,7 +1057,7 @@ window.preguntasAñadidas = preguntasAñadidas;
     // Función para eliminar la imagen
     function eliminarImagen() {
         if (confirm('¿Estás seguro de que deseas eliminar la imagen actual?')) {
-            fetch(`/eliminar_imagen_formulario/${window.FORMULARIO_ID}/`, {
+            fetch(`/survey/eliminar_imagen_formulario/${window.FORMULARIO_ID}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': window.CSRF_TOKEN,
@@ -1195,7 +1203,7 @@ window.preguntasAñadidas = preguntasAñadidas;
         if (inputDepartamento) {
             formData.set('departamento', inputDepartamento.value);
         }
-        fetch('/guardar_cambios_formulario/', {
+        fetch('/survey/guardar_cambios_formulario/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': window.CSRF_TOKEN
@@ -1263,6 +1271,7 @@ window.preguntasAñadidas = preguntasAñadidas;
                         if (refNode) {
                             questionsPreview.insertBefore(newDom, refNode);
                         } else {
+                            // Si no hay siguiente, agregar al final
                             // Si no hay siguiente, agregar al final
                             questionsPreview.appendChild(newDom);
                         }
@@ -1512,7 +1521,6 @@ actualizarVistaPrevia = function() {
         if (!item) return;
         const preguntaId = item.getAttribute('data-pregunta-id');
         if (!preguntaId) return; // Protección extra
-        // Quitar selección previa
         document.querySelectorAll('.question-item.selected').forEach(el => el.classList.remove('selected'));
         // Seleccionar el actual
         item.classList.add('selected');
@@ -1682,7 +1690,7 @@ function actualizarOrdenPreguntasDOM() {
         orden.push(item.getAttribute('data-pregunta-id'));
     });
     // Enviar al backend
-    fetch('/actualizar_orden_preguntas/', {
+    fetch('/survey/actualizar_orden_preguntas/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

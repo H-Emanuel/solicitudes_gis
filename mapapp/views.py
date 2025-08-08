@@ -1326,3 +1326,10 @@ def actualizar_punto(request, punto_id):
         return JsonResponse({'success': False, 'message': 'Punto no encontrado.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+from django.contrib.auth import logout
+from django.shortcuts import redirect    
+def logout_view(request):
+    logout(request)
+    # Redirige a la página de inicio u otra página después de cerrar sesión
+    return redirect('home')  # 'home' debe ser el nombre de otro patrón de URL    

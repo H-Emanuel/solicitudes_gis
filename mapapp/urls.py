@@ -34,9 +34,13 @@ urlpatterns = [
     
     path('logout/', include(('archivos.urls', 'home'), namespace='logout')),
     path('login/', include(('archivos.urls', 'home'), namespace='login')),
-
+    path('logout/', views.logout_view, name='logout'),
     path('actualizar_punto/<int:punto_id>/', views.actualizar_punto, name='actualizar_punto'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

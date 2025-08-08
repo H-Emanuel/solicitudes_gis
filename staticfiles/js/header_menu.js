@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const descEl = document.querySelector('.form-description');
             if(descEl) descEl.textContent = descripcion;
             // Actualizar en el backend (AJAX)
-            fetch(`/actualizar_nombre_formulario/${window.FORMULARIO_ID}/`, {
+            fetch(`/survey/actualizar_nombre_formulario/${window.FORMULARIO_ID}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

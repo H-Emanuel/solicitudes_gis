@@ -24,7 +24,7 @@ urlpatterns = [
     path('',include('control_creacion_usuario.urls')),
     path('solicitud/',include('formulario.urls')),
     path('survey/',include('mapapp.urls')),
-    path('nube/',include('archivos.urls')),
+    
 
     path('tareas/', include('tareas.urls')),  # Incluye las URLs de la aplicación tareas
 
