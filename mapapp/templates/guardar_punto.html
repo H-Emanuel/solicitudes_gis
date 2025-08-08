@@ -16,9 +16,9 @@
 <body style="background: {{ tema_color|default:'#e8e8e8' }};">
     <div class="main-container" style="background: {{ tema_color|default:'#e8e8e8' }};">
         <!-- Recuadro para la portada -->
-        <div class="cover-photo-container">
+        <div class="cover-photo-container" style="height: 300px;">
             {% if imagen_url %}
-                <img id="portada-imagen" src="{{ imagen_url }}" alt="Portada del formulario" style=" object-fit: cover; width: 100%;">
+                <img id="portada-imagen" src="{{ imagen_url }}" alt="Portada del formulario" style="height: 300px; object-fit: cover; width: 100%;">
             {% else %}
                 <div class="no-image-message" style="height: 300px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-image"></i>
@@ -28,37 +28,33 @@
         </div>
 
         <div class="form-content">
-            <h1 style="padding: 0 20px;text-align:{{ estilos_header.titulo.align|default:'center' }}; color:{{ estilos_header.titulo.color|default:'#000' }}; font-family:{{ estilos_header.titulo.font|default:"'Inter',sans-serif" }}; font-weight:{% if estilos_header.titulo.bold %}bold{% else %}normal{% endif %}; font-style:{% if estilos_header.titulo.italic %}italic{% else %}normal{% endif %}; text-decoration:{% if estilos_header.titulo.underline %}underline{% else %}none{% endif %};">{{ formulario.titulo }}</h1>
-            {% if formulario.subtitulo %}
-                <p class="form-description" style="padding: 0 20px; text-align:{{ estilos_header.subtitulo.align|default:'center' }}; color:{{ estilos_header.subtitulo.color|default:'#000' }}; font-family:{{ estilos_header.subtitulo.font|default:"'Inter',sans-serif" }}; font-weight:{% if estilos_header.subtitulo.bold %}bold{% else %}normal{% endif %}; font-style:{% if estilos_header.subtitulo.italic %}italic{% else %}normal{% endif %}; text-decoration:{% if estilos_header.subtitulo.underline %}underline{% else %}none{% endif %};">{{ formulario.subtitulo }}</p>
-            {% endif %}
-            <!-- Recordar intalar django templates para los errores del editor -->
-
-            {% if mostrar_mensaje_ya_respondido %}
-                <div class="ya-respondido-aviso" style="margin:40px 0; padding:32px 24px; background:#ffe5e5; color:#b91c1c; border-radius:8px; text-align:center; font-size:1.2rem; font-weight:500;">
-                    <i class="fas fa-ban" style="font-size:2rem; margin-bottom:10px;"></i><br>
-                    Ya has respondido este formulario.
-                </div>
-            {% else %}
-                <form id="mapForm" method="post" action="{% url 'guardar_punto' formulario.id|hashid %}" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <!-- Campos ocultos para latitud y longitud globales (si no hay pregunta tipo mapa) -->
-                    <input type="hidden" id="lat" name="lat">
-                    <input type="hidden" id="lng" name="lng">
-
-                    {% if preguntas %}
-                        <div class="questions-section">
-                            {% include 'questions_fragment.html' with preguntas=preguntas mostrar_boton_eliminar=False %}
-                        </div>
-                    {% endif %}
-
-                    <div class="btn-container">
-                        <button type="submit">{{ formulario.texto_boton_enviar|default:'Enviar' }}</button>
-                    </div>
-                </form>
-            {% endif %}
+    <h1 style="padding: 0 20px;text-align:{{ estilos_header.titulo.align|default:'center' }}; color:{{ estilos_header.titulo.color|default:'#000' }}; font-family:{{ estilos_header.titulo.font|default:"'Inter',sans-serif" }}; font-weight:{% if estilos_header.titulo.bold %}bold{% else %}normal{% endif %}; font-style:{% if estilos_header.titulo.italic %}italic{% else %}normal{% endif %}; text-decoration:{% if estilos_header.titulo.underline %}underline{% else %}none{% endif %};">{{ formulario.titulo }}</h1>
+    {% if formulario.subtitulo %}
+        <p class="form-description" style="padding: 0 20px; text-align:{{ estilos_header.subtitulo.align|default:'center' }}; color:{{ estilos_header.subtitulo.color|default:'#000' }}; font-family:{{ estilos_header.subtitulo.font|default:"'Inter',sans-serif" }}; font-weight:{% if estilos_header.subtitulo.bold %}bold{% else %}normal{% endif %}; font-style:{% if estilos_header.subtitulo.italic %}italic{% else %}normal{% endif %}; text-decoration:{% if estilos_header.subtitulo.underline %}underline{% else %}none{% endif %}; font-size:{{ estilos_header.subtitulo.fontSize|default:'16px' }};">{{ formulario.subtitulo }}</p>
+    {% endif %}
+    {% if mostrar_mensaje_ya_respondido %}
+        <div class="ya-respondido-aviso" style="margin:40px 0; padding:32px 24px; background:#ffe5e5; color:#b91c1c; border-radius:8px; text-align:center; font-size:1.2rem; font-weight:500;">
+            <i class="fas fa-ban" style="font-size:2rem; margin-bottom:10px;"></i><br>
+            Ya has respondido este formulario.
         </div>
-    </div>
+    {% else %}
+        <form id="mapForm" method="post" action="{% url 'guardar_punto' formulario.id|hashid %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="lat" name="lat">
+            <input type="hidden" id="lng" name="lng">
+
+            {% if preguntas %}
+                <div class="questions-section">
+                    {% include 'questions_fragment.html' with preguntas=preguntas mostrar_boton_eliminar=False %}
+                </div>
+            {% endif %}
+
+            <div class="btn-container">
+                <button type="submit">{{ formulario.texto_boton_enviar|default:'Enviar' }}</button>
+            </div>
+        </form>
+    {% endif %}
+</div>
     
     <div id="popup-mensaje" style="display:none;position:fixed;top:40px;left:50%;transform:translateX(-50%);z-index:9999;min-width:320px;max-width:90vw;padding:18px 32px;border-radius:8px;font-size:1.1rem;font-weight:600;text-align:center;box-shadow:0 2px 16px rgba(0,0,0,0.12);background:#38b000;color:#fff;transition:all .3s;opacity:0;">
         <span id="popup-mensaje-texto"></span>

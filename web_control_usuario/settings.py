@@ -35,6 +35,7 @@ CORS_ALLOWED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
+     'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,7 +47,7 @@ INSTALLED_APPS = [
     'control_creacion_usuario',
     'formulario',
     'channels',
-    'daphne',
+   
     'tareas', 
     'rest_framework',
     'widget_tweaks',
@@ -106,15 +107,14 @@ CHANNEL_LAYERS = {
 
 DATABASES = {
     'default': {
-        'ENGINE':'django.db.backends.postgresql_psycopg2',
-        'NAME':'departamento_sig_c',
-        'USER':'departamento_sig_c',
-        'PASSWORD':'Sigcontrol2023',
-        'HOST':'localhost',
-        'PORT':'5432',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'caca',   # Reemplaza con el nombre de tu base de datos
+        'USER': 'postgres',        # Tu usuario de PostgreSQL (por ejemplo, 'postgres')
+        'PASSWORD': 'osval217K', # La contraseña correspondiente
+        'HOST': 'localhost',         # O la IP donde se aloja la BD
+        'PORT': '5432',              # Puerto por defecto en PostgreSQL
     }
 }
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE':'django.db.backends.postgresql_psycopg2',
@@ -163,9 +163,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "mapapp", "static"),
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Media files
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

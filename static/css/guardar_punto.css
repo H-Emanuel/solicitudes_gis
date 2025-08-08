@@ -84,6 +84,12 @@ h1 {
 .form-description {
     /* No forzar color ni tamaño ni alineación, dejar que el template lo controle */
     margin-bottom: 30px;
+    transition: all 0.3s ease;
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.5;
+    white-space: pre-wrap !important; /* El !important forzará la aplicación */
+    word-break: break-word !important;
 }
 
 .location-title {
@@ -295,7 +301,7 @@ button[type="submit"]:hover {
         padding: 0 4px;
     }
     .form-description {
-        font-size: 0.95rem;
+        
         padding: 0 4px;
     }
     .btn-container {

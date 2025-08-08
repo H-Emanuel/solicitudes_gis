@@ -22,6 +22,11 @@ from hashids import Hashids
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
+
+import json
+
+from .models import Formulario, Pregunta, Opcion
+
 HASHIDS_SALT = 'cambia_esto_por_un_salt_secreto'
 hashids = Hashids(salt=HASHIDS_SALT, min_length=8)
 
@@ -67,9 +72,14 @@ def guardar_punto(request, formulario_hashid):
             'underline': formulario.subtitulo_underline,
             'color': formulario.subtitulo_color,
             'font': formulario.subtitulo_font,
-            'align': formulario.subtitulo_align
+            'align': formulario.subtitulo_align,
+            'fontSize': formulario.subtitulo_fontSize,
         }
     }
+
+    print(f"DEBUG: Valor de formulario.subtitulo desde la DB: {formulario.subtitulo}")
+    print(f"DEBUG: Valor de formulario.subtitulo_fontSize desde la DB: {formulario.subtitulo_fontSize}")
+    print(f"DEBUG: Valor de estilos_header['subtitulo']['fontSize'] enviado a la plantilla: {estilos_header['subtitulo']['fontSize']}")
 
     tema_color = formulario.tema_color or '#e8e8e8'
 
@@ -856,6 +866,7 @@ def guardar_cambios_formulario(request):
                 formulario.subtitulo_color = subtitulo_estilos.get('color', '#000000')
                 formulario.subtitulo_font = subtitulo_estilos.get('font', "'Inter',sans-serif")
                 formulario.subtitulo_align = subtitulo_estilos.get('align', 'center')
+                formulario.subtitulo_fontSize = subtitulo_estilos.get('fontSize', '16px') # <--- ¡AÑADE ESTA LÍNEA!
                 formulario.save()
             
             # Procesar eliminaciones
@@ -1029,6 +1040,79 @@ def descargar_excel(request, formulario_hashid):
     response['Content-Disposition'] = f'attachment; filename=datos_formulario_{formulario_hashid}.xlsx'
     return response
 
+
+def descargar_excel(request, formulario_hashid):
+    formulario_id = decode_hashid_or_404(formulario_hashid)
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+    preguntas = formulario.preguntas.all()
+    puntos = Punto.objects.filter(respuesta__pregunta__formulario=formulario).distinct().order_by('id')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Datos"
+
+    # Solo columnas: ID, Latitud, Longitud, y preguntas (excluyendo tipo 'mapa')
+    preguntas_sin_mapa = [p for p in preguntas if p.tipo != 'mapa']
+    headers = ['ID', 'Latitud', 'Longitud'] + [p.texto for p in preguntas_sin_mapa]
+    ws.append(headers)
+
+    if not puntos.exists():
+        ws.append(["No hay puntos guardados"])
+    else:
+        for punto in puntos:
+            fila = [
+                punto.id,
+                punto.latitud,
+                punto.longitud
+            ]
+            for pregunta in preguntas_sin_mapa:
+                respuestas = Respuesta.objects.filter(punto=punto, pregunta=pregunta)
+                if pregunta.tipo == 'foto' and respuestas.exists():
+                    imagenes = []
+                    for r in respuestas:
+                        if r.imagen_respuesta and hasattr(r.imagen_respuesta.imagen, 'url'):
+                            url = request.build_absolute_uri(r.imagen_respuesta.imagen.url)
+                            imagenes.append(url)
+                        else:
+                            imagenes.append(r.respuesta or '')
+                    # Si solo hay una imagen, poner el string directamente
+                    if len(imagenes) == 1:
+                        fila.append(imagenes[0])
+                    elif len(imagenes) > 1:
+                        fila.append(', '.join(imagenes))
+                    else:
+                        fila.append('')
+                else:
+                    respuestas_texto = [r.respuesta for r in respuestas] if respuestas.exists() else []
+                    # Si solo hay una respuesta, poner el string directamente
+                    if len(respuestas_texto) == 1:
+                        fila.append(respuestas_texto[0])
+                    elif len(respuestas_texto) > 1:
+                        fila.append(', '.join(respuestas_texto))
+                    else:
+                        fila.append('')
+            ws.append(fila)
+
+        # Convertir las celdas de imágenes a hipervínculos
+        from urllib.parse import urlparse
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+            for cell in row[3:]:
+                if isinstance(cell.value, str) and cell.value.startswith('http'):
+                    cell.hyperlink = cell.value
+                    parsed = urlparse(cell.value)
+                    filename = parsed.path.split('/')[-1] if '/' in parsed.path else cell.value
+                    cell.value = filename
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=datos_formulario_{formulario_hashid}.xlsx'
+    return response
+
 def descargar_kmz(request, formulario_hashid):
     formulario_id = decode_hashid_or_404(formulario_hashid)
     formulario = get_object_or_404(Formulario, id=formulario_id)
@@ -1099,7 +1183,8 @@ def obtener_datos_formulario(request, formulario_hashid):
             'underline': formulario.subtitulo_underline,
             'color': formulario.subtitulo_color,
             'font': formulario.subtitulo_font,
-            'align': formulario.subtitulo_align
+            'align': formulario.subtitulo_align,
+            'fontSize': formulario.subtitulo_fontSize # <--- ¡AÑADE ESTA LÍNEA!
         }
     }
     
