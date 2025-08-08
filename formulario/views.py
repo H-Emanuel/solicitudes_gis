@@ -61,6 +61,8 @@ def crear_protocolo(request):
                     archivo_adjunto=archivo_adjunto,
                     anexo=request.POST['anexo'],
                 )
+                Protocolo.codigo = str(Protocolo.id)
+                Protocolo.save()
                 archivos_adjuntos = request.FILES.getlist('archivo')
                 if archivos_adjuntos:
                     for archivo in archivos_adjuntos:
@@ -112,51 +114,51 @@ def crear_protocolo(request):
 
             nombre_archivo = nombre_ficha + ".pdf"
 
-            try:
-                # Obtén los datos necesarios para el correo
-                correo_destino1 = 'deisy.pereira@munivalpo.cl' 
-                asunto = 'Nueva ficha generada'
+            # try:
+            #     # Obtén los datos necesarios para el correo
+            #     correo_destino1 = 'deisy.pereira@munivalpo.cl' 
+            #     asunto = 'Nueva ficha generada'
 
-                # Construye el mensaje de correo
-                mensaje = MIMEMultipart()
-                mensaje['From'] = 'departamento.sig@munivalpo.cl'  
-                mensaje['To'] = correo_destino1
-                mensaje['Subject'] = asunto
+            #     # Construye el mensaje de correo
+            #     mensaje = MIMEMultipart()
+            #     mensaje['From'] = 'departamento.sig@munivalpo.cl'  
+            #     mensaje['To'] = correo_destino1
+            #     mensaje['Subject'] = asunto
 
-                # Cuerpo del mensaje
-                cuerpo_mensaje = cuerpo_mensaje  # Asegúrate de definir el cuerpo del mensaje
-                mensaje.attach(MIMEText(cuerpo_mensaje, 'plain'))
+            #     # Cuerpo del mensaje
+            #     cuerpo_mensaje = cuerpo_mensaje  # Asegúrate de definir el cuerpo del mensaje
+            #     mensaje.attach(MIMEText(cuerpo_mensaje, 'plain'))
 
-                # Adjunta el PDF al mensaje de correo
-                pdf_adjunto = MIMEApplication(open(file_name, 'rb').read())
-                pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
-                mensaje.attach(pdf_adjunto)
+            #     # Adjunta el PDF al mensaje de correo
+            #     pdf_adjunto = MIMEApplication(open(file_name, 'rb').read())
+            #     pdf_adjunto.add_header('Content-Disposition', 'attachment', filename='Ficha_de_protocolo.pdf')
+            #     mensaje.attach(pdf_adjunto)
 
-                # Configura el servidor SMTP
-                smtp_server = 'mail.munivalpo.cl'  # Cambia esto según tu proveedor de correo
-                smtp_port = 587    # Puerto de Gmail para TLS
-                smtp_usuario = 'servervalpo\\departamento.sig'  # Tu dirección de correo
-                smtp_contrasena = 'deptosig2024!'  # Tu contraseña de correo
+            #     # Configura el servidor SMTP
+            #     smtp_server = 'mail.munivalpo.cl'  # Cambia esto según tu proveedor de correo
+            #     smtp_port = 587    # Puerto de Gmail para TLS
+            #     smtp_usuario = 'servervalpo\\departamento.sig'  # Tu dirección de correo
+            #     smtp_contrasena = 'deptosig2024!'  # Tu contraseña de correo
 
-                # Inicia la conexión con el servidor SMTP
-                server = smtplib.SMTP(smtp_server, smtp_port)
-                server.starttls()
+            #     # Inicia la conexión con el servidor SMTP
+            #     server = smtplib.SMTP(smtp_server, smtp_port)
+            #     server.starttls()
 
-                # Inicia sesión en tu cuenta de correo
-                server.login(smtp_usuario, smtp_contrasena)
+            #     # Inicia sesión en tu cuenta de correo
+            #     server.login(smtp_usuario, smtp_contrasena)
 
-                server.sendmail("departamento.sig@munivalpo.cl", correo_destino1, mensaje.as_string())
+            #     server.sendmail("departamento.sig@munivalpo.cl", correo_destino1, mensaje.as_string())
 
-                # Cierra la conexión con el servidor SMTP
-                server.quit()
-            except Exception as e:
-                print(f"Error al enviar el correo: {e}")
+            #     # Cierra la conexión con el servidor SMTP
+            #     server.quit()
+            # except Exception as e:
+            #     print(f"Error al enviar el correo: {e}")
 
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)( 
-                "solicitudes",
-                {"type": "send_update", "message": "actualizar"}
-            )
+            # channel_layer = get_channel_layer()
+            # async_to_sync(channel_layer.group_send)( 
+            #     "solicitudes",
+            #     {"type": "send_update", "message": "actualizar"}
+            # )
 
             return FileResponse(open(file_name, 'rb'), content_type='application/pdf', filename=nombre_archivo, as_attachment=True)
 

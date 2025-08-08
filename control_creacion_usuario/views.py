@@ -569,21 +569,23 @@ def solicitudes_json(request):
                 'profesional_correo': solicitud.profesional.email if solicitud.profesional else "Sin asignar",
                 'tipo_limite': solicitud.tipo_limite,
                 'estado': solicitud.estado,
+                'estados': list(ProtocoloSolicitud._meta.get_field("estado").choices),  # ✅ AQUI
                 'enviado_correo': solicitud.enviado_correo,
                 'enviado_correo_t': solicitud.enviado_correo_t,
                 'numero_designios': numero_designios,
                 'dias_restantes': dias_restantes,
                 'archivos_adjuntos_urls': archivos_adjuntos_urls,
                 'apoyos': apoyos_lista,
+
             })
 
         # 📤 Respuesta
         
         OPCIONES_ESTADO = [
-            ('PENDIENTE', 'Pendiente'),
-            ('EN_PROCESO', 'En Proceso'),
-            ('RECHAZADO', 'Rechazado'),
-            ('TERMINADO', 'Terminado'),
+            ('RECIBIDO', 'RECIBIDO'),
+            ('EN PROCESO', 'EN PROCESO'),
+            ('EJECUTADO', 'EJECUTADO'),
+            ('RECHAZADO', 'RECHAZADO')
         ]
         return JsonResponse({
             "draw": draw,
