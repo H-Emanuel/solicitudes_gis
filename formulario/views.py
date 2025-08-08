@@ -61,6 +61,9 @@ def crear_protocolo(request):
                     archivo_adjunto=archivo_adjunto,
                     anexo=request.POST['anexo'],
                 )
+                Protocolo.codigo = string(Protocolo.id)
+                Protocolo.save()
+
                 archivos_adjuntos = request.FILES.getlist('archivo')
                 if archivos_adjuntos:
                     for archivo in archivos_adjuntos:
